@@ -8,7 +8,8 @@ ORDERED_OBJS += \
 "./GPS_task.obj" \
 "./command_task.obj" \
 "./compdcm_task.obj" \
-"./senshub_iot.obj" \
+"./ravvn.obj" \
+"./ravvnuart.obj" \
 "./startup_ccs.obj" \
 "./utils/cmdline.obj" \
 "./utils/flash_pb.obj" \
@@ -177,8 +178,8 @@ ravvn.bin: $(EXE_OUTPUTS)
 # Other Targets
 clean:
 	-$(RM) $(EXE_OUTPUTS__QUOTED)$(BIN_OUTPUTS__QUOTED)
-	-$(RM) "GPS_task.pp" "command_task.pp" "compdcm_task.pp" "senshub_iot.pp" "startup_ccs.pp" "utils/cmdline.pp" "utils/flash_pb.pp" "utils/locator.pp" "utils/lwiplib.pp" "utils/ringbuf.pp" "utils/uartstdio.pp" "utils/ustdlib.pp" "third_party/FreeRTOS/Source/list.pp" "third_party/FreeRTOS/Source/queue.pp" "third_party/FreeRTOS/Source/tasks.pp" "third_party/FreeRTOS/Source/timers.pp" "third_party/FreeRTOS/Source/portable/MemMang/heap_1.pp" "third_party/FreeRTOS/Source/portable/CCS/ARM_CM4F/port.pp" "drivers/buttons.pp" "drivers/pinout.pp" 
-	-$(RM) "GPS_task.obj" "command_task.obj" "compdcm_task.obj" "senshub_iot.obj" "startup_ccs.obj" "utils/cmdline.obj" "utils/flash_pb.obj" "utils/locator.obj" "utils/lwiplib.obj" "utils/ringbuf.obj" "utils/uartstdio.obj" "utils/ustdlib.obj" "third_party/FreeRTOS/Source/list.obj" "third_party/FreeRTOS/Source/queue.obj" "third_party/FreeRTOS/Source/tasks.obj" "third_party/FreeRTOS/Source/timers.obj" "third_party/FreeRTOS/Source/portable/MemMang/heap_1.obj" "third_party/FreeRTOS/Source/portable/CCS/ARM_CM4F/port.obj" "third_party/FreeRTOS/Source/portable/CCS/ARM_CM4F/portasm.obj" "drivers/buttons.obj" "drivers/pinout.obj" 
+	-$(RM) "GPS_task.pp" "command_task.pp" "compdcm_task.pp" "ravvn.pp" "ravvnuart.pp" "startup_ccs.pp" "utils/cmdline.pp" "utils/flash_pb.pp" "utils/locator.pp" "utils/lwiplib.pp" "utils/ringbuf.pp" "utils/uartstdio.pp" "utils/ustdlib.pp" "third_party/FreeRTOS/Source/list.pp" "third_party/FreeRTOS/Source/queue.pp" "third_party/FreeRTOS/Source/tasks.pp" "third_party/FreeRTOS/Source/timers.pp" "third_party/FreeRTOS/Source/portable/MemMang/heap_1.pp" "third_party/FreeRTOS/Source/portable/CCS/ARM_CM4F/port.pp" "drivers/buttons.pp" "drivers/pinout.pp" 
+	-$(RM) "GPS_task.obj" "command_task.obj" "compdcm_task.obj" "ravvn.obj" "ravvnuart.obj" "startup_ccs.obj" "utils/cmdline.obj" "utils/flash_pb.obj" "utils/locator.obj" "utils/lwiplib.obj" "utils/ringbuf.obj" "utils/uartstdio.obj" "utils/ustdlib.obj" "third_party/FreeRTOS/Source/list.obj" "third_party/FreeRTOS/Source/queue.obj" "third_party/FreeRTOS/Source/tasks.obj" "third_party/FreeRTOS/Source/timers.obj" "third_party/FreeRTOS/Source/portable/MemMang/heap_1.obj" "third_party/FreeRTOS/Source/portable/CCS/ARM_CM4F/port.obj" "third_party/FreeRTOS/Source/portable/CCS/ARM_CM4F/portasm.obj" "drivers/buttons.obj" "drivers/pinout.obj" 
 	-$(RM) "third_party/FreeRTOS/Source/portable/CCS/ARM_CM4F/portasm.pp" 
 	-@echo 'Finished clean'
 	-@echo ' '

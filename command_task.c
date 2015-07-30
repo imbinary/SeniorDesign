@@ -325,7 +325,7 @@ CommandTask(void *pvParameters)
     // Get the current time as a reference to start our delays.
     //
     xLastWakeTime = xTaskGetTickCount();
-
+    UARTprintf("\n>");
     while(1)
     {
 

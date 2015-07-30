@@ -334,7 +334,7 @@ main(void)
     //
     // Create the cloud task.
     //
-
+/*
     if(GPSTaskInit() != 0)
     {
         UARTprintf("GPSTask: Init Failed!\n");
@@ -386,7 +386,7 @@ main(void)
             //
         }
     }
-
+*/
     //
     // Config and start the timer that is used by FreeRTOS to determine
     // run time stats.
