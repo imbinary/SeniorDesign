@@ -42,14 +42,18 @@
 #include "utils/ustdlib.h"
 #include "drivers/pinout.h"
 #include "drivers/buttons.h"
+#include "exosite.h"
+#include "drivers/exosite_hal_lwip.h"
 #include "priorities.h"
 #include "FreeRTOS.h"
 #include "task.h"
 #include "queue.h"
 #include "semphr.h"
+
 #include "compdcm_task.h"
+
 #include "command_task.h"
-#include "GPS_task.h"
+
 
 //*****************************************************************************
 //
@@ -209,6 +213,8 @@ Cmd_stats(int argc, char *argv[])
 {
 
 
+
+
     return 0;
 }
 
@@ -223,6 +229,7 @@ Cmd_stats(int argc, char *argv[])
 int
 Cmd_activate(int argc, char *argv[])
 {
+
 
     return 0;
 }
@@ -270,21 +277,6 @@ int
 Cmd_proxy(int argc, char *argv[])
 {
 
-    {
-        UARTprintf("\nProxy configuration help:\n");
-        UARTprintf("    The proxy command changes the proxy behavior of this "
-                   "board.\n");
-        UARTprintf("    To disable the proxy, type:\n\n");
-
-        UARTprintf("    proxy off\n\n");
-
-        UARTprintf("    To enable the proxy with a specific proxy name and "
-                   "port, type\n");
-        UARTprintf("    proxy <proxyaddress> <portnumber>. For example:\n\n");
-
-        UARTprintf("    proxy www.mycompanyproxy.com 80\n\n");
-    }
-
     return 0;
 }
 
@@ -325,7 +317,7 @@ CommandTask(void *pvParameters)
     // Get the current time as a reference to start our delays.
     //
     xLastWakeTime = xTaskGetTickCount();
-    UARTprintf("\n>");
+
     while(1)
     {
 

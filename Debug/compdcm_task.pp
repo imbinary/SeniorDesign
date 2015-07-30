@@ -41,7 +41,6 @@ compdcm_task.obj: /home/chris/src/tivaware/third_party/FreeRTOS/Source/include/q
 compdcm_task.obj: /home/chris/src/tivaware/third_party/FreeRTOS/Source/include/semphr.h
 compdcm_task.obj: ../compdcm_task.h
 compdcm_task.obj: ../command_task.h
-compdcm_task.obj: ../GPS_task.h
 compdcm_task.obj: /home/chris/src/tivaware/examples/boards/ek-tm4c1294xl-boostxl-senshub/drivers/pinout.h
 compdcm_task.obj: /home/chris/src/tivaware/examples/boards/ek-tm4c1294xl-boostxl-senshub/drivers/buttons.h
 
@@ -86,6 +85,5 @@ compdcm_task.obj: /home/chris/src/tivaware/examples/boards/ek-tm4c1294xl-boostxl
 /home/chris/src/tivaware/third_party/FreeRTOS/Source/include/semphr.h: 
 ../compdcm_task.h: 
 ../command_task.h: 
-../GPS_task.h: 
 /home/chris/src/tivaware/examples/boards/ek-tm4c1294xl-boostxl-senshub/drivers/pinout.h: 
 /home/chris/src/tivaware/examples/boards/ek-tm4c1294xl-boostxl-senshub/drivers/buttons.h: 

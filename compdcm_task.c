@@ -48,7 +48,7 @@
 #include "semphr.h"
 #include "compdcm_task.h"
 #include "command_task.h"
-#include "GPS_task.h"
+
 #include "drivers/pinout.h"
 #include "drivers/buttons.h"
 

@@ -40,9 +40,11 @@
 #include "task.h"
 #include "queue.h"
 #include "semphr.h"
+
 #include "compdcm_task.h"
+
 #include "command_task.h"
-#include "GPS_task.h"
+
 #include "drivers/pinout.h"
 #include "drivers/buttons.h"
 
@@ -122,6 +124,21 @@ uint32_t g_ui32SysClock;
 //*****************************************************************************
 xSemaphoreHandle g_xI2CSemaphore;
 
+//*****************************************************************************
+//
+// The mutex that protects concurrent access of Cloud Data from multiple
+// tasks.
+//
+//*****************************************************************************
+xSemaphoreHandle g_xCloudDataSemaphore;
+
+//*****************************************************************************
+//
+// The instance structure that will hold data for the cloud from all the
+// sensors.
+//
+//*****************************************************************************
+//sCloudData_t g_sCloudData;
 
 //*****************************************************************************
 //
@@ -294,7 +311,7 @@ main(void)
     //
     // For BoosterPack 2 interface use PA2 and PA3.
     //
-    ROM_GPIOPinTypeI2CSCL(GPIO_PORTD_BASE, GPIO_PIN_0);
+    GPIOPinTypeI2CSCL(GPIO_PORTD_BASE, GPIO_PIN_0);
     ROM_GPIOPinTypeI2C(GPIO_PORTD_BASE, GPIO_PIN_1);
 
     //
@@ -310,7 +327,10 @@ main(void)
     //
     g_xI2CSemaphore = xSemaphoreCreateMutex();
 
-
+    //
+    // Create a mutex to guard the Cloud Data structure.
+    //
+    g_xCloudDataSemaphore = xSemaphoreCreateMutex();
 
     //
     // Create the virtual com port task.
@@ -328,18 +348,6 @@ main(void)
             //
             // Do Nothing.
             //
-        }
-    }
-
-    //
-    // Create the cloud task.
-    //
-/*
-    if(GPSTaskInit() != 0)
-    {
-        UARTprintf("GPSTask: Init Failed!\n");
-        while(1)
-        {
         }
     }
 
@@ -366,19 +374,19 @@ main(void)
     }
 
 
-
     //
     // Verify that the semaphores were created correctly.
     //
-    if((g_xI2CSemaphore == NULL))
+    if((g_xI2CSemaphore == NULL) || (g_xCloudDataSemaphore == NULL))
     {
         //
         // I2C or CloudData semaphore was not created successfully.
         // Print an error message and wait for user to debug or reset.
         //
         UARTprintf("I2C or Cloud Data semaphore create failed.\n");
-        UARTprintf("I2C Semaphore: 0x%X",
-                   (uint32_t) g_xI2CSemaphore);
+        UARTprintf("I2C Semaphore: 0x%X\t\tCloudData Semaphore: 0x%X",
+                   (uint32_t) g_xI2CSemaphore,
+                   (uint32_t) g_xCloudDataSemaphore);
         while(1)
         {
             //
@@ -386,7 +394,7 @@ main(void)
             //
         }
     }
-*/
+
     //
     // Config and start the timer that is used by FreeRTOS to determine
     // run time stats.
