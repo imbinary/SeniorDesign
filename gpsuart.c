@@ -35,7 +35,7 @@
 #include "driverlib/rom_map.h"
 #include "driverlib/sysctl.h"
 #include "driverlib/uart.h"
-#include "ravvnuart.h"
+#include "gpsuart.h"
 
 //*****************************************************************************
 //
@@ -61,43 +61,43 @@
 // disable echo by calling UARTEchoSet(false).
 //
 //*****************************************************************************
-static bool rg_bDisableEcho;
+static bool gps_gbDisableEcho;
 
 //*****************************************************************************
 //
-// Output ring buffer.  Buffer is full if rg_ui32UARTTxReadIndex is one ahead of
-// rg_ui32UARTTxWriteIndex.  Buffer is empty if the two indices are the same.
+// Output ring buffer.  Buffer is full if gps_gui32UARTTxReadIndex is one ahead of
+// gps_gui32UARTTxWriteIndex.  Buffer is empty if the two indices are the same.
 //
 //*****************************************************************************
-static unsigned char rg_pcUARTTxBuffer[UART_TX_BUFFER_SIZE];
-static volatile uint32_t rg_ui32UARTTxWriteIndex = 0;
-static volatile uint32_t rg_ui32UARTTxReadIndex = 0;
+static unsigned char gps_gpcUARTTxBuffer[UART_TX_BUFFER_SIZE];
+static volatile uint32_t gps_gui32UARTTxWriteIndex = 0;
+static volatile uint32_t gps_gui32UARTTxReadIndex = 0;
 
 //*****************************************************************************
 //
-// Input ring buffer.  Buffer is full if rg_ui32UARTTxReadIndex is one ahead of
-// rg_ui32UARTTxWriteIndex.  Buffer is empty if the two indices are the same.
+// Input ring buffer.  Buffer is full if gps_gui32UARTTxReadIndex is one ahead of
+// gps_gui32UARTTxWriteIndex.  Buffer is empty if the two indices are the same.
 //
 //*****************************************************************************
-static unsigned char rg_pcUARTRxBuffer[UART_RX_BUFFER_SIZE];
-static volatile uint32_t rg_ui32UARTRxWriteIndex = 0;
-static volatile uint32_t rg_ui32UARTRxReadIndex = 0;
+static unsigned char gps_gpcUARTRxBuffer[UART_RX_BUFFER_SIZE];
+static volatile uint32_t gps_gui32UARTRxWriteIndex = 0;
+static volatile uint32_t gps_gui32UARTRxReadIndex = 0;
 
 //*****************************************************************************
 //
 // Macros to determine number of free and used bytes in the transmit buffer.
 //
 //*****************************************************************************
-#define rTX_BUFFER_USED          (rGetBufferCount(&rg_ui32UARTTxReadIndex,  \
-                                                &rg_ui32UARTTxWriteIndex, \
+#define gpsTX_BUFFER_USED          (gpsGetBufferCount(&gps_gui32UARTTxReadIndex,  \
+                                                &gps_gui32UARTTxWriteIndex, \
                                                 UART_TX_BUFFER_SIZE))
-#define rTX_BUFFER_FREE          (UART_TX_BUFFER_SIZE - rTX_BUFFER_USED)
-#define rTX_BUFFER_EMPTY         (rIsBufferEmpty(&rg_ui32UARTTxReadIndex,   \
-                                               &rg_ui32UARTTxWriteIndex))
-#define rTX_BUFFER_FULL          (rIsBufferFull(&rg_ui32UARTTxReadIndex,  \
-                                              &rg_ui32UARTTxWriteIndex, \
+#define gpsTX_BUFFER_FREE          (UART_TX_BUFFER_SIZE - gpsTX_BUFFER_USED)
+#define gpsTX_BUFFER_EMPTY         (gpsIsBufferEmpty(&gps_gui32UARTTxReadIndex,   \
+                                               &gps_gui32UARTTxWriteIndex))
+#define gpsTX_BUFFER_FULL          (gpsIsBufferFull(&gps_gui32UARTTxReadIndex,  \
+                                              &gps_gui32UARTTxWriteIndex, \
                                               UART_TX_BUFFER_SIZE))
-#define rADVANCE_TX_BUFFER_INDEX(Index) \
+#define gpsADVANCE_TX_BUFFER_INDEX(Index) \
                                 (Index) = ((Index) + 1) % UART_TX_BUFFER_SIZE
 
 //*****************************************************************************
@@ -105,16 +105,16 @@ static volatile uint32_t rg_ui32UARTRxReadIndex = 0;
 // Macros to determine number of free and used bytes in the receive buffer.
 //
 //*****************************************************************************
-#define rRX_BUFFER_USED          (rGetBufferCount(&rg_ui32UARTRxReadIndex,  \
-                                                &rg_ui32UARTRxWriteIndex, \
+#define gpsRX_BUFFER_USED          (gpsGetBufferCount(&gps_gui32UARTRxReadIndex,  \
+                                                &gps_gui32UARTRxWriteIndex, \
                                                 UART_RX_BUFFER_SIZE))
-#define rRX_BUFFER_FREE          (UART_RX_BUFFER_SIZE - RX_BUFFER_USED)
-#define rRX_BUFFER_EMPTY         (rIsBufferEmpty(&rg_ui32UARTRxReadIndex,   \
-                                               &rg_ui32UARTRxWriteIndex))
-#define rRX_BUFFER_FULL          (rIsBufferFull(&rg_ui32UARTRxReadIndex,  \
-                                              &rg_ui32UARTRxWriteIndex, \
+#define gpsRX_BUFFER_FREE          (UART_RX_BUFFER_SIZE - gpsRX_BUFFER_USED)
+#define gpsRX_BUFFER_EMPTY         (gpsIsBufferEmpty(&gps_gui32UARTRxReadIndex,   \
+                                               &gps_gui32UARTRxWriteIndex))
+#define gpsRX_BUFFER_FULL          (gpsIsBufferFull(&gps_gui32UARTRxReadIndex,  \
+                                              &gps_gui32UARTRxWriteIndex, \
                                               UART_RX_BUFFER_SIZE))
-#define rADVANCE_RX_BUFFER_INDEX(Index) \
+#define gpsADVANCE_RX_BUFFER_INDEX(Index) \
                                 (Index) = ((Index) + 1) % UART_RX_BUFFER_SIZE
 #endif
 
@@ -123,7 +123,7 @@ static volatile uint32_t rg_ui32UARTRxReadIndex = 0;
 // The base address of the chosen UART.
 //
 //*****************************************************************************
-static uint32_t rg_ui32Base = 0;
+static uint32_t gps_gui32Base = 3;
 
 //*****************************************************************************
 //
@@ -131,14 +131,14 @@ static uint32_t rg_ui32Base = 0;
 // equivalent.
 //
 //*****************************************************************************
-static const char * const rg_pcHex = "0123456789abcdef";
+static const char * const gps_gpcHex = "0123456789abcdef";
 
 //*****************************************************************************
 //
 // The list of possible base addresses for the console UART.
 //
 //*****************************************************************************
-static const uint32_t rg_ui32UARTBase[6] =
+static const uint32_t gps_gui32UARTBase[6] =
 {
     UART0_BASE, UART1_BASE, UART2_BASE, UART3_BASE, UART4_BASE, UART5_BASE
 };
@@ -149,7 +149,7 @@ static const uint32_t rg_ui32UARTBase[6] =
 // The list of possible interrupts for the console UART.
 //
 //*****************************************************************************
-static const uint32_t rg_ui32UARTInt[6] =
+static const uint32_t gps_gui32UARTInt[6] =
 {
     INT_UART0, INT_UART1, INT_UART2, INT_UART3, INT_UART4, INT_UART5
 };
@@ -159,7 +159,7 @@ static const uint32_t rg_ui32UARTInt[6] =
 // The port number in use.
 //
 //*****************************************************************************
-static uint32_t rg_ui32PortNum;
+static uint32_t gps_gui32PortNum;
 #endif
 
 //*****************************************************************************
@@ -167,7 +167,7 @@ static uint32_t rg_ui32PortNum;
 // The list of UART peripherals.
 //
 //*****************************************************************************
-static const uint32_t rg_ui32UARTPeriph[6] =
+static const uint32_t gps_gui32UARTPeriph[6] =
 {
     SYSCTL_PERIPH_UART0, SYSCTL_PERIPH_UART1, SYSCTL_PERIPH_UART2, SYSCTL_PERIPH_UART3, SYSCTL_PERIPH_UART4, SYSCTL_PERIPH_UART5
 };
@@ -191,7 +191,7 @@ static const uint32_t rg_ui32UARTPeriph[6] =
 //*****************************************************************************
 #ifdef UART_BUFFERED
 static bool
-rIsBufferFull(volatile uint32_t *pui32Read,
+gpsIsBufferFull(volatile uint32_t *pui32Read,
              volatile uint32_t *pui32Write, uint32_t ui32Size)
 {
     uint32_t ui32Write;
@@ -222,7 +222,7 @@ rIsBufferFull(volatile uint32_t *pui32Read,
 //*****************************************************************************
 #ifdef UART_BUFFERED
 static bool
-rIsBufferEmpty(volatile uint32_t *pui32Read,
+gpsIsBufferEmpty(volatile uint32_t *pui32Read,
               volatile uint32_t *pui32Write)
 {
     uint32_t ui32Write;
@@ -253,7 +253,7 @@ rIsBufferEmpty(volatile uint32_t *pui32Read,
 //*****************************************************************************
 #ifdef UART_BUFFERED
 static uint32_t
-rGetBufferCount(volatile uint32_t *pui32Read,
+gpsGetBufferCount(volatile uint32_t *pui32Read,
                volatile uint32_t *pui32Write, uint32_t ui32Size)
 {
     uint32_t ui32Write;
@@ -275,34 +275,34 @@ rGetBufferCount(volatile uint32_t *pui32Read,
 //*****************************************************************************
 #ifdef UART_BUFFERED
 static void
-rUARTPrimeTransmit(uint32_t ui32Base)
+gpsUARTPrimeTransmit(uint32_t ui32Base)
 {
     //
     // Do we have any data to transmit?
     //
-    if(!rTX_BUFFER_EMPTY)
+    if(!gpsTX_BUFFER_EMPTY)
     {
         //
         // Disable the UART interrupt.  If we don't do this there is a race
         // condition which can cause the read index to be corrupted.
         //
-        MAP_IntDisable(rg_ui32UARTInt[rg_ui32PortNum]);
+        MAP_IntDisable(gps_gui32UARTInt[gps_gui32PortNum]);
 
         //
         // Yes - take some characters out of the transmit buffer and feed
         // them to the UART transmit FIFO.
         //
-        while(MAP_UARTSpaceAvail(ui32Base) && !rTX_BUFFER_EMPTY)
+        while(MAP_UARTSpaceAvail(ui32Base) && !gpsTX_BUFFER_EMPTY)
         {
             MAP_UARTCharPutNonBlocking(ui32Base,
-                                      rg_pcUARTTxBuffer[rg_ui32UARTTxReadIndex]);
-            rADVANCE_TX_BUFFER_INDEX(rg_ui32UARTTxReadIndex);
+                                      gps_gpcUARTTxBuffer[gps_gui32UARTTxReadIndex]);
+            gpsADVANCE_TX_BUFFER_INDEX(gps_gui32UARTTxReadIndex);
         }
 
         //
         // Reenable the UART interrupt.
         //
-        MAP_IntEnable(rg_ui32UARTInt[rg_ui32PortNum]);
+        MAP_IntEnable(gps_gui32UARTInt[gps_gui32PortNum]);
     }
 }
 #endif
@@ -331,7 +331,7 @@ rUARTPrimeTransmit(uint32_t ui32Base)
 //
 //*****************************************************************************
 void
-rUARTxConfig(uint32_t ui32PortNum, uint32_t ui32Baud, uint32_t ui32SrcClock)
+gpsUARTxConfig(uint32_t ui32PortNum, uint32_t ui32Baud, uint32_t ui32SrcClock)
 {
     //
     // Check the arguments.
@@ -343,13 +343,13 @@ rUARTxConfig(uint32_t ui32PortNum, uint32_t ui32Baud, uint32_t ui32SrcClock)
     //
     // In buffered mode, we only allow a single instance to be opened.
     //
-    ASSERT(rg_ui32Base == 0);
+    ASSERT(gps_gui32Base == 0);
 #endif
 
     //
     // Check to make sure the UART peripheral is present.
     //
-    if(!MAP_SysCtlPeripheralPresent(rg_ui32UARTPeriph[ui32PortNum]))
+    if(!MAP_SysCtlPeripheralPresent(gps_gui32UARTPeriph[ui32PortNum]))
     {
         return;
     }
@@ -357,17 +357,17 @@ rUARTxConfig(uint32_t ui32PortNum, uint32_t ui32Baud, uint32_t ui32SrcClock)
     //
     // Select the base address of the UART.
     //
-    rg_ui32Base = rg_ui32UARTBase[ui32PortNum];
+    gps_gui32Base = gps_gui32UARTBase[ui32PortNum];
 
     //
     // Enable the UART peripheral for use.
     //
-    MAP_SysCtlPeripheralEnable(rg_ui32UARTPeriph[ui32PortNum]);
+    MAP_SysCtlPeripheralEnable(gps_gui32UARTPeriph[ui32PortNum]);
 
     //
     // Configure the UART for 115200, n, 8, 1
     //
-    MAP_UARTConfigSetExpClk(rg_ui32Base, ui32SrcClock, ui32Baud,
+    MAP_UARTConfigSetExpClk(gps_gui32Base, ui32SrcClock, ui32Baud,
                             (UART_CONFIG_PAR_NONE | UART_CONFIG_STOP_ONE |
                              UART_CONFIG_WLEN_8));
 
@@ -376,18 +376,18 @@ rUARTxConfig(uint32_t ui32PortNum, uint32_t ui32Baud, uint32_t ui32SrcClock)
     // Set the UART to interrupt whenever the TX FIFO is almost empty or
     // when any character is received.
     //
-    MAP_UARTFIFOLevelSet(rg_ui32Base, UART_FIFO_TX1_8, UART_FIFO_RX1_8);
+    MAP_UARTFIFOLevelSet(gps_gui32Base, UART_FIFO_TX1_8, UART_FIFO_RX1_8);
 
     //
     // Flush both the buffers.
     //
-    rUARTFlushRx();
-    rUARTFlushTx(true);
+    gpsUARTFlushRx();
+    gpsUARTFlushTx(true);
 
     //
     // Remember which interrupt we are dealing with.
     //
-    rg_ui32PortNum = ui32PortNum;
+    gps_gui32PortNum = ui32PortNum;
 
     //
     // We are configured for buffered output so enable the master interrupt
@@ -395,15 +395,15 @@ rUARTxConfig(uint32_t ui32PortNum, uint32_t ui32Baud, uint32_t ui32SrcClock)
     // transmit interrupt in the UART itself until some data has been placed
     // in the transmit buffer.
     //
-    MAP_UARTIntDisable(rg_ui32Base, 0xFFFFFFFF);
-    MAP_UARTIntEnable(rg_ui32Base, UART_INT_RX | UART_INT_RT);
-    MAP_IntEnable(rg_ui32UARTInt[ui32PortNum]);
+    MAP_UARTIntDisable(gps_gui32Base, 0xFFFFFFFF);
+    MAP_UARTIntEnable(gps_gui32Base, UART_INT_RX | UART_INT_RT);
+    MAP_IntEnable(gps_gui32UARTInt[ui32PortNum]);
 #endif
 
     //
     // Enable the UART operation.
     //
-    MAP_UARTEnable(rg_ui32Base);
+    MAP_UARTEnable(gps_gui32Base);
 }
 
 //*****************************************************************************
@@ -433,7 +433,7 @@ rUARTxConfig(uint32_t ui32PortNum, uint32_t ui32Baud, uint32_t ui32SrcClock)
 //
 //*****************************************************************************
 int
-rUARTwrite(const char *pcBuf, uint32_t ui32Len)
+gpsUARTwrite(const char *pcBuf, uint32_t ui32Len)
 {
 #ifdef UART_BUFFERED
     unsigned int uIdx;
@@ -442,7 +442,7 @@ rUARTwrite(const char *pcBuf, uint32_t ui32Len)
     // Check for valid arguments.
     //
     ASSERT(pcBuf != 0);
-    ASSERT(rg_ui32Base != 0);
+    ASSERT(gps_gui32Base != 0);
 
     //
     // Send the characters
@@ -455,10 +455,10 @@ rUARTwrite(const char *pcBuf, uint32_t ui32Len)
         //
         if(pcBuf[uIdx] == '\n')
         {
-            if(!rTX_BUFFER_FULL)
+            if(!gpsTX_BUFFER_FULL)
             {
-                rg_pcUARTTxBuffer[rg_ui32UARTTxWriteIndex] = '\r';
-                rADVANCE_TX_BUFFER_INDEX(rg_ui32UARTTxWriteIndex);
+                gps_gpcUARTTxBuffer[gps_gui32UARTTxWriteIndex] = '\r';
+                gpsADVANCE_TX_BUFFER_INDEX(gps_gui32UARTTxWriteIndex);
             }
             else
             {
@@ -472,10 +472,10 @@ rUARTwrite(const char *pcBuf, uint32_t ui32Len)
         //
         // Send the character to the UART output.
         //
-        if(!rTX_BUFFER_FULL)
+        if(!gpsTX_BUFFER_FULL)
         {
-            rg_pcUARTTxBuffer[rg_ui32UARTTxWriteIndex] = pcBuf[uIdx];
-            rADVANCE_TX_BUFFER_INDEX(rg_ui32UARTTxWriteIndex);
+            gps_gpcUARTTxBuffer[gps_gui32UARTTxWriteIndex] = pcBuf[uIdx];
+            gpsADVANCE_TX_BUFFER_INDEX(gps_gui32UARTTxWriteIndex);
         }
         else
         {
@@ -490,10 +490,10 @@ rUARTwrite(const char *pcBuf, uint32_t ui32Len)
     // If we have anything in the buffer, make sure that the UART is set
     // up to transmit it.
     //
-    if(!rTX_BUFFER_EMPTY)
+    if(!gpsTX_BUFFER_EMPTY)
     {
-        rUARTPrimeTransmit(rg_ui32Base);
-        MAP_UARTIntEnable(rg_ui32Base, UART_INT_TX);
+        gpsUARTPrimeTransmit(gps_gui32Base);
+        MAP_UARTIntEnable(gps_gui32Base, UART_INT_TX);
     }
 
     //
@@ -506,7 +506,7 @@ rUARTwrite(const char *pcBuf, uint32_t ui32Len)
     //
     // Check for valid UART base address, and valid arguments.
     //
-    ASSERT(rg_ui32Base != 0);
+    ASSERT(gps_gui32Base != 0);
     ASSERT(pcBuf != 0);
 
     //
@@ -520,13 +520,13 @@ rUARTwrite(const char *pcBuf, uint32_t ui32Len)
         //
         if(pcBuf[uIdx] == '\n')
         {
-            MAP_UARTCharPut(rg_ui32Base, '\r');
+            MAP_UARTCharPut(gps_gui32Base, '\r');
         }
 
         //
         // Send the character to the UART output.
         //
-        MAP_UARTCharPut(rg_ui32Base, pcBuf[uIdx]);
+        MAP_UARTCharPut(gps_gui32Base, pcBuf[uIdx]);
     }
 
     //
@@ -566,7 +566,7 @@ rUARTwrite(const char *pcBuf, uint32_t ui32Len)
 //
 //*****************************************************************************
 int
-rUARTgets(char *pcBuf, uint32_t ui32Len)
+gpsUARTgets(char *pcBuf, uint32_t ui32Len)
 {
 #ifdef UART_BUFFERED
     uint32_t ui32Count = 0;
@@ -577,7 +577,7 @@ rUARTgets(char *pcBuf, uint32_t ui32Len)
     //
     ASSERT(pcBuf != 0);
     ASSERT(ui32Len != 0);
-    ASSERT(rg_ui32Base != 0);
+    ASSERT(gps_gui32Base != 0);
 
     //
     // Adjust the length back by 1 to leave space for the trailing
@@ -593,10 +593,10 @@ rUARTgets(char *pcBuf, uint32_t ui32Len)
         //
         // Read the next character from the receive buffer.
         //
-        if(!rRX_BUFFER_EMPTY)
+        if(!gpsRX_BUFFER_EMPTY)
         {
-            cChar = rg_pcUARTRxBuffer[rg_ui32UARTRxReadIndex];
-            rADVANCE_RX_BUFFER_INDEX(rg_ui32UARTRxReadIndex);
+            cChar = gps_gpcUARTRxBuffer[gps_gui32UARTRxReadIndex];
+            gpsADVANCE_RX_BUFFER_INDEX(gps_gui32UARTRxReadIndex);
 
             //
             // See if a newline or escape character was received.
@@ -649,7 +649,7 @@ rUARTgets(char *pcBuf, uint32_t ui32Len)
     //
     ASSERT(pcBuf != 0);
     ASSERT(ui32Len != 0);
-    ASSERT(rg_ui32Base != 0);
+    ASSERT(gps_gui32Base != 0);
 
     //
     // Adjust the length back by 1 to leave space for the trailing
@@ -665,7 +665,7 @@ rUARTgets(char *pcBuf, uint32_t ui32Len)
         //
         // Read the next character from the console.
         //
-        cChar = MAP_UARTCharGet(rg_ui32Base);
+        cChar = MAP_UARTCharGet(gps_gui32Base);
 
         //
         // See if the backspace key was pressed.
@@ -681,7 +681,7 @@ rUARTgets(char *pcBuf, uint32_t ui32Len)
                 //
                 // Rub out the previous character.
                 //
-                UARTwrite("\b \b", 3);
+                gpsUARTwrite("\b \b", 3);
 
                 //
                 // Decrement the number of characters in the buffer.
@@ -746,7 +746,7 @@ rUARTgets(char *pcBuf, uint32_t ui32Len)
             //
             // Reflect the character back to the user.
             //
-            MAP_UARTCharPut(rg_ui32Base, cChar);
+            MAP_UARTCharPut(gps_gui32Base, cChar);
         }
     }
 
@@ -758,7 +758,7 @@ rUARTgets(char *pcBuf, uint32_t ui32Len)
     //
     // Send a CRLF pair to the terminal to end the line.
     //
-    UARTwrite("\r\n", 2);
+    gpsUARTwrite("\r\n", 2);
 
     //
     // Return the count of int8_ts in the buffer, not counting the trailing 0.
@@ -783,7 +783,7 @@ rUARTgets(char *pcBuf, uint32_t ui32Len)
 //
 //*****************************************************************************
 unsigned char
-rUARTgetc(void)
+gpsUARTgetc(void)
 {
 #ifdef UART_BUFFERED
     unsigned char cChar;
@@ -791,7 +791,7 @@ rUARTgetc(void)
     //
     // Wait for a character to be received.
     //
-    while(rRX_BUFFER_EMPTY)
+    while(gpsRX_BUFFER_EMPTY)
     {
         //
         // Block waiting for a character to be received (if the buffer is
@@ -802,8 +802,8 @@ rUARTgetc(void)
     //
     // Read a character from the buffer.
     //
-    cChar = rg_pcUARTRxBuffer[rg_ui32UARTRxReadIndex];
-    rADVANCE_RX_BUFFER_INDEX(rg_ui32UARTRxReadIndex);
+    cChar = gps_gpcUARTRxBuffer[gps_gui32UARTRxReadIndex];
+    gpsADVANCE_RX_BUFFER_INDEX(gps_gui32UARTRxReadIndex);
 
     //
     // Return the character to the caller.
@@ -814,7 +814,7 @@ rUARTgetc(void)
     // Block until a character is received by the UART then return it to
     // the caller.
     //
-    return(MAP_UARTCharGet(rg_ui32Base));
+    return(MAP_UARTCharGet(gps_gui32Base));
 #endif
 }
 
@@ -857,7 +857,7 @@ rUARTgetc(void)
 //
 //*****************************************************************************
 void
-rUARTvprintf(const char *pcString, va_list vaArgP)
+gpsUARTvprintf(const char *pcString, va_list vaArgP)
 {
     uint32_t ui32Idx, ui32Value, ui32Pos, ui32Count, ui32Base, ui32Neg;
     char *pcStr, pcBuf[16], cFill;
@@ -884,7 +884,7 @@ rUARTvprintf(const char *pcString, va_list vaArgP)
         //
         // Write this portion of the string.
         //
-        rUARTwrite(pcString, ui32Idx);
+        gpsUARTwrite(pcString, ui32Idx);
 
         //
         // Skip the portion of the string that was written.
@@ -968,7 +968,7 @@ again:
                     //
                     // Print out the character.
                     //
-                    rUARTwrite((char *)&ui32Value, 1);
+                    gpsUARTwrite((char *)&ui32Value, 1);
 
                     //
                     // This command has been handled.
@@ -1048,7 +1048,7 @@ again:
                     //
                     // Write the string.
                     //
-                    rUARTwrite(pcStr, ui32Idx);
+                    gpsUARTwrite(pcStr, ui32Idx);
 
                     //
                     // Write any required padding spaces
@@ -1058,7 +1058,7 @@ again:
                         ui32Count -= ui32Idx;
                         while(ui32Count--)
                         {
-                            rUARTwrite(" ", 1);
+                            gpsUARTwrite(" ", 1);
                         }
                     }
 
@@ -1200,13 +1200,13 @@ convert:
                     for(; ui32Idx; ui32Idx /= ui32Base)
                     {
                         pcBuf[ui32Pos++] =
-                            rg_pcHex[(ui32Value / ui32Idx) % ui32Base];
+                            gps_gpcHex[(ui32Value / ui32Idx) % ui32Base];
                     }
 
                     //
                     // Write the string.
                     //
-                    rUARTwrite(pcBuf, ui32Pos);
+                    gpsUARTwrite(pcBuf, ui32Pos);
 
                     //
                     // This command has been handled.
@@ -1222,7 +1222,7 @@ convert:
                     //
                     // Simply write a single %.
                     //
-                    rUARTwrite(pcString - 1, 1);
+                    gpsUARTwrite(pcString - 1, 1);
 
                     //
                     // This command has been handled.
@@ -1238,7 +1238,7 @@ convert:
                     //
                     // Indicate an error.
                     //
-                    rUARTwrite("ERROR", 5);
+                    gpsUARTwrite("ERROR", 5);
 
                     //
                     // This command has been handled.
@@ -1289,7 +1289,7 @@ convert:
 //
 //*****************************************************************************
 void
-rUARTprintf(const char *pcString, ...)
+gpsUARTprintf(const char *pcString, ...)
 {
     va_list vaArgP;
 
@@ -1298,7 +1298,7 @@ rUARTprintf(const char *pcString, ...)
     //
     va_start(vaArgP, pcString);
 
-    rUARTvprintf(pcString, vaArgP);
+    gpsUARTvprintf(pcString, vaArgP);
 
     //
     // We're finished with the varargs now.
@@ -1319,9 +1319,9 @@ rUARTprintf(const char *pcString, ...)
 //*****************************************************************************
 #if defined(UART_BUFFERED) || defined(DOXYGEN)
 int
-rUARTRxBytesAvail(void)
+gpsUARTRxBytesAvail(void)
 {
-    return(rRX_BUFFER_USED);
+    return(gpsRX_BUFFER_USED);
 }
 #endif
 
@@ -1338,9 +1338,9 @@ rUARTRxBytesAvail(void)
 //
 //*****************************************************************************
 int
-rUARTTxBytesFree(void)
+gpsUARTTxBytesFree(void)
 {
-    return(rTX_BUFFER_FREE);
+    return(gpsTX_BUFFER_FREE);
 }
 #endif
 
@@ -1365,7 +1365,7 @@ rUARTTxBytesFree(void)
 //*****************************************************************************
 #if defined(UART_BUFFERED) || defined(DOXYGEN)
 int
-rUARTPeek(unsigned char ucChar)
+gpsUARTPeek(unsigned char ucChar)
 {
     int iCount;
     int iAvail;
@@ -1374,15 +1374,15 @@ rUARTPeek(unsigned char ucChar)
     //
     // How many characters are there in the receive buffer?
     //
-    iAvail = (int)rRX_BUFFER_USED;
-    ui32ReadIndex = rg_ui32UARTRxReadIndex;
+    iAvail = (int)gpsRX_BUFFER_USED;
+    ui32ReadIndex = gps_gui32UARTRxReadIndex;
 
     //
     // Check all the unread characters looking for the one passed.
     //
     for(iCount = 0; iCount < iAvail; iCount++)
     {
-        if(rg_pcUARTRxBuffer[ui32ReadIndex] == ucChar)
+        if(gps_gpcUARTRxBuffer[ui32ReadIndex] == ucChar)
         {
             //
             // We found it so return the index
@@ -1394,7 +1394,7 @@ rUARTPeek(unsigned char ucChar)
             //
             // This one didn't match so move on to the next character.
             //
-            rADVANCE_RX_BUFFER_INDEX(ui32ReadIndex);
+            gpsADVANCE_RX_BUFFER_INDEX(ui32ReadIndex);
         }
     }
 
@@ -1419,7 +1419,7 @@ rUARTPeek(unsigned char ucChar)
 //*****************************************************************************
 #if defined(UART_BUFFERED) || defined(DOXYGEN)
 void
-rUARTFlushRx(void)
+gpsUARTFlushRx(void)
 {
     uint32_t ui32Int;
 
@@ -1431,8 +1431,8 @@ rUARTFlushRx(void)
     //
     // Flush the receive buffer.
     //
-    rg_ui32UARTRxReadIndex = 0;
-    rg_ui32UARTRxWriteIndex = 0;
+    gps_gui32UARTRxReadIndex = 0;
+    gps_gui32UARTRxWriteIndex = 0;
 
     //
     // If interrupts were enabled when we turned them off, turn them
@@ -1463,7 +1463,7 @@ rUARTFlushRx(void)
 //*****************************************************************************
 #if defined(UART_BUFFERED) || defined(DOXYGEN)
 void
-rUARTFlushTx(bool bDiscard)
+gpsUARTFlushTx(bool bDiscard)
 {
     uint32_t ui32Int;
 
@@ -1481,8 +1481,8 @@ rUARTFlushTx(bool bDiscard)
         //
         // Flush the transmit buffer.
         //
-        rg_ui32UARTTxReadIndex = 0;
-        rg_ui32UARTTxWriteIndex = 0;
+        gps_gui32UARTTxReadIndex = 0;
+        gps_gui32UARTTxWriteIndex = 0;
 
         //
         // If interrupts were enabled when we turned them off, turn them
@@ -1498,7 +1498,7 @@ rUARTFlushTx(bool bDiscard)
         //
         // Wait for all remaining data to be transmitted before returning.
         //
-        while(!rTX_BUFFER_EMPTY)
+        while(!gpsTX_BUFFER_EMPTY)
         {
         }
     }
@@ -1527,9 +1527,9 @@ rUARTFlushTx(bool bDiscard)
 //*****************************************************************************
 #if defined(UART_BUFFERED) || defined(DOXYGEN)
 void
-rUARTEchoSet(bool bEnable)
+gpsUARTEchoSet(bool bEnable)
 {
-    rg_bDisableEcho = !bEnable;
+    gps_gbDisableEcho = !bEnable;
 }
 #endif
 
@@ -1547,7 +1547,7 @@ rUARTEchoSet(bool bEnable)
 //*****************************************************************************
 #if defined(UART_BUFFERED) || defined(DOXYGEN)
 void
-rUARTxIntHandler(void)
+gpsUARTxIntHandler(void)
 {
     uint32_t ui32Ints;
     int8_t cChar;
@@ -1557,8 +1557,8 @@ rUARTxIntHandler(void)
     //
     // Get and clear the current interrupt source(s)
     //
-    ui32Ints = MAP_UARTIntStatus(rg_ui32Base, true);
-    MAP_UARTIntClear(rg_ui32Base, ui32Ints);
+    ui32Ints = MAP_UARTIntStatus(gps_gui32Base, true);
+    MAP_UARTIntClear(gps_gui32Base, ui32Ints);
 
     //
     // Are we being interrupted because the TX FIFO has space available?
@@ -1568,14 +1568,14 @@ rUARTxIntHandler(void)
         //
         // Move as many bytes as we can into the transmit FIFO.
         //
-        rUARTPrimeTransmit(rg_ui32Base);
+        gpsUARTPrimeTransmit(gps_gui32Base);
 
         //
         // If the output buffer is empty, turn off the transmit interrupt.
         //
-        if(rTX_BUFFER_EMPTY)
+        if(gpsTX_BUFFER_EMPTY)
         {
-            MAP_UARTIntDisable(rg_ui32Base, UART_INT_TX);
+            MAP_UARTIntDisable(gps_gui32Base, UART_INT_TX);
         }
     }
 
@@ -1587,12 +1587,12 @@ rUARTxIntHandler(void)
         //
         // Get all the available characters from the UART.
         //
-        while(MAP_UARTCharsAvail(rg_ui32Base))
+        while(MAP_UARTCharsAvail(gps_gui32Base))
         {
             //
             // Read a character
             //
-            i32Char = MAP_UARTCharGetNonBlocking(rg_ui32Base);
+            i32Char = MAP_UARTCharGetNonBlocking(gps_gui32Base);
             cChar = (unsigned char)(i32Char & 0xFF);
 
             //
@@ -1600,7 +1600,7 @@ rUARTxIntHandler(void)
             // operations that would typically be required when supporting a
             // command line.
             //
-            if(!rg_bDisableEcho)
+            if(!gps_gbDisableEcho)
             {
                 //
                 // Handle backspace by erasing the last character in the
@@ -1612,24 +1612,24 @@ rUARTxIntHandler(void)
                     // If there are any characters already in the buffer, then
                     // delete the last.
                     //
-                    if(!rRX_BUFFER_EMPTY)
+                    if(!gpsRX_BUFFER_EMPTY)
                     {
                         //
                         // Rub out the previous character on the users
                         // terminal.
                         //
-                        rUARTwrite("\b \b", 3);
+                        gpsUARTwrite("\b \b", 3);
 
                         //
                         // Decrement the number of characters in the buffer.
                         //
-                        if(rg_ui32UARTRxWriteIndex == 0)
+                        if(gps_gui32UARTRxWriteIndex == 0)
                         {
-                            rg_ui32UARTRxWriteIndex = UART_RX_BUFFER_SIZE - 1;
+                            gps_gui32UARTRxWriteIndex = UART_RX_BUFFER_SIZE - 1;
                         }
                         else
                         {
-                            rg_ui32UARTRxWriteIndex--;
+                            gps_gui32UARTRxWriteIndex--;
                         }
                     }
 
@@ -1674,7 +1674,7 @@ rUARTxIntHandler(void)
                     // receives both CR and LF.
                     //
                     cChar = '\r';
-                    rUARTwrite("\n", 1);
+                    gpsUARTwrite("\n", 1);
                 }
             }
 
@@ -1682,22 +1682,22 @@ rUARTxIntHandler(void)
             // If there is space in the receive buffer, put the character
             // there, otherwise throw it away.
             //
-            if(!rRX_BUFFER_FULL)
+            if(!gpsRX_BUFFER_FULL)
             {
                 //
                 // Store the new character in the receive buffer
                 //
-                rg_pcUARTRxBuffer[rg_ui32UARTRxWriteIndex] =
+                gps_gpcUARTRxBuffer[gps_gui32UARTRxWriteIndex] =
                     (unsigned char)(i32Char & 0xFF);
-                rADVANCE_RX_BUFFER_INDEX(rg_ui32UARTRxWriteIndex);
+                gpsADVANCE_RX_BUFFER_INDEX(gps_gui32UARTRxWriteIndex);
 
                 //
                 // If echo is enabled, write the character to the transmit
                 // buffer so that the user gets some immediate feedback.
                 //
-                if(!rg_bDisableEcho)
+                if(!gps_gbDisableEcho)
                 {
-                    rUARTwrite((const char *)&cChar, 1);
+                    gpsUARTwrite((const char *)&cChar, 1);
                 }
             }
         }
@@ -1706,8 +1706,8 @@ rUARTxIntHandler(void)
         // If we wrote anything to the transmit buffer, make sure it actually
         // gets transmitted.
         //
-        rUARTPrimeTransmit(rg_ui32Base);
-        MAP_UARTIntEnable(rg_ui32Base, UART_INT_TX);
+        gpsUARTPrimeTransmit(gps_gui32Base);
+        MAP_UARTIntEnable(gps_gui32Base, UART_INT_TX);
     }
 }
 #endif

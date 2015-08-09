@@ -28,8 +28,6 @@ command_task.obj: /opt/ti/ccsv6/tools/compiler/arm_5.1.12/include/stdarg.h
 command_task.obj: /opt/ti/ccsv6/tools/compiler/arm_5.1.12/include/time.h
 command_task.obj: /home/chris/src/tivaware/examples/boards/ek-tm4c1294xl-boostxl-senshub/drivers/pinout.h
 command_task.obj: /home/chris/src/tivaware/examples/boards/ek-tm4c1294xl-boostxl-senshub/drivers/buttons.h
-command_task.obj: /home/chris/src/tivaware/third_party/exosite/exosite.h
-command_task.obj: /home/chris/src/tivaware/examples/boards/ek-tm4c1294xl-boostxl-senshub/drivers/exosite_hal_lwip.h
 command_task.obj: ../priorities.h
 command_task.obj: /home/chris/src/tivaware/third_party/FreeRTOS/Source/include/FreeRTOS.h
 command_task.obj: /opt/ti/ccsv6/tools/compiler/arm_5.1.12/include/stddef.h
@@ -73,8 +71,6 @@ command_task.obj: ../command_task.h
 /opt/ti/ccsv6/tools/compiler/arm_5.1.12/include/time.h: 
 /home/chris/src/tivaware/examples/boards/ek-tm4c1294xl-boostxl-senshub/drivers/pinout.h: 
 /home/chris/src/tivaware/examples/boards/ek-tm4c1294xl-boostxl-senshub/drivers/buttons.h: 
-/home/chris/src/tivaware/third_party/exosite/exosite.h: 
-/home/chris/src/tivaware/examples/boards/ek-tm4c1294xl-boostxl-senshub/drivers/exosite_hal_lwip.h: 
 ../priorities.h: 
 /home/chris/src/tivaware/third_party/FreeRTOS/Source/include/FreeRTOS.h: 
 /opt/ti/ccsv6/tools/compiler/arm_5.1.12/include/stddef.h: 

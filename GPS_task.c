@@ -91,6 +91,17 @@ extern bool g_bOnline;
 //
 //*****************************************************************************
 void
+GPSreadUART(){
+	UARTprintf("%c", ROM_UARTCharGetNonBlocking(UART3_BASE));
+
+}
+
+//*****************************************************************************
+//
+// Configure the UART and its pins.  This must be called before UARTprintf().
+//
+//*****************************************************************************
+void
 ConfigureGPSUART(uint32_t ui32SysClock)
 {
     //
@@ -144,8 +155,12 @@ GPSTask(void *pvParameters)
         //
         vTaskDelayUntil(&xLastWakeTime, COMMAND_TASK_PERIOD_MS /
                         portTICK_RATE_MS);
-
-        	UARTprintf("%c", ROM_UARTCharGetNonBlocking(UART3_BASE));
+        //
+        // Take the I2C semaphore.
+        //
+        xSemaphoreTake(g_gpsUARTSemaphore, portMAX_DELAY);
+        //GPSreadUART();
+        xSemaphoreGive(g_gpsUARTSemaphore);
     }
 }
 
@@ -166,7 +181,7 @@ uint32_t GPSTaskInit(void)
     // with the RTOS. This may not be needed since the int handler does not
     // call FreeRTOS functions ("fromISR" or otherwise).
     //
-    //IntPrioritySet(INT_UART3, 0xE0);
+    IntPrioritySet(INT_UART3, 0xE0);
 
     //
     // Create a mutex to guard the UART.

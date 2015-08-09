@@ -31,6 +31,7 @@ ravvn.obj: /home/chris/src/tivaware/third_party/FreeRTOS/Source/include/task.h
 ravvn.obj: /home/chris/src/tivaware/third_party/FreeRTOS/Source/include/list.h
 ravvn.obj: /home/chris/src/tivaware/third_party/FreeRTOS/Source/include/queue.h
 ravvn.obj: /home/chris/src/tivaware/third_party/FreeRTOS/Source/include/semphr.h
+ravvn.obj: ../GPS_task.h
 ravvn.obj: ../compdcm_task.h
 ravvn.obj: ../command_task.h
 ravvn.obj: /home/chris/src/tivaware/examples/boards/ek-tm4c1294xl-boostxl-senshub/drivers/pinout.h
@@ -67,6 +68,7 @@ ravvn.obj: /home/chris/src/tivaware/examples/boards/ek-tm4c1294xl-boostxl-senshu
 /home/chris/src/tivaware/third_party/FreeRTOS/Source/include/list.h: 
 /home/chris/src/tivaware/third_party/FreeRTOS/Source/include/queue.h: 
 /home/chris/src/tivaware/third_party/FreeRTOS/Source/include/semphr.h: 
+../GPS_task.h: 
 ../compdcm_task.h: 
 ../command_task.h: 
 /home/chris/src/tivaware/examples/boards/ek-tm4c1294xl-boostxl-senshub/drivers/pinout.h: 

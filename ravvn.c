@@ -40,7 +40,7 @@
 #include "task.h"
 #include "queue.h"
 #include "semphr.h"
-
+#include "GPS_task.h"
 #include "compdcm_task.h"
 
 #include "command_task.h"
@@ -352,7 +352,23 @@ main(void)
     }
 
 
-
+    //
+    // Create the CompDCM 9 axis sensor task.
+    //
+    if(GPSTaskInit() != 0)
+    {
+        //
+        // Init returned an error. Print an alert to the user and
+        // spin forever.  Wait for reset or user to debug.
+        //
+        UARTprintf("GPS: Task Init Failed!\n");
+        while(1)
+        {
+            //
+            // Do Nothing.
+            //
+        }
+    }
 
 
     //
