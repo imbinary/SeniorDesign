@@ -49,18 +49,18 @@
 #include "semphr.h"
 #include "compdcm_task.h"
 #include "command_task.h"
-#include "GPS_task.h"
-#include "gpsuart.h"
+#include "xbee_task.h"
+#include "xbeeuart.h"
 
 
-#define GPS_INPUT_BUF_SIZE  80
+#define XBEE_INPUT_BUF_SIZE  80
 
 //*****************************************************************************
 //
 // A handle by which this task and others can refer to this task.
 //
 //*****************************************************************************
-xTaskHandle g_xGPSHandle;
+xTaskHandle g_xXBEEHandle;
 
 //*****************************************************************************
 //
@@ -68,7 +68,7 @@ xTaskHandle g_xGPSHandle;
 // calling UARTprintf each task must take this semaphore.
 //
 //*****************************************************************************
-xSemaphoreHandle g_gpsUARTSemaphore;
+xSemaphoreHandle g_xbeeUARTSemaphore;
 
 //*****************************************************************************
 //
@@ -92,8 +92,8 @@ extern bool g_bOnline;
 //
 //*****************************************************************************
 void
-GPSreadUART(){
-	//gpsUARTgets(cInput, COMMAND_INPUT_BUF_SIZE);
+XBEEreadUART(){
+	//xbeeUARTgets(cInput, COMMAND_INPUT_BUF_SIZE);
 	UARTprintf("%c", ROM_UARTCharGetNonBlocking(UART3_BASE));
 
 }
@@ -104,7 +104,7 @@ GPSreadUART(){
 //
 //*****************************************************************************
 void
-ConfigureGPSUART(uint32_t ui32SysClock)
+ConfigureXBEEUART(uint32_t ui32SysClock)
 {
     //
     // Enable the GPIO Peripheral used by the UART.
@@ -114,18 +114,18 @@ ConfigureGPSUART(uint32_t ui32SysClock)
     //
     // Enable UART3
     //
-    ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_UART3);
+    ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_UART2);
 
     //
     // Configure GPIO Pins for UART mode.
     //
-    ROM_GPIOPinConfigure(GPIO_PA4_U3RX);
-    ROM_GPIOPinConfigure(GPIO_PA5_U3TX);
-    ROM_GPIOPinTypeUART(GPIO_PORTA_BASE, GPIO_PIN_4 | GPIO_PIN_5);
+    ROM_GPIOPinConfigure(GPIO_PA6_U2RX);
+    ROM_GPIOPinConfigure(GPIO_PA7_U2TX);
+    ROM_GPIOPinTypeUART(GPIO_PORTA_BASE, GPIO_PIN_6 | GPIO_PIN_7);
 
 
     //
-    // Configure the UART for 115,200, 8-N-1 operation. GPS
+    // Configure the UART for 115,200, 8-N-1 operation. xbee
     //
   //  UARTConfigSetExpClk(UART3_BASE, g_ui32SysClock, 9600,
    //                         (UART_CONFIG_WLEN_8 | UART_CONFIG_STOP_ONE |
@@ -134,12 +134,12 @@ ConfigureGPSUART(uint32_t ui32SysClock)
     //
     // Use the system clock for the UART.
     //
-    UARTClockSourceSet(UART3_BASE, UART_CLOCK_SYSTEM);
+    UARTClockSourceSet(UART2_BASE, UART_CLOCK_SYSTEM);
 
     //
     // Initialize the UART for console I/O.
     //
-    gpsUARTxConfig(3, 9600, ui32SysClock);
+    xbeeUARTxConfig(2, 115200, ui32SysClock);
 
 }
 
@@ -151,11 +151,11 @@ ConfigureGPSUART(uint32_t ui32SysClock)
 //
 //*****************************************************************************
 static void
-GPSTask(void *pvParameters)
+XBEETask(void *pvParameters)
 {
     portTickType xLastWakeTime;
     int32_t i32DollarPosition;
-    char cInput[GPS_INPUT_BUF_SIZE];
+    char cInput[XBEE_INPUT_BUF_SIZE];
     int iStatus;
 
     //
@@ -176,18 +176,18 @@ GPSTask(void *pvParameters)
 		// complete command that needs processing. Make sure your terminal
 		// sends a \r when you press 'enter'.
 		//
-		i32DollarPosition = gpsUARTPeek('$');
+		i32DollarPosition = xbeeUARTPeek('$');
 
 		if(i32DollarPosition != (-1))
 			{
 				//
-				// Take the gps semaphore.
+				// Take the xbee semaphore.
 				//
-				xSemaphoreTake(g_gpsUARTSemaphore, portMAX_DELAY);
-				//GPSreadUART();
-				gpsUARTgets(cInput, GPS_INPUT_BUF_SIZE);
+				xSemaphoreTake(g_xbeeUARTSemaphore, portMAX_DELAY);
+				//xbeereadUART();
+				xbeeUARTgets(cInput, XBEE_INPUT_BUF_SIZE);
 				UARTprintf("%s\n",cInput);
-				xSemaphoreGive(g_gpsUARTSemaphore);
+				xSemaphoreGive(g_xbeeUARTSemaphore);
 			}
     }
 }
@@ -197,12 +197,12 @@ GPSTask(void *pvParameters)
 // Initializes the Command task.
 //
 //*****************************************************************************
-uint32_t GPSTaskInit(void)
+uint32_t XBEETaskInit(void)
 {
     //
     // Configure the UART and the UARTStdio library.
     //
-    ConfigureGPSUART(g_ui32SysClock);
+    ConfigureXBEEUART(g_ui32SysClock);
 
     //
     // Make sure the UARTStdioIntHandler priority is low to not interfere
@@ -214,14 +214,14 @@ uint32_t GPSTaskInit(void)
     //
     // Create a mutex to guard the UART.
     //
-    g_gpsUARTSemaphore = xSemaphoreCreateMutex();
+    g_xbeeUARTSemaphore = xSemaphoreCreateMutex();
 
     //
     // Create the switch task.
     //
-    if(xTaskCreate(GPSTask, (signed portCHAR *)"GPS",
-                   GPS_TASK_STACK_SIZE, NULL, tskIDLE_PRIORITY +
-                   PRIORITY_GPS_TASK, g_xGPSHandle) != pdTRUE)
+    if(xTaskCreate(XBEETask, (signed portCHAR *)"xbee",
+    			XBEE_TASK_STACK_SIZE, NULL, tskIDLE_PRIORITY +
+                   PRIORITY_XBEE_TASK, g_xXBEEHandle) != pdTRUE)
     {
         //
         // Task creation failed.
@@ -232,7 +232,7 @@ uint32_t GPSTaskInit(void)
     //
     // Check if queue creation and semaphore was successful.
     //
-    if(g_gpsUARTSemaphore == NULL)
+    if(g_xbeeUARTSemaphore == NULL)
     {
         //
         // queue was not created successfully.

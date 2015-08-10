@@ -42,8 +42,6 @@
 #include "utils/ustdlib.h"
 #include "drivers/pinout.h"
 #include "drivers/buttons.h"
-#include "exosite.h"
-#include "drivers/exosite_hal_lwip.h"
 #include "priorities.h"
 #include "FreeRTOS.h"
 #include "task.h"

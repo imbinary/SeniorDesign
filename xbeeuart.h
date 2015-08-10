@@ -22,8 +22,8 @@
 //
 //*****************************************************************************
 
-#ifndef __RAVVNUART_H__
-#define __RAVVNUART_H__
+#ifndef __XBEEUART_H__
+#define __XBEEUART_H__
 
 #include <stdarg.h>
 
@@ -58,20 +58,20 @@ extern "C"
 // Prototypes for the APIs.
 //
 //*****************************************************************************
-extern void rUARTxConfig(uint32_t ui32Port, uint32_t ui32Baud,
+extern void xbeeUARTxConfig(uint32_t ui32Port, uint32_t ui32Baud,
                             uint32_t ui32SrcClock);
-extern int rUARTgets(char *pcBuf, uint32_t ui32Len);
-extern unsigned char rUARTgetc(void);
-extern void rUARTprintf(const char *pcString, ...);
-extern void rUARTvprintf(const char *pcString, va_list vaArgP);
-extern int rUARTwrite(const char *pcBuf, uint32_t ui32Len);
+extern int xbeeUARTgets(char *pcBuf, uint32_t ui32Len);
+extern unsigned char xbeeUARTgetc(void);
+extern void xbeeUARTprintf(const char *pcString, ...);
+extern void xbeeUARTvprintf(const char *pcString, va_list vaArgP);
+extern int xbeeUARTwrite(const char *pcBuf, uint32_t ui32Len);
 #ifdef UART_BUFFERED
-extern int rUARTPeek(unsigned char ucChar);
-extern void rUARTFlushTx(bool bDiscard);
-extern void rUARTFlushRx(void);
-extern int rUARTRxBytesAvail(void);
-extern int rUARTTxBytesFree(void);
-extern void rUARTEchoSet(bool bEnable);
+extern int xbeeUARTPeek(unsigned char ucChar);
+extern void xbeeUARTFlushTx(bool bDiscard);
+extern void xbeeUARTFlushRx(void);
+extern int xbeeUARTRxBytesAvail(void);
+extern int xbeeUARTTxBytesFree(void);
+extern void xbeeUARTEchoSet(bool bEnable);
 #endif
 
 //*****************************************************************************
@@ -83,4 +83,4 @@ extern void rUARTEchoSet(bool bEnable);
 }
 #endif
 
-#endif // __RAVVNUART_H__
+#endif // __XBEEUART_H__
