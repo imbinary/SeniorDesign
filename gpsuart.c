@@ -337,13 +337,14 @@ gpsUARTxConfig(uint32_t ui32PortNum, uint32_t ui32Baud, uint32_t ui32SrcClock)
     // Check the arguments.
     //
     ASSERT((ui32PortNum == 0) || (ui32PortNum == 1) ||
-           (ui32PortNum == 2));
+           (ui32PortNum == 2) || (ui32PortNum == 3) ||
+           (ui32PortNum == 4) || (ui32PortNum == 5) );
 
 #ifdef UART_BUFFERED
     //
     // In buffered mode, we only allow a single instance to be opened.
     //
-    ASSERT(gps_gui32Base == 0);
+    ASSERT(gps_gui32Base == 3);
 #endif
 
     //
@@ -1553,7 +1554,7 @@ gpsUARTxIntHandler(void)
     int8_t cChar;
     int32_t i32Char;
     static bool bLastWasCR = false;
-
+    gpsUARTEchoSet(false);
     //
     // Get and clear the current interrupt source(s)
     //

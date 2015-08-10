@@ -43,6 +43,8 @@ GPS_task.obj: /home/chris/src/tivaware/third_party/FreeRTOS/Source/include/semph
 GPS_task.obj: ../compdcm_task.h
 GPS_task.obj: ../command_task.h
 GPS_task.obj: ../GPS_task.h
+GPS_task.obj: ../gpsuart.h
+GPS_task.obj: /opt/ti/ccsv6/tools/compiler/arm_5.1.12/include/stdarg.h
 
 ../GPS_task.c: 
 /opt/ti/ccsv6/tools/compiler/arm_5.1.12/include/stdint.h: 
@@ -87,3 +89,5 @@ GPS_task.obj: ../GPS_task.h
 ../compdcm_task.h: 
 ../command_task.h: 
 ../GPS_task.h: 
+../gpsuart.h: 
+/opt/ti/ccsv6/tools/compiler/arm_5.1.12/include/stdarg.h: 

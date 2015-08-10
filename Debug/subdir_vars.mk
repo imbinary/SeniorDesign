@@ -3,9 +3,6 @@
 ################################################################################
 
 # Add inputs and outputs from these tool invocations to the build variables 
-CPP_SRCS += \
-../ruart.cpp 
-
 CMD_SRCS += \
 ../senshub_iot_ccs.cmd 
 
@@ -25,11 +22,7 @@ OBJS += \
 ./gpsuart.obj \
 ./ravvn.obj \
 ./ravvnuart.obj \
-./ruart.obj \
 ./startup_ccs.obj 
-
-CPP_DEPS += \
-./ruart.pp 
 
 C_DEPS += \
 ./GPS_task.pp \
@@ -39,9 +32,6 @@ C_DEPS += \
 ./ravvn.pp \
 ./ravvnuart.pp \
 ./startup_ccs.pp 
-
-CPP_DEPS__QUOTED += \
-"ruart.pp" 
 
 C_DEPS__QUOTED += \
 "GPS_task.pp" \
@@ -59,7 +49,6 @@ OBJS__QUOTED += \
 "gpsuart.obj" \
 "ravvn.obj" \
 "ravvnuart.obj" \
-"ruart.obj" \
 "startup_ccs.obj" 
 
 C_SRCS__QUOTED += \
@@ -70,8 +59,5 @@ C_SRCS__QUOTED += \
 "../ravvn.c" \
 "../ravvnuart.c" \
 "../startup_ccs.c" 
-
-CPP_SRCS__QUOTED += \
-"../ruart.cpp" 
 
 

@@ -50,6 +50,7 @@
 #include "compdcm_task.h"
 #include "command_task.h"
 #include "GPS_task.h"
+#include "gpsuart.h"
 
 
 #define GPS_INPUT_BUF_SIZE  80
@@ -92,6 +93,7 @@ extern bool g_bOnline;
 //*****************************************************************************
 void
 GPSreadUART(){
+	//gpsUARTgets(cInput, COMMAND_INPUT_BUF_SIZE);
 	UARTprintf("%c", ROM_UARTCharGetNonBlocking(UART3_BASE));
 
 }
@@ -125,9 +127,19 @@ ConfigureGPSUART(uint32_t ui32SysClock)
     //
     // Configure the UART for 115,200, 8-N-1 operation. GPS
     //
-    UARTConfigSetExpClk(UART3_BASE, g_ui32SysClock, 9600,
-                            (UART_CONFIG_WLEN_8 | UART_CONFIG_STOP_ONE |
-                             UART_CONFIG_PAR_NONE));
+  //  UARTConfigSetExpClk(UART3_BASE, g_ui32SysClock, 9600,
+   //                         (UART_CONFIG_WLEN_8 | UART_CONFIG_STOP_ONE |
+   //                          UART_CONFIG_PAR_NONE));
+
+    //
+    // Use the system clock for the UART.
+    //
+    UARTClockSourceSet(UART3_BASE, UART_CLOCK_SYSTEM);
+
+    //
+    // Initialize the UART for console I/O.
+    //
+    gpsUARTxConfig(3, 9600, ui32SysClock);
 
 }
 
@@ -142,6 +154,10 @@ static void
 GPSTask(void *pvParameters)
 {
     portTickType xLastWakeTime;
+    int32_t i32DollarPosition;
+    char cInput[GPS_INPUT_BUF_SIZE];
+    int iStatus;
+
     //
     // Get the current time as a reference to start our delays.
     //
@@ -155,12 +171,24 @@ GPSTask(void *pvParameters)
         //
         vTaskDelayUntil(&xLastWakeTime, COMMAND_TASK_PERIOD_MS /
                         portTICK_RATE_MS);
-        //
-        // Take the I2C semaphore.
-        //
-        xSemaphoreTake(g_gpsUARTSemaphore, portMAX_DELAY);
-        //GPSreadUART();
-        xSemaphoreGive(g_gpsUARTSemaphore);
+
+		// Peek at the buffer to see if a \r is there.  If so we have a
+		// complete command that needs processing. Make sure your terminal
+		// sends a \r when you press 'enter'.
+		//
+		i32DollarPosition = gpsUARTPeek('$');
+
+		if(i32DollarPosition != (-1))
+			{
+				//
+				// Take the gps semaphore.
+				//
+				xSemaphoreTake(g_gpsUARTSemaphore, portMAX_DELAY);
+				//GPSreadUART();
+				gpsUARTgets(cInput, GPS_INPUT_BUF_SIZE);
+				UARTprintf("%s\n",cInput);
+				xSemaphoreGive(g_gpsUARTSemaphore);
+			}
     }
 }
 
