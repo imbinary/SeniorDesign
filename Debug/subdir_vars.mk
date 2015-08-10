@@ -13,7 +13,9 @@ C_SRCS += \
 ../gpsuart.c \
 ../ravvn.c \
 ../ravvnuart.c \
-../startup_ccs.c 
+../startup_ccs.c \
+../xbee_task.c \
+../xbeeuart.c 
 
 OBJS += \
 ./GPS_task.obj \
@@ -22,7 +24,9 @@ OBJS += \
 ./gpsuart.obj \
 ./ravvn.obj \
 ./ravvnuart.obj \
-./startup_ccs.obj 
+./startup_ccs.obj \
+./xbee_task.obj \
+./xbeeuart.obj 
 
 C_DEPS += \
 ./GPS_task.pp \
@@ -31,7 +35,9 @@ C_DEPS += \
 ./gpsuart.pp \
 ./ravvn.pp \
 ./ravvnuart.pp \
-./startup_ccs.pp 
+./startup_ccs.pp \
+./xbee_task.pp \
+./xbeeuart.pp 
 
 C_DEPS__QUOTED += \
 "GPS_task.pp" \
@@ -40,7 +46,9 @@ C_DEPS__QUOTED += \
 "gpsuart.pp" \
 "ravvn.pp" \
 "ravvnuart.pp" \
-"startup_ccs.pp" 
+"startup_ccs.pp" \
+"xbee_task.pp" \
+"xbeeuart.pp" 
 
 OBJS__QUOTED += \
 "GPS_task.obj" \
@@ -49,7 +57,9 @@ OBJS__QUOTED += \
 "gpsuart.obj" \
 "ravvn.obj" \
 "ravvnuart.obj" \
-"startup_ccs.obj" 
+"startup_ccs.obj" \
+"xbee_task.obj" \
+"xbeeuart.obj" 
 
 C_SRCS__QUOTED += \
 "../GPS_task.c" \
@@ -58,6 +68,8 @@ C_SRCS__QUOTED += \
 "../gpsuart.c" \
 "../ravvn.c" \
 "../ravvnuart.c" \
-"../startup_ccs.c" 
+"../startup_ccs.c" \
+"../xbee_task.c" \
+"../xbeeuart.c" 
 
 

@@ -31,6 +31,7 @@
 //
 //*****************************************************************************
 #define PRIORITY_GPS_TASK         5
+#define PRIORITY_XBEE_TASK         5
 #define PRIORITY_COMPDCM_TASK       15
 #define PRIORITY_COMMAND_TASK       13
 

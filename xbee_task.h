@@ -1,8 +1,8 @@
 //*****************************************************************************
 //
-// uartstdio.h - Prototypes for the UART console functions.
+// command_task.h - Virtual COM Port Task manage messages to and from terminal.
 //
-// Copyright (c) 2007-2015 Texas Instruments Incorporated.  All rights reserved.
+// Copyright (c) 2013-2015 Texas Instruments Incorporated.  All rights reserved.
 // Software License Agreement
 //
 // Texas Instruments (TI) is supplying this software for use solely and
@@ -18,69 +18,56 @@
 // CIRCUMSTANCES, BE LIABLE FOR SPECIAL, INCIDENTAL, OR CONSEQUENTIAL
 // DAMAGES, FOR ANY REASON WHATSOEVER.
 //
-// This is part of revision 2.1.1.71 of the Tiva Utility Library.
+// This is part of revision 2.1.1.71 of the EK-TM4C1294XL Firmware Package.
 //
 //*****************************************************************************
 
-#ifndef __GPSUART_H__
-#define __GPSUART_H__
-
-#include <stdarg.h>
+#ifndef __XBEE_TASK_H__
+#define __XBEE_TASK_H__
 
 //*****************************************************************************
 //
-// If building with a C++ compiler, make all of the definitions in this header
-// have a C binding.
+// The stack size for the COMMAND task.
 //
 //*****************************************************************************
-#ifdef __cplusplus
-extern "C"
-{
-#endif
+#define XBEE_TASK_STACK_SIZE        1024         // Stack size in words
 
 //*****************************************************************************
 //
-// If built for buffered operation, the following labels define the sizes of
-// the transmit and receive buffers respectively.
+// Period in milliseconds to determine time between how often run the task.
+// This determines how often we check for the carriage return which indicates
+// we need to process a command.
 //
 //*****************************************************************************
-#ifdef UART_BUFFERED
-#ifndef UART_RX_BUFFER_SIZE
-#define UART_RX_BUFFER_SIZE     128
-#endif
-#ifndef UART_TX_BUFFER_SIZE
-#define UART_TX_BUFFER_SIZE     1024
-#endif
-#endif
+#define XBEE_TASK_PERIOD_MS         50        // periodic rate of the task
 
 //*****************************************************************************
 //
-// Prototypes for the APIs.
+// A handle by which this task and others can refer to this task.
 //
 //*****************************************************************************
-extern void gpsUARTxConfig(uint32_t ui32Port, uint32_t ui32Baud,
-                            uint32_t ui32SrcClock);
-extern int gpsUARTgets(char *pcBuf, uint32_t ui32Len);
-extern unsigned char gpsUARTgetc(void);
-extern void gpsUARTprintf(const char *pcString, ...);
-extern void gpsUARTvprintf(const char *pcString, va_list vaArgP);
-extern int gpsUARTwrite(const char *pcBuf, uint32_t ui32Len);
-#ifdef UART_BUFFERED
-extern int gpsUARTPeek(unsigned char ucChar);
-extern void gpsUARTFlushTx(bool bDiscard);
-extern void gpsUARTFlushRx(void);
-extern int gpsUARTRxBytesAvail(void);
-extern int gpsUARTTxBytesFree(void);
-extern void gpsUARTEchoSet(bool bEnable);
-#endif
+extern xTaskHandle g_xXBEEHandle;
 
 //*****************************************************************************
 //
-// Mark the end of the C bindings section for C++ compilers.
+// A handle for the UART semaphore. Only used when more than one message must
+// be kept in order without other tasks injecting messages in between.
 //
 //*****************************************************************************
-#ifdef __cplusplus
-}
-#endif
+extern xSemaphoreHandle g_xbeeUARTSemaphore;
 
-#endif // __GPSUART_H__
+//*****************************************************************************
+//
+// Prototypes for the command task.
+//
+//*****************************************************************************
+extern uint32_t XBEETaskInit(void);
+
+//*****************************************************************************
+//
+// Forward declarations for command-line operations.
+//
+//*****************************************************************************
+
+
+#endif // __XBEE_TASK_H__

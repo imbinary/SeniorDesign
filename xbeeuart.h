@@ -22,8 +22,8 @@
 //
 //*****************************************************************************
 
-#ifndef __GPSUART_H__
-#define __GPSUART_H__
+#ifndef __XBEEUART_H__
+#define __XBEEUART_H__
 
 #include <stdarg.h>
 
@@ -58,20 +58,20 @@ extern "C"
 // Prototypes for the APIs.
 //
 //*****************************************************************************
-extern void gpsUARTxConfig(uint32_t ui32Port, uint32_t ui32Baud,
+extern void xbeeUARTxConfig(uint32_t ui32Port, uint32_t ui32Baud,
                             uint32_t ui32SrcClock);
-extern int gpsUARTgets(char *pcBuf, uint32_t ui32Len);
-extern unsigned char gpsUARTgetc(void);
-extern void gpsUARTprintf(const char *pcString, ...);
-extern void gpsUARTvprintf(const char *pcString, va_list vaArgP);
-extern int gpsUARTwrite(const char *pcBuf, uint32_t ui32Len);
+extern int xbeeUARTgets(char *pcBuf, uint32_t ui32Len);
+extern unsigned char xbeeUARTgetc(void);
+extern void xbeeUARTprintf(const char *pcString, ...);
+extern void xbeeUARTvprintf(const char *pcString, va_list vaArgP);
+extern int xbeeUARTwrite(const char *pcBuf, uint32_t ui32Len);
 #ifdef UART_BUFFERED
-extern int gpsUARTPeek(unsigned char ucChar);
-extern void gpsUARTFlushTx(bool bDiscard);
-extern void gpsUARTFlushRx(void);
-extern int gpsUARTRxBytesAvail(void);
-extern int gpsUARTTxBytesFree(void);
-extern void gpsUARTEchoSet(bool bEnable);
+extern int xbeeUARTPeek(unsigned char ucChar);
+extern void xbeeUARTFlushTx(bool bDiscard);
+extern void xbeeUARTFlushRx(void);
+extern int xbeeUARTRxBytesAvail(void);
+extern int xbeeUARTTxBytesFree(void);
+extern void xbeeUARTEchoSet(bool bEnable);
 #endif
 
 //*****************************************************************************
@@ -83,4 +83,4 @@ extern void gpsUARTEchoSet(bool bEnable);
 }
 #endif
 
-#endif // __GPSUART_H__
+#endif // __XBEEUART_H__
