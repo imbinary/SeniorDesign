@@ -399,6 +399,7 @@ gpsUARTxConfig(uint32_t ui32PortNum, uint32_t ui32Baud, uint32_t ui32SrcClock)
     MAP_UARTIntDisable(gps_gui32Base, 0xFFFFFFFF);
     MAP_UARTIntEnable(gps_gui32Base, UART_INT_RX | UART_INT_RT);
     MAP_IntEnable(gps_gui32UARTInt[ui32PortNum]);
+
 #endif
 
     //
@@ -572,6 +573,7 @@ gpsUARTgets(char *pcBuf, uint32_t ui32Len)
 #ifdef UART_BUFFERED
     uint32_t ui32Count = 0;
     int8_t cChar;
+    int8_t cCount = 0;
 
     //
     // Check the arguments.
@@ -602,13 +604,15 @@ gpsUARTgets(char *pcBuf, uint32_t ui32Len)
             //
             // See if a newline or escape character was received.
             //
+
+
             if((cChar == '\r') || (cChar == '\n') || (cChar == 0x1b))
-            {
-                //
-                // Stop processing the input and end the line.
-                //
-                break;
-            }
+                      {
+                          //
+                          // Stop processing the input and end the line.
+                          //
+                          break;
+                      }
 
             //
             // Process the received character as long as we are not at the end
@@ -628,6 +632,8 @@ gpsUARTgets(char *pcBuf, uint32_t ui32Len)
                 //
                 ui32Count++;
             }
+            if(cCount == 3)
+            	break;
         }
     }
 
@@ -1554,7 +1560,7 @@ gpsUARTxIntHandler(void)
     int8_t cChar;
     int32_t i32Char;
     static bool bLastWasCR = false;
-    gpsUARTEchoSet(false);
+    //gpsUARTEchoSet(false);
     //
     // Get and clear the current interrupt source(s)
     //

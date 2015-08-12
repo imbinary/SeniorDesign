@@ -67,6 +67,7 @@ extern void xPortSysTickHandler(void);
 extern void Timer0IntHandler(void);
 extern void UARTStdioIntHandler(void);
 extern void gpsUARTxIntHandler(void);
+extern void xbeeUARTxIntHandler(void);
 //*****************************************************************************
 //
 // The vector table.  Note that the proper constructs must be placed on this to
@@ -127,7 +128,7 @@ void (* const g_pfnVectors[])(void) =
     IntDefaultHandler,                      // GPIO Port F
     IntDefaultHandler,                      // GPIO Port G
 	IntDefaultHandler,                    // GPIO Port H
-    IntDefaultHandler,                      // UART2 Rx and Tx
+	xbeeUARTxIntHandler,                      // UART2 Rx and Tx
     IntDefaultHandler,                      // SSI1 Rx and Tx
     IntDefaultHandler,                      // Timer 3 subtimer A
     IntDefaultHandler,                      // Timer 3 subtimer B

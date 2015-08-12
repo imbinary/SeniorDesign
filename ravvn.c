@@ -42,7 +42,7 @@
 #include "semphr.h"
 #include "GPS_task.h"
 #include "compdcm_task.h"
-
+#include "xbee_task.h"
 #include "command_task.h"
 
 #include "drivers/pinout.h"
@@ -59,32 +59,13 @@
 //! control over to the FreeRTOS scheduler.
 //!
 //! The tasks and their responsibilities are as follows:
-//!
-//! - cloud_task.c is a manager of the cloud interface.  It gathers the sensor
-//!   data and builds it into a packet for transmission to the cloud.
-//!
 //! - command_task.c is a manager of the UART virtual com port connection to a
 //!   local PC.  This interface allows advanced commands and data.
-//!
-//! - isl29023_task.c is a task to manage the interface to the isl29023 light
-//!   sensor.  It collects data from the sensor and makes it available to
-//!   other tasks.
-//!
-//! - tmp006_task.c is a task that manages the tmp006 temperature sensor. It
-//!   gathers data from the temperature sensor and makes it available to other
-//!   tasks.
-//!
-//! - bmp180_task.c is a task that manages the bmp180 pressure sensor. It
-//!   gathers data from the sensor and makes it available to other tasks.
-//!
 //! - compdcm_task.c is a task that manages data from the MPU9150. It performs
 //!   complimentary direct cosine matrix filter on the data to determine roll,
 //!   pitch and yaw as well as quaternions. This data is made available to
 //!   other tasks.
 //!
-//! - sht21_task.c is a task that manages the SHT21 humidity and temperature
-//!   sensor.  It collects data from the sensor and makes it available to other
-//!   tasks.
 //!
 //! In addition to the tasks, this application also uses the following FreeRTOS
 //! resources:
@@ -351,9 +332,27 @@ main(void)
         }
     }
 
+    //
+    // Create the xbee task.
+    //
+    if(XBEETaskInit() != 0)
+    {
+        //
+        // Init returned an error. Print an alert to the user and
+        // spin forever.  Wait for reset or user to debug.
+        //
+        UARTprintf("XBEE: Task Init Failed!\n");
+        while(1)
+        {
+            //
+            // Do Nothing.
+            //
+        }
+    }
+
 
     //
-    // Create the CompDCM 9 axis sensor task.
+    // Create the GPS  task.
     //
     if(GPSTaskInit() != 0)
     {
