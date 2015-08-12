@@ -55,7 +55,7 @@
 #include "gpsuart.h"
 #include "util.h"
 
-#define GPS_INPUT_BUF_SIZE  80
+#define GPS_INPUT_BUF_SIZE  82
 
 //*****************************************************************************
 //
@@ -118,7 +118,7 @@ int8_t nmea_validateChecksum(char *strPtr) {
 		hx[2] = strPtr[p];
 		hx[3] = strPtr[p + 1];
 		hx[4] = 0x00;
-		nmeaChk = atoi(hx);
+		nmeaChk = strtol(hx,NULL,16);
 		if (chksum != nmeaChk) {
 			flagValid = 0;
 		}
@@ -129,7 +129,7 @@ int8_t nmea_validateChecksum(char *strPtr) {
 
 // this returns a single binary byte that is the checksum
 // you must convert it to hex if you are going to print it or send it
-uint8_t nmea_generateChecksum(char *strPtr)
+const char * nmea_generateChecksum(char *strPtr, char *dstStr)
 {
 	int p;
 	char c;
@@ -144,8 +144,8 @@ uint8_t nmea_generateChecksum(char *strPtr)
 		if ( c != 0x00 ) {chksum = chksum ^ c;}
 		p++;
 	}
-
-	return chksum;
+	sprintf(&dstStr[0],"$%s*%02x",strPtr,chksum);
+	return dstStr;
 }
 
 //*****************************************************************************
@@ -158,7 +158,9 @@ void GPSparse(char *gpsString) {
 	if (gpsString[0] != '$')
 		return;
 	if(nmea_validateChecksum(gpsString))
-		UARTprintf("--> %s <--\n", gpsString);
+		UARTprintf("%s\n", gpsString);
+	else
+		UARTprintf("--> %s\n", gpsString);
 
 
 }
