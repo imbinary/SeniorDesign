@@ -123,7 +123,7 @@ static volatile uint32_t ui_gui32UARTRxReadIndex = 0;
 // The base address of the chosen UART.
 //
 //*****************************************************************************
-static uint32_t ui_gui32Base = 3;
+static uint32_t ui_gui32Base = 5;
 
 //*****************************************************************************
 //

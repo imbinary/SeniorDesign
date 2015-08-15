@@ -109,19 +109,19 @@ ConfigureUIUART(uint32_t ui32SysClock)
     //
     // Enable the GPIO Peripheral used by the UART.
     //
-    ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOA);
+    ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOC);
 
     //
     // Enable UART3
     //
-    ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_UART2);
+    ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_UART5);
 
     //
     // Configure GPIO Pins for UART mode.
     //
-    ROM_GPIOPinConfigure(GPIO_PA6_U2RX);
-    ROM_GPIOPinConfigure(GPIO_PA7_U2TX);
-    ROM_GPIOPinTypeUART(GPIO_PORTA_BASE, GPIO_PIN_6 | GPIO_PIN_7);
+    ROM_GPIOPinConfigure(GPIO_PC6_U5RX);
+    ROM_GPIOPinConfigure(GPIO_PC7_U5TX);
+    ROM_GPIOPinTypeUART(GPIO_PORTC_BASE, GPIO_PIN_6 | GPIO_PIN_7);
 
 
     //
@@ -134,12 +134,12 @@ ConfigureUIUART(uint32_t ui32SysClock)
     //
     // Use the system clock for the UART.
     //
-    UARTClockSourceSet(UART2_BASE, UART_CLOCK_SYSTEM);
+    UARTClockSourceSet(UART5_BASE, UART_CLOCK_SYSTEM);
 
     //
     // Initialize the UART for console I/O.
     //
-    uiUARTxConfig(2, 115200, ui32SysClock);
+    uiUARTxConfig(5, 115200, ui32SysClock);
 
 }
 
@@ -209,7 +209,7 @@ uint32_t UITaskInit(void)
     // with the RTOS. This may not be needed since the int handler does not
     // call FreeRTOS functions ("fromISR" or otherwise).
     //
-    IntPrioritySet(INT_UART3, 0xE0);
+    IntPrioritySet(INT_UART5, 0xE0);
 
     //
     // Create a mutex to guard the UART.

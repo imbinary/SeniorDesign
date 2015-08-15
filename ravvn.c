@@ -44,7 +44,7 @@
 #include "compdcm_task.h"
 #include "xbee_task.h"
 #include "command_task.h"
-
+#include "ui_task.h"
 #include "drivers/pinout.h"
 #include "drivers/buttons.h"
 
@@ -113,13 +113,6 @@ xSemaphoreHandle g_xI2CSemaphore;
 //*****************************************************************************
 xSemaphoreHandle g_xCloudDataSemaphore;
 
-//*****************************************************************************
-//
-// The instance structure that will hold data for the cloud from all the
-// sensors.
-//
-//*****************************************************************************
-//sCloudData_t g_sCloudData;
 
 //*****************************************************************************
 //
@@ -342,6 +335,24 @@ main(void)
         // spin forever.  Wait for reset or user to debug.
         //
         UARTprintf("XBEE: Task Init Failed!\n");
+        while(1)
+        {
+            //
+            // Do Nothing.
+            //
+        }
+    }
+
+    //
+    // Create the ui task.
+    //
+    if(UITaskInit() != 0)
+    {
+        //
+        // Init returned an error. Print an alert to the user and
+        // spin forever.  Wait for reset or user to debug.
+        //
+        UARTprintf("UI: Task Init Failed!\n");
         while(1)
         {
             //
