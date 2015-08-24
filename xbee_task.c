@@ -209,7 +209,7 @@ uint32_t XBEETaskInit(void)
     // with the RTOS. This may not be needed since the int handler does not
     // call FreeRTOS functions ("fromISR" or otherwise).
     //
-    IntPrioritySet(INT_UART3, 0xE0);
+    IntPrioritySet(INT_UART2, 0xE0);
 
     //
     // Create a mutex to guard the UART.
