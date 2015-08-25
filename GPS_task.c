@@ -39,9 +39,7 @@
 #include "driverlib/uart.h"
 #include "driverlib/interrupt.h"
 #include "driverlib/timer.h"
-//#include "utils/cmdline.h"
 #include "utils/uartstdio.h"
-//#include "utils/ustdlib.h"
 #include "drivers/pinout.h"
 #include "drivers/buttons.h"
 #include "priorities.h"
@@ -54,6 +52,7 @@
 #include "GPS_task.h"
 #include "gpsuart.h"
 #include "util.h"
+#include "xbeeuart.h"
 
 #define GPS_INPUT_BUF_SIZE  85
 
@@ -157,10 +156,12 @@ void GPSparse(char *gpsString) {
 
 	if (gpsString[0] != '$')
 		return;
-	if(nmea_validateChecksum(gpsString))
+	if(nmea_validateChecksum(gpsString)){
+		xbeeUARTprintf("%s\n", gpsString);
 		UARTprintf("%s\n", gpsString);
+	}
 	else
-		UARTprintf("> %s\n", gpsString);
+		xbeeUARTprintf("> %s\n", gpsString);
 
 
 }
