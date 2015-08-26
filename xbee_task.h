@@ -69,5 +69,6 @@ extern uint32_t XBEETaskInit(void);
 //
 //*****************************************************************************
 
+void bsmSend();
 
 #endif // __XBEE_TASK_H__

@@ -54,7 +54,7 @@
 #include "ravvn.h"
 
 #define XBEE_INPUT_BUF_SIZE  80
-
+#define BSM_SIZE  50
 //*****************************************************************************
 //
 // A handle by which this task and others can refer to this task.
@@ -95,6 +95,28 @@ void
 XBEEreadUART(){
 	//xbeeUARTgets(cInput, COMMAND_INPUT_BUF_SIZE);
 	UARTprintf("%c", ROM_UARTCharGetNonBlocking(UART3_BASE));
+
+}
+
+//*****************************************************************************
+//
+//
+//
+//*****************************************************************************
+void
+bsmSend(){
+	char bsm[BSM_SIZE];
+	//xbeeUARTgets(cInput, COMMAND_INPUT_BUF_SIZE);
+	g_rBSMData.latitiude = 81.1;
+	xbeeUARTprintf("$B%s\n", "test");
+	if(DTYPE){
+		xbeeUARTprintf("$B%f%d%f%f%f%d%d%f%f%f%f%c%d%d\n", g_rBSMData.latitiude,g_rBSMData.elevation,g_rBSMData.longitude,g_rBSMData.pAccuracy,
+			g_rBSMData.speed,g_rBSMData.heading,g_rBSMData.steeringAngle,g_rBSMData.longAccel,g_rBSMData.vertAccel,g_rBSMData.latAccel,g_rBSMData.yawRate
+			,g_rBSMData.brake,g_rBSMData.length,g_rBSMData.width);
+	}else
+	{
+		xbeeUARTprintf("$I%f%d%f%d%d\n", g_rBSMData.latitiude,g_rBSMData.elevation,g_rBSMData.longitude,g_rBSMData.heading,1);
+	}
 
 }
 
