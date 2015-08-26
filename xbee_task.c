@@ -109,20 +109,23 @@ ConfigureXBEEUART(uint32_t ui32SysClock)
     //
     // Enable the GPIO Peripheral used by the UART.
     //
-    ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOA);
-
+    //ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOA);
+    ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOK);
     //
     // Enable UART3
     //
-    ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_UART2);
+    ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_UART4);
 
     //
     // Configure GPIO Pins for UART mode.
     //
-    ROM_GPIOPinConfigure(GPIO_PA6_U2RX);
-    ROM_GPIOPinConfigure(GPIO_PA7_U2TX);
-    ROM_GPIOPinTypeUART(GPIO_PORTA_BASE, GPIO_PIN_6 | GPIO_PIN_7);
+    //ROM_GPIOPinConfigure(GPIO_PA6_U2RX);
+    //ROM_GPIOPinConfigure(GPIO_PA7_U2TX);
+    //ROM_GPIOPinTypeUART(GPIO_PORTA_BASE, GPIO_PIN_6 | GPIO_PIN_7);
 
+    ROM_GPIOPinConfigure(GPIO_PK0_U4RX);
+    ROM_GPIOPinConfigure(GPIO_PK1_U4TX);
+    ROM_GPIOPinTypeUART(GPIO_PORTK_BASE, GPIO_PIN_0 | GPIO_PIN_1);
 
     //
     // Configure the UART for 115,200, 8-N-1 operation. xbee
@@ -134,12 +137,12 @@ ConfigureXBEEUART(uint32_t ui32SysClock)
     //
     // Use the system clock for the UART.
     //
-    UARTClockSourceSet(UART2_BASE, UART_CLOCK_SYSTEM);
+    UARTClockSourceSet(UART4_BASE, UART_CLOCK_SYSTEM);
 
     //
     // Initialize the UART for console I/O.
     //
-    xbeeUARTxConfig(2, 115200, ui32SysClock);
+    xbeeUARTxConfig(4, 115200, ui32SysClock);
 
 }
 
@@ -208,7 +211,7 @@ uint32_t XBEETaskInit(void)
     // with the RTOS. This may not be needed since the int handler does not
     // call FreeRTOS functions ("fromISR" or otherwise).
     //
-    IntPrioritySet(INT_UART3, 0xE0);
+    IntPrioritySet(INT_UART4, 0xE0);
 
     //
     // Create a mutex to guard the UART.

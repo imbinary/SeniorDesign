@@ -344,7 +344,7 @@ xbeeUARTxConfig(uint32_t ui32PortNum, uint32_t ui32Baud, uint32_t ui32SrcClock)
     //
     // In buffered mode, we only allow a single instance to be opened.
     //
-    ASSERT(xbee_gui32Base == 3);
+    ASSERT(xbee_gui32Base == 4);
 #endif
 
     //

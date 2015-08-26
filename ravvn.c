@@ -258,7 +258,7 @@ main(void)
     // Configure the device pins for this board.
     // This application uses Ethernet but not USB.
     //
-    PinoutSet(true, false);
+    PinoutSet(false, false);
     ButtonsInit();
 
     //

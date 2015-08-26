@@ -39,9 +39,7 @@
 #include "driverlib/uart.h"
 #include "driverlib/interrupt.h"
 #include "driverlib/timer.h"
-//#include "utils/cmdline.h"
 #include "utils/uartstdio.h"
-//#include "utils/ustdlib.h"
 #include "drivers/pinout.h"
 #include "drivers/buttons.h"
 #include "priorities.h"
@@ -54,8 +52,9 @@
 #include "GPS_task.h"
 #include "gpsuart.h"
 #include "util.h"
+#include "xbeeuart.h"
 
-#define GPS_INPUT_BUF_SIZE  82
+#define GPS_INPUT_BUF_SIZE  85
 
 //*****************************************************************************
 //
@@ -150,17 +149,19 @@ const char * nmea_generateChecksum(char *strPtr, char *dstStr)
 
 //*****************************************************************************
 //
-// Configure the UART and its pins.  This must be called before UARTprintf().
+//
 //
 //*****************************************************************************
 void GPSparse(char *gpsString) {
 
 	if (gpsString[0] != '$')
 		return;
-	if(nmea_validateChecksum(gpsString))
+	if(nmea_validateChecksum(gpsString)){
+		xbeeUARTprintf("%s\n", gpsString);
 		UARTprintf("%s\n", gpsString);
+	}
 	else
-		UARTprintf("--> %s\n", gpsString);
+		xbeeUARTprintf("> %s\n", gpsString);
 
 
 }
@@ -171,6 +172,7 @@ void GPSparse(char *gpsString) {
 //
 //*****************************************************************************
 void ConfigureGPSUART(uint32_t ui32SysClock) {
+	char gpsStr[GPS_INPUT_BUF_SIZE];
 	//
 	// Enable the GPIO Peripheral used by the UART.
 	//
@@ -206,7 +208,16 @@ void ConfigureGPSUART(uint32_t ui32SysClock) {
 	gpsUARTxConfig(3, 9600, ui32SysClock);
 
 	gpsUARTEchoSet(false);
-	gpsUARTprintf("%s\n", "$PMTK314,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0*29");
+	gpsUARTprintf("%s\n", nmea_generateChecksum("PMTK314,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0",gpsStr));
+	gpsUARTprintf("%s\n", nmea_generateChecksum("PMTK001,604,3",gpsStr));
+	gpsUARTprintf("%s\n", nmea_generateChecksum("PMTK220,200",gpsStr));
+	gpsUARTprintf("%s\n", nmea_generateChecksum("PMTK001,604,3",gpsStr));
+	//gpsUARTprintf("%s\n", nmea_generateChecksum("PMTK251,38400",gpsStr));
+	//gpsUARTxConfig(3, 38400, ui32SysClock);
+	//gpsUARTprintf("%s\n", nmea_generateChecksum("PMTK001,604,3",gpsStr));
+	//gpsUARTprintf("%s\n", nmea_generateChecksum("PMTK001,604,3",gpsStr));
+	//gpsUARTprintf("%s\n", nmea_generateChecksum("PMTK001,604,3",gpsStr));
+
 }
 
 //*****************************************************************************
@@ -243,7 +254,6 @@ static void GPSTask(void *pvParameters) {
 			// Take the gps semaphore.
 			//
 			xSemaphoreTake(g_gpsUARTSemaphore, portMAX_DELAY);
-			//GPSreadUART();
 			gpsUARTgets(cInput, GPS_INPUT_BUF_SIZE);
 			GPSparse(cInput);
 			xSemaphoreGive(g_gpsUARTSemaphore);
