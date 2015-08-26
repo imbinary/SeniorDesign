@@ -51,7 +51,7 @@
 #include "command_task.h"
 #include "xbee_task.h"
 #include "xbeeuart.h"
-
+#include "ravvn.h"
 
 #define XBEE_INPUT_BUF_SIZE  80
 
@@ -156,7 +156,6 @@ XBEETask(void *pvParameters)
     portTickType xLastWakeTime;
     int32_t i32DollarPosition;
     char cInput[XBEE_INPUT_BUF_SIZE];
-    int iStatus;
 
     //
     // Get the current time as a reference to start our delays.

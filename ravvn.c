@@ -47,6 +47,7 @@
 #include "ui_task.h"
 #include "drivers/pinout.h"
 #include "drivers/buttons.h"
+#include "ravvn.h"
 
 //*****************************************************************************
 //

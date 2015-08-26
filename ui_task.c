@@ -156,7 +156,6 @@ UITask(void *pvParameters)
     portTickType xLastWakeTime;
     int32_t i32DollarPosition;
     char cInput[UI_INPUT_BUF_SIZE];
-    int iStatus;
 
     //
     // Get the current time as a reference to start our delays.
