@@ -53,6 +53,7 @@
 #include "gpsuart.h"
 #include "util.h"
 #include "xbeeuart.h"
+#include "ravvn.h"
 
 #define GPS_INPUT_BUF_SIZE  85
 
@@ -159,9 +160,13 @@ void GPSparse(char *gpsString) {
 	if(nmea_validateChecksum(gpsString)){
 		xbeeUARTprintf("%s\n", gpsString);
 		//UARTprintf("%s\n", gpsString);
+		
 	}
 	else
 		UARTprintf("> %s\n", gpsString);
+
+
+}
 
 
 }
