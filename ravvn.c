@@ -91,7 +91,7 @@
 //
 //*****************************************************************************
 
-
+rBSMData_t g_rBSMData;
 //*****************************************************************************
 //
 // Global variable to hold the system clock speed.
@@ -246,6 +246,10 @@ vApplicationStackOverflowHook(xTaskHandle *pxTask, char *pcTaskName)
 int
 main(void)
 {
+
+
+
+	g_rBSMData.latitiude = 81.1;
     //
     // Configure the system frequency.
     //
@@ -434,8 +438,7 @@ main(void)
     // config happens in the VCP Task. Once scheduler starts tasks must take
     // the UART semaphore to safely print.
     //
-    UARTprintf("Welcome to the EK-TM4C1294XL Exosite Senshub IoT Demo "
-               "using FreeRTOS!\n");
+    UARTprintf("Welcome to the RAVVN!\n");
 
     //
     // Start the scheduler.  This should not return.

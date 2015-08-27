@@ -33,8 +33,10 @@ typedef struct rBSMDataStruct
 
 } rBSMData_t;
 
-extern rBSMData_t g_rBSMData;
+
 
 #define  DTYPE  1    // 1 for vehicle, 0 for infrastructure
 
 #endif /* RAVVN_H_ */
+
+extern rBSMData_t g_rBSMData;

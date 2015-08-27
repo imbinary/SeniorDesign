@@ -23,6 +23,7 @@
 //*****************************************************************************
 
 #include <stdint.h>
+#include <stdio.h>
 #include <stdbool.h>
 #include <string.h>
 #include "inc/hw_memmap.h"
@@ -77,6 +78,7 @@ xSemaphoreHandle g_xbeeUARTSemaphore;
 //*****************************************************************************
 extern uint32_t g_ui32SysClock;
 
+//extern rBSMData_t g_rBSMData;
 
 
 //*****************************************************************************
@@ -108,14 +110,16 @@ bsmSend(){
 	char bsm[BSM_SIZE];
 	//xbeeUARTgets(cInput, COMMAND_INPUT_BUF_SIZE);
 	g_rBSMData.latitiude = 81.1;
-	xbeeUARTprintf("$B%s\n", "test");
+	sprintf(bsm, "%f", g_rBSMData.latitiude);
 	if(DTYPE){
-		xbeeUARTprintf("$B%f%d%f%f%f%d%d%f%f%f%f%c%d%d\n", g_rBSMData.latitiude,g_rBSMData.elevation,g_rBSMData.longitude,g_rBSMData.pAccuracy,
+		/*
+		xbeeUARTprintf("$B%d%d%d%d%d%d%d%d%d%d%d%c%d%d\n", g_rBSMData.latitiude,g_rBSMData.elevation,g_rBSMData.longitude,g_rBSMData.pAccuracy,
 			g_rBSMData.speed,g_rBSMData.heading,g_rBSMData.steeringAngle,g_rBSMData.longAccel,g_rBSMData.vertAccel,g_rBSMData.latAccel,g_rBSMData.yawRate
-			,g_rBSMData.brake,g_rBSMData.length,g_rBSMData.width);
+			,g_rBSMData.brake,g_rBSMData.length,g_rBSMData.width); */
+		xbeeUARTprintf("$B%s\n", bsm);
 	}else
 	{
-		xbeeUARTprintf("$I%f%d%f%d%d\n", g_rBSMData.latitiude,g_rBSMData.elevation,g_rBSMData.longitude,g_rBSMData.heading,1);
+		//xbeeUARTprintf("$I%f%d%f%d%d\n", g_rBSMData.latitiude,g_rBSMData.elevation,g_rBSMData.longitude,g_rBSMData.heading,1);
 	}
 
 }
@@ -200,7 +204,7 @@ XBEETask(void *pvParameters)
 		// complete command that needs processing. Make sure your terminal
 		// sends a \r when you press 'enter'.
 		//
-		i32DollarPosition = xbeeUARTPeek('$');
+		i32DollarPosition = xbeeUARTPeek('\r');
 
 		if(i32DollarPosition != (-1))
 			{
@@ -213,6 +217,7 @@ XBEETask(void *pvParameters)
 				UARTprintf("%s\n",cInput);
 				xSemaphoreGive(g_xbeeUARTSemaphore);
 			}
+		bsmSend();
     }
 }
 
