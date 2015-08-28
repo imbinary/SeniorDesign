@@ -317,7 +317,7 @@ bool minmea_scan(const char *sentence, const char *format, ...)
 
             default: { // Unknown.
                 goto parse_error;
-            } break;
+            }
         }
 
         next_field();
@@ -376,7 +376,7 @@ bool minmea_parse_rmc(struct minmea_sentence_rmc *frame, const char *sentence)
     int latitude_direction;
     int longitude_direction;
     int variation_direction;
-    if (!minmea_scan(sentence, "tTcfdfdffDfd",
+    if (!minmea_scan(sentence, "tTcfdfdffD;__d",
             type,
             &frame->time,
             &validity,

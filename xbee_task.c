@@ -112,11 +112,7 @@ bsmSend(){
 	g_rBSMData.latitiude = 81.1;
 	sprintf(bsm, "%f", g_rBSMData.latitiude);
 	if(DTYPE){
-		/*
-		xbeeUARTprintf("$B%d%d%d%d%d%d%d%d%d%d%d%c%d%d\n", g_rBSMData.latitiude,g_rBSMData.elevation,g_rBSMData.longitude,g_rBSMData.pAccuracy,
-			g_rBSMData.speed,g_rBSMData.heading,g_rBSMData.steeringAngle,g_rBSMData.longAccel,g_rBSMData.vertAccel,g_rBSMData.latAccel,g_rBSMData.yawRate
-			,g_rBSMData.brake,g_rBSMData.length,g_rBSMData.width); */
-		xbeeUARTprintf("$B%s\n", bsm);
+		//xbeeUARTprintf("$B%s\n", bsm);
 	}else
 	{
 		//xbeeUARTprintf("$I%f%d%f%d%d\n", g_rBSMData.latitiude,g_rBSMData.elevation,g_rBSMData.longitude,g_rBSMData.heading,1);
