@@ -247,9 +247,6 @@ int
 main(void)
 {
 
-
-
-	g_rBSMData.latitiude = 81.1;
     //
     // Configure the system frequency.
     //

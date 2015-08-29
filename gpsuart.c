@@ -640,6 +640,10 @@ gpsUARTgets(char *pcBuf, uint32_t ui32Len)
     //
     // Add a null termination to the string.
     //
+    pcBuf[ui32Count] = '\r';
+    ui32Count++;
+    pcBuf[ui32Count] = '\n';
+    ui32Count++;
     pcBuf[ui32Count] = 0;
 
     //
