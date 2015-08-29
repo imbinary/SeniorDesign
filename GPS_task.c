@@ -54,7 +54,6 @@
 #include "util.h"
 #include "xbeeuart.h"
 #include "ravvn.h"
-#include "minmea.h"
 
 #define GPS_INPUT_BUF_SIZE  85
 
@@ -155,27 +154,27 @@ const char * nmea_generateChecksum(char *strPtr, char *dstStr) {
 //
 //*****************************************************************************
 void GPSparse(char *gpsString) {
+	//"$GPRMC,173843,A,3349.896,N,11808.521,W,000.0,360.0,230108,013.4,E*69\r\n"
 
 	if (gpsString[0] != '$')
 		return;
 	if (nmea_validateChecksum(gpsString)) {
-		xbeeUARTprintf("%s\n", gpsString);
-		//UARTprintf("%s\n", gpsString);
-		struct minmea_sentence_rmc frame;
-		if (minmea_parse_rmc(&frame, gpsString)) {
-			UARTprintf("$RMC: raw coordinates and speed: (%d/%d,%d/%d) %d/%d\n",
-					frame.latitude.value, frame.latitude.scale,
-					frame.longitude.value, frame.longitude.scale,
-					frame.speed.value, frame.speed.scale);
-			UARTprintf("$RMC fixed-point coordinates and speed scaled to three decimal places: (%d,%d) %d\n",
-					minmea_rescale(&frame.latitude, 1000),
-					minmea_rescale(&frame.longitude, 1000),
-					minmea_rescale(&frame.speed, 1000));
-			UARTprintf("$RMC floating point degree coordinates and speed: (%f,%f) %f\n",
-					minmea_tocoord(&frame.latitude),
-					minmea_tocoord(&frame.longitude),
-					minmea_tofloat(&frame.speed));
-		}
+		xbeeUARTprintf("%s", gpsString);
+	    char** tokens;
+
+	    tokens = str_split(gpsString, ',');
+
+	    if (tokens)
+	    {
+	        int i;
+	        for (i = 0; *(tokens + i); i++)
+	        {
+	            UARTprintf("parts=[%s]\n", *(tokens + i));
+	            free(*(tokens + i));
+	        }
+	        UARTprintf("\n");
+	        vPortFree(tokens);
+	    }
 
 	} else
 	{
