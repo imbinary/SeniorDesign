@@ -21,12 +21,13 @@
 
 char** str_split(char* a_str, const char a_delim) {
 	char** result = 0;
-	size_t count = 0;
+	int8_t count = 0;
 	char* tmp = a_str;
 	char* last_comma = 0;
 	char delim[2];
 	delim[0] = a_delim;
 	delim[1] = 0;
+	//char *mystring;
 
 
 	/* Count how many elements will be extracted. */
@@ -53,15 +54,15 @@ char** str_split(char* a_str, const char a_delim) {
 		char* token = strsep(tmp, delim);
 
 		while (token) {
-			UARTprintf("%s\n", token);
 			assert(idx < count);
-			*(result + idx++) = strdup(token);
+			result[idx] = pvPortMalloc(sizeof(char*));
+			memcpy(result[idx], token,sizeof(token));
+			idx++;
 			token = strsep(0, delim);
 		}
 		assert(idx == count - 1);
-		*(result + idx) = 0;
+		result[idx] = 0;
 	}
-
 	return result;
 }
 
