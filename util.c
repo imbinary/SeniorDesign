@@ -55,8 +55,8 @@ char** str_split(char* a_str, const char a_delim) {
 
 		while (token) {
 			assert(idx < count);
-			result[idx] = pvPortMalloc(sizeof(char*));
-			memcpy(result[idx], token,sizeof(token));
+			result[idx] = pvPortMalloc(strlen(token)+1);
+			memcpy(result[idx],token,strlen(token)+1);
 			idx++;
 			token = strsep(0, delim);
 		}
