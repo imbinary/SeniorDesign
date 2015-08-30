@@ -109,13 +109,18 @@ void
 bsmSend(){
 	char bsm[BSM_SIZE];
 	//xbeeUARTgets(cInput, COMMAND_INPUT_BUF_SIZE);
-	g_rBSMData.latitiude = 81.1;
-	sprintf(bsm, "%f", g_rBSMData.latitiude);
+	//g_rBSMData.latitiude = 81.1;
+
 	if(DTYPE){
-		//xbeeUARTprintf("$B%s\n", bsm);
+		sprintf(bsm, "$B,%0.4f,%0.4f,%0.2f,%d,%0.1f,%d,%0.3f,%0.3f,%0.3f,%0.5f", g_rBSMData.latitiude,
+				g_rBSMData.longitude, g_rBSMData.speed, g_rBSMData.heading, g_rBSMData.time, g_rBSMData.date,
+				g_rBSMData.latAccel, g_rBSMData.longAccel, g_rBSMData.vertAccel, g_rBSMData.yawRate);
+		xbeeUARTprintf("%s\n", bsm);
 	}else
 	{
-		//xbeeUARTprintf("$I%f%d%f%d%d\n", g_rBSMData.latitiude,g_rBSMData.elevation,g_rBSMData.longitude,g_rBSMData.heading,1);
+		//todo change time to status
+		sprintf(bsm, "$I,%0.4f,%0.4f,%d,%0.1f", g_rBSMData.latitiude, g_rBSMData.longitude, g_rBSMData.heading, g_rBSMData.time);
+		xbeeUARTprintf("%s\n", bsm);
 	}
 
 }

@@ -112,7 +112,7 @@ xSemaphoreHandle g_xI2CSemaphore;
 // tasks.
 //
 //*****************************************************************************
-xSemaphoreHandle g_xCloudDataSemaphore;
+xSemaphoreHandle g_xBsmDataSemaphore;
 
 
 //*****************************************************************************
@@ -306,7 +306,7 @@ main(void)
     //
     // Create a mutex to guard the Cloud Data structure.
     //
-    g_xCloudDataSemaphore = xSemaphoreCreateMutex();
+    g_xBsmDataSemaphore = xSemaphoreCreateMutex();
 
     //
     // Create the virtual com port task.
@@ -405,7 +405,7 @@ main(void)
     //
     // Verify that the semaphores were created correctly.
     //
-    if((g_xI2CSemaphore == NULL) || (g_xCloudDataSemaphore == NULL))
+    if((g_xI2CSemaphore == NULL) || (g_xBsmDataSemaphore == NULL))
     {
         //
         // I2C or CloudData semaphore was not created successfully.
@@ -414,7 +414,7 @@ main(void)
         UARTprintf("I2C or Cloud Data semaphore create failed.\n");
         UARTprintf("I2C Semaphore: 0x%X\t\tCloudData Semaphore: 0x%X",
                    (uint32_t) g_xI2CSemaphore,
-                   (uint32_t) g_xCloudDataSemaphore);
+                   (uint32_t) g_xBsmDataSemaphore);
         while(1)
         {
             //

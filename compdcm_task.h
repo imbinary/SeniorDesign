@@ -93,6 +93,5 @@ extern sCompDCMData_t g_sCompDCMData;
 //*****************************************************************************
 extern uint32_t CompDCMTaskInit(void);
 extern void CompDCMDataPrint(float *pfRPY, float *pfQuaternion);
-extern uint32_t CompDCMDataEncodeJSON(char *pcBuf, uint32_t ui32BufSize);
-
+void updateR( float* pfAcceleration, float* pfAngularVelocity);
 #endif // __CompDCM_TASK_H__
