@@ -159,7 +159,6 @@ void GPSparse(char *gpsString) {
 	if (gpsString[0] != '$')
 		return;
 	if (nmea_validateChecksum(gpsString)) {
-		xbeeUARTprintf("%s", gpsString);
 	    char** tokens;
 
 	    tokens = str_split(gpsString, ',');
@@ -167,12 +166,23 @@ void GPSparse(char *gpsString) {
 	    if (tokens)
 	    {
 	        int i;
+	        if((!strcmp(tokens[2],"A")) && (!strcmp(tokens[0],"$GPRMC"))){
+	        	g_rBSMData.latitiude = strtod(tokens[3],NULL);
+	        	if(!strcmp(tokens[4],"S"))
+	        		g_rBSMData.latitiude *= -1;
+	        	g_rBSMData.longitude = strtod(tokens[5],NULL);
+	        	if(!strcmp(tokens[6],"W"))
+	        		g_rBSMData.longitude *= -1;
+	        	g_rBSMData.speed = strtod(tokens[7],NULL);
+	        	g_rBSMData.heading = strtol(tokens[8],NULL,10);
+	        	//xbeeUARTprintf("%s", tokens[8]);
+	        }
 	        for (i = 0; *(tokens + i); i++)
 	        {
-	            UARTprintf("parts=[%s]\n", *(tokens + i));
+	           // UARTprintf("parts=[%s]\n", *(tokens + i));
 	            vPortFree(*(tokens + i));
 	        }
-	        UARTprintf("\n");
+	        //UARTprintf("\n");
 	        vPortFree(tokens);
 	    }
 

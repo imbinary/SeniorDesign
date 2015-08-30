@@ -109,10 +109,10 @@ void
 bsmSend(){
 	char bsm[BSM_SIZE];
 	//xbeeUARTgets(cInput, COMMAND_INPUT_BUF_SIZE);
-	g_rBSMData.latitiude = 81.1;
-	sprintf(bsm, "%f", g_rBSMData.latitiude);
+	//g_rBSMData.latitiude = 81.1;
+	sprintf(bsm, "%0.4f,%0.4f,%0.4f,%d", g_rBSMData.latitiude, g_rBSMData.longitude, g_rBSMData.speed, g_rBSMData.heading);
 	if(DTYPE){
-		//xbeeUARTprintf("$B%s\n", bsm);
+		xbeeUARTprintf("$B%s\n", bsm);
 	}else
 	{
 		//xbeeUARTprintf("$I%f%d%f%d%d\n", g_rBSMData.latitiude,g_rBSMData.elevation,g_rBSMData.longitude,g_rBSMData.heading,1);
