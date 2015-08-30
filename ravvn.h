@@ -29,7 +29,8 @@ typedef struct rBSMDataStruct
 	bool brake;
 	uint16_t length;
 	uint16_t width;
-    float timeStamp;
+    float time;
+    int date;
 
 } rBSMData_t;
 

@@ -347,74 +347,7 @@ CompDCMAppErrorHandler(char *pcFilename, uint_fast32_t ui32Line)
     //
     vTaskSuspend(NULL);
 }
-//*****************************************************************************
-//
-// This function will encode the sensor data into a JSON format string.
-//
-// \param pcBuf is a pointer to a buffer where the JSON string is stored.
-// \param ui32BufSize is the size of the buffer pointer to by pcBuf.
-//
-// \return the number of bytes written to pcBuf as indicated by usnprintf.
-//
-//*****************************************************************************
-uint32_t
-CompDCMDataEncodeJSON(char *pcBuf, uint32_t ui32BufSize)
-{
-    uint32_t ui32SpaceUsed, ui32Idx;
-    char pcEulerBuf[3][12];
-    char pcAccelerationBuf[3][12];
-    char pcAngularVelocityBuf[3][12];
-    char pcMagneticFieldBuf[3][12];
-    char pcQuaternionBuf[4][12];
 
-    //
-    // Convert all floats in the structure to strings.
-    //
-    for(ui32Idx = 0; ui32Idx < 3; ui32Idx++)
-    {
-        uftostr(pcEulerBuf[ui32Idx], 12, 3,
-                g_sCompDCMData.pfEuler[ui32Idx]);
-        uftostr(pcAccelerationBuf[ui32Idx], 12, 3,
-                g_sCompDCMData.pfAcceleration[ui32Idx]);
-        uftostr(pcAngularVelocityBuf[ui32Idx], 12, 3,
-                g_sCompDCMData.pfAngularVelocity[ui32Idx]);
-        uftostr(pcMagneticFieldBuf[ui32Idx], 12, 3,
-                g_sCompDCMData.pfMagneticField[ui32Idx]);
-        uftostr(pcQuaternionBuf[ui32Idx], 12, 3,
-                g_sCompDCMData.pfQuaternion[ui32Idx]);
-    }
-
-    //
-    // Convert the last quaternion from float to string. Special handling
-    // since we have four quaternions and three of everything else.
-    //
-    uftostr(pcQuaternionBuf[ui32Idx], 12, 3,
-                 g_sCompDCMData.pfQuaternion[ui32Idx]);
-
-    //
-    // Merge all the strings together into a single JSON formated string.
-    //
-    ui32SpaceUsed = usnprintf(pcBuf, ui32BufSize, "{\"sCompDCMData_t\":{"
-                              "\"bActive\":%d,\"fEuler\":[%s,%s,%s],"
-                              "\"fAcceleration\":[%s,%s,%s],"
-                              "\"fAngularVelocity\":[%s,%s,%s],"
-                              "\"fMagneticField\":[%s,%s,%s],"
-                              "\"fQuaternion\":[%s,%s,%s,%s]}}",
-                              g_sCompDCMData.bActive, pcEulerBuf[0],
-                              pcEulerBuf[1], pcEulerBuf[2],
-                              pcAccelerationBuf[0], pcAccelerationBuf[1],
-                              pcAccelerationBuf[2], pcAngularVelocityBuf[0],
-                              pcAngularVelocityBuf[1], pcAngularVelocityBuf[2],
-                              pcMagneticFieldBuf[0], pcMagneticFieldBuf[1],
-                              pcMagneticFieldBuf[2], pcQuaternionBuf[0],
-                              pcQuaternionBuf[1], pcQuaternionBuf[2],
-                              pcQuaternionBuf[3]);
-
-    //
-    // Return how much of the buffer was used.
-    //
-    return ui32SpaceUsed;
-}
 
 //*****************************************************************************
 //

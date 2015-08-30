@@ -155,7 +155,7 @@ const char * nmea_generateChecksum(char *strPtr, char *dstStr) {
 //*****************************************************************************
 void GPSparse(char *gpsString) {
 	//"$GPRMC,173843,A,3349.896,N,11808.521,W,000.0,360.0,230108,013.4,E*69\r\n"
-
+	//todo maybe add a semephore
 	if (gpsString[0] != '$')
 		return;
 	if (nmea_validateChecksum(gpsString)) {
@@ -167,6 +167,7 @@ void GPSparse(char *gpsString) {
 	    {
 	        int i;
 	        if((!strcmp(tokens[2],"A")) && (!strcmp(tokens[0],"$GPRMC"))){
+	        	g_rBSMData.time = strtod(tokens[1],NULL);
 	        	g_rBSMData.latitiude = strtod(tokens[3],NULL);
 	        	if(!strcmp(tokens[4],"S"))
 	        		g_rBSMData.latitiude *= -1;
@@ -175,6 +176,7 @@ void GPSparse(char *gpsString) {
 	        		g_rBSMData.longitude *= -1;
 	        	g_rBSMData.speed = strtod(tokens[7],NULL);
 	        	g_rBSMData.heading = strtol(tokens[8],NULL,10);
+	        	g_rBSMData.date = strtol(tokens[9],NULL,10);
 	        	//xbeeUARTprintf("%s", tokens[8]);
 	        }
 	        for (i = 0; *(tokens + i); i++)
