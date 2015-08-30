@@ -24,6 +24,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <stdio.h>
 #include "inc/hw_memmap.h"
 #include "inc/hw_types.h"
 #include "inc/hw_ints.h"
@@ -48,10 +49,12 @@
 #include "semphr.h"
 #include "compdcm_task.h"
 #include "command_task.h"
-
+#include "ravvn.h"
 #include "drivers/pinout.h"
 #include "drivers/buttons.h"
 
+
+extern xSemaphoreHandle g_xBsmDataSemaphore;
 //*****************************************************************************
 //
 // The I2C mutex
@@ -131,6 +134,25 @@ xTaskHandle g_xCompDCMHandle;
 //
 //*****************************************************************************
 sCompDCMData_t g_sCompDCMData;
+
+
+void updateR( float* pfAcceleration, float* pfAngularVelocity){
+
+
+    xSemaphoreTake(g_xBsmDataSemaphore, portMAX_DELAY);
+
+
+    g_rBSMData.longAccel = pfAcceleration[1];
+    g_rBSMData.latAccel = pfAcceleration[0];
+    g_rBSMData.vertAccel = pfAcceleration[2];
+    g_rBSMData.yawRate = pfAngularVelocity[1];
+
+
+    xSemaphoreGive(g_xBsmDataSemaphore);
+
+
+
+}
 
 
 //*****************************************************************************
@@ -645,6 +667,7 @@ CompDCMTask(void *pvParameters)
         MPU9150DataMagnetoGetFloat(&g_sMPU9150Inst, pfMag, pfMag + 1,
                                    pfMag + 2);
 
+        //todo put data in our struct
         //
         // Check if this is our first data ever.
         //
@@ -689,6 +712,8 @@ CompDCMTask(void *pvParameters)
 
 
         }
+
+        updateR(g_sCompDCMInst.pfAccel,g_sCompDCMInst.pfGyro);
     }
 }
 

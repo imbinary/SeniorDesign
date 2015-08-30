@@ -57,6 +57,10 @@
 
 #define GPS_INPUT_BUF_SIZE  85
 
+
+extern xSemaphoreHandle g_xBsmDataSemaphore;
+
+
 //*****************************************************************************
 //
 // A handle by which this task and others can refer to this task.
@@ -161,6 +165,8 @@ void GPSparse(char *gpsString) {
 	if (nmea_validateChecksum(gpsString)) {
 	    char** tokens;
 
+	    xSemaphoreTake(g_xBsmDataSemaphore, portMAX_DELAY);
+
 	    tokens = str_split(gpsString, ',');
 
 	    if (tokens)
@@ -187,10 +193,10 @@ void GPSparse(char *gpsString) {
 	        //UARTprintf("\n");
 	        vPortFree(tokens);
 	    }
-
+	    xSemaphoreGive(g_xBsmDataSemaphore);
 	} else
 	{
-		UARTprintf("> %s\n", gpsString);
+		//UARTprintf("> %s\n", gpsString);
 	}
 }
 
