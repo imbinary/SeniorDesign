@@ -39,7 +39,7 @@
 // we need to process a command.
 //
 //*****************************************************************************
-#define UI_TASK_PERIOD_MS         50        // periodic rate of the task
+#define UI_TASK_PERIOD_MS         100        // periodic rate of the task
 
 //*****************************************************************************
 //
