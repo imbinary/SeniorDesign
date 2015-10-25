@@ -247,9 +247,11 @@ Cmd_sync(int argc, char *argv[])
 	    //
 	    xSemaphoreTake(g_xUARTSemaphore, portMAX_DELAY);
 
-	    if(argc>=2){
-	    	uiUARTprintf("%d\n",argv[2]);
-	    	//UARTprintf(" 1 2 3 %d\n",argv[2]);
+	    if(argc>=1){
+	    	int i;
+	    	for(i=0;i<1;i++)
+	    		uiUARTprintf("%s\n",argv[1]);
+	    	UARTprintf("Lighting pixel %s\n",argv[1]);
 	    }
 
 
