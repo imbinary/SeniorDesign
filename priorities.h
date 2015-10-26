@@ -34,6 +34,7 @@
 #define PRIORITY_XBEE_TASK           5
 #define PRIORITY_UI_TASK             5
 #define PRIORITY_COMPDCM_TASK       15
+#define PRIORITY_ADXL_TASK      	15
 #define PRIORITY_COMMAND_TASK       13
 
 #endif // __PRIORITIES_H__

@@ -78,23 +78,7 @@ static const float g_fADXL312AccelFactors[] =
     0.0047883855                            // Range = +/- 16 g (2048 lsb/g)
 };
 
-//*****************************************************************************
-//
-// The factors used to convert the acceleration readings from the ADXL312 into
-// floating point values in radians per second.
-//
-// Values are obtained by taking the degree per second conversion factors
-// from the data sheet and then converting to radians per sec (1 degree =
-// 0.0174532925 radians).
-//
-//*****************************************************************************
-static const float g_fADXL312GyroFactors[] =
-{
-    1.3323124e-4,                           // Range = +/- 250 dps (131.0)
-    2.6646248e-4,                           // Range = +/- 500 dps (65.5)
-    5.3211258e-4,                           // Range = +/- 1000 dps (32.8)
-    0.0010642252                            // Range = +/- 2000 dps (16.4)
-};
+
 
 //*****************************************************************************
 //
