@@ -119,9 +119,9 @@ ConfigureUIUART(uint32_t ui32SysClock)
     //
     // Configure GPIO Pins for UART mode.
     //
-    ROM_GPIOPinConfigure(GPIO_PC6_U5RX);
-    ROM_GPIOPinConfigure(GPIO_PC7_U5TX);
-    ROM_GPIOPinTypeUART(GPIO_PORTC_BASE, GPIO_PIN_6 | GPIO_PIN_7);
+    ROM_GPIOPinConfigure(GPIO_PC4_U7RX);
+    ROM_GPIOPinConfigure(GPIO_PC5_U7TX);
+    ROM_GPIOPinTypeUART(GPIO_PORTC_BASE, GPIO_PIN_4 | GPIO_PIN_5);
 
 
     //
@@ -134,12 +134,12 @@ ConfigureUIUART(uint32_t ui32SysClock)
     //
     // Use the system clock for the UART.
     //
-    UARTClockSourceSet(UART5_BASE, UART_CLOCK_SYSTEM);
+    UARTClockSourceSet(UART7_BASE, UART_CLOCK_SYSTEM);
 
     //
     // Initialize the UART for console I/O.
     //
-    uiUARTxConfig(5, 9600, ui32SysClock);
+    uiUARTxConfig(7, 9600, ui32SysClock);
 
 }
 
