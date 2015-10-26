@@ -47,7 +47,7 @@
 #include "task.h"
 #include "queue.h"
 #include "semphr.h"
-
+#include "uiuart.h"
 #include "compdcm_task.h"
 
 #include "command_task.h"
@@ -99,7 +99,7 @@ tCmdLineEntry g_psCmdTable[] =
     { "proxy",    Cmd_proxy,    ": Set or disable a HTTP proxy server." },
     { "connect",  Cmd_connect,  ": Tries to establish a connection with"
                                 " exosite."},
-    { "sync",    Cmd_sync,      ": Syncronize data with exosite now." },
+    { "s",    Cmd_sync,      ": Syncronize data with exosite now." },
     { 0, 0, 0 }
 };
 
@@ -242,6 +242,23 @@ Cmd_activate(int argc, char *argv[])
 int
 Cmd_sync(int argc, char *argv[])
 {
+	//
+	    // Get the UART semaphore
+	    //
+	    xSemaphoreTake(g_xUARTSemaphore, portMAX_DELAY);
+
+	    if(argc>=1){
+	    	int i;
+	    	for(i=0;i<1;i++)
+	    		uiUARTprintf("%s\n",argv[1]);
+	    	UARTprintf("Lighting pixel %s\n",argv[1]);
+	    }
+
+
+	    //
+	    // Give back the UART semaphore.
+	    //
+	    xSemaphoreGive(g_xUARTSemaphore);
 
 
     return 0;

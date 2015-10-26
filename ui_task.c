@@ -139,7 +139,7 @@ ConfigureUIUART(uint32_t ui32SysClock)
     //
     // Initialize the UART for console I/O.
     //
-    uiUARTxConfig(5, 115200, ui32SysClock);
+    uiUARTxConfig(5, 9600, ui32SysClock);
 
 }
 
@@ -156,6 +156,7 @@ UITask(void *pvParameters)
     portTickType xLastWakeTime;
     int32_t i32DollarPosition;
     char cInput[UI_INPUT_BUF_SIZE];
+    //int8_t test=0;
 
     //
     // Get the current time as a reference to start our delays.
@@ -168,14 +169,14 @@ UITask(void *pvParameters)
         //
         // Wait for the required amount of time to check back.
         //
-        vTaskDelayUntil(&xLastWakeTime, COMMAND_TASK_PERIOD_MS /
+        vTaskDelayUntil(&xLastWakeTime, UI_TASK_PERIOD_MS /
                         portTICK_RATE_MS);
 
 		// Peek at the buffer to see if a \r is there.  If so we have a
 		// complete command that needs processing. Make sure your terminal
 		// sends a \r when you press 'enter'.
 		//
-		i32DollarPosition = uiUARTPeek('$');
+		i32DollarPosition = uiUARTPeek('\r');
 
 		if(i32DollarPosition != (-1))
 			{
@@ -188,6 +189,8 @@ UITask(void *pvParameters)
 				UARTprintf("%s\n",cInput);
 				xSemaphoreGive(g_uiUARTSemaphore);
 			}
+		//uiUARTprintf("%d",test);
+		//test = ++test%10;
     }
 }
 

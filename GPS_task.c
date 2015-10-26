@@ -275,7 +275,7 @@ static void GPSTask(void *pvParameters) {
 		 //
 		 // Wait for the required amount of time to check back.
 		 //
-		vTaskDelayUntil(&xLastWakeTime, COMMAND_TASK_PERIOD_MS /
+		vTaskDelayUntil(&xLastWakeTime, GPS_TASK_PERIOD_MS /
 		portTICK_RATE_MS);
 
 			// Peek at the buffer to see if a \r is there.  If so we have a

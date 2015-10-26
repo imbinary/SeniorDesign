@@ -1,73 +1,97 @@
 //*****************************************************************************
 //
-// command_task.h - Virtual COM Port Task manage messages to and from terminal.
+// compdcm_task.h - Prototypes for the Complimentary Filtered DCM task.
 //
 // Copyright (c) 2013-2015 Texas Instruments Incorporated.  All rights reserved.
 // Software License Agreement
-//
+// 
 // Texas Instruments (TI) is supplying this software for use solely and
 // exclusively on TI's microcontroller products. The software is owned by
 // TI and/or its suppliers, and is protected under applicable copyright
 // laws. You may not combine this software with "viral" open-source
 // software in order to form a larger program.
-//
+// 
 // THIS SOFTWARE IS PROVIDED "AS IS" AND WITH ALL FAULTS.
 // NO WARRANTIES, WHETHER EXPRESS, IMPLIED OR STATUTORY, INCLUDING, BUT
 // NOT LIMITED TO, IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
 // A PARTICULAR PURPOSE APPLY TO THIS SOFTWARE. TI SHALL NOT, UNDER ANY
 // CIRCUMSTANCES, BE LIABLE FOR SPECIAL, INCIDENTAL, OR CONSEQUENTIAL
 // DAMAGES, FOR ANY REASON WHATSOEVER.
-//
+// 
 // This is part of revision 2.1.1.71 of the EK-TM4C1294XL Firmware Package.
 //
 //*****************************************************************************
 
-#ifndef __UI_TASK_H__
-#define __UI_TASK_H__
+#ifndef __ADXL_TASK_H__
+#define __ADXL_TASK_H__
 
 //*****************************************************************************
 //
-// The stack size for the COMMAND task.
+// The stack size for the display task.
 //
 //*****************************************************************************
-#define UI_TASK_STACK_SIZE        1024         // Stack size in words
-
-//*****************************************************************************
-//
-// Period in milliseconds to determine time between how often run the task.
-// This determines how often we check for the carriage return which indicates
-// we need to process a command.
-//
-//*****************************************************************************
-#define UI_TASK_PERIOD_MS         100        // periodic rate of the task
+#define ADXL_TASK_STACK_SIZE        1024         // Stack size in words
 
 //*****************************************************************************
 //
 // A handle by which this task and others can refer to this task.
 //
 //*****************************************************************************
-extern xTaskHandle g_xUIHandle;
+extern xTaskHandle g_xADXLHandle;
 
 //*****************************************************************************
 //
-// A handle for the UART semaphore. Only used when more than one message must
-// be kept in order without other tasks injecting messages in between.
+// Structure to hold the sensor data and provide access to other tasks.
 //
 //*****************************************************************************
-extern xSemaphoreHandle g_uiUARTSemaphore;
+typedef struct sADXLDataStruct
+{
+    //
+    // boolean flag to indicate if the task is still actively updating data.
+    //
+    bool bActive;
+
+    //
+    // Array of Euler angles. Roll, Pitch, Yaw.
+    //
+    float pfEuler[3];
+
+    //
+    // Array of quaternion values
+    //
+    float pfQuaternion[4];
+
+    //
+    // Array of raw angular velocities from the sensor.
+    //
+    float pfAngularVelocity[3];
+
+    //
+    // Array of raw magnetic field strength sensor measurements.
+    //
+    float pfMagneticField[3];
+
+    //
+    // Array of raw accelerometer readings from the sensor.
+    //
+    float pfAcceleration[3];
+
+    //
+    // Tick counter time stamp at the most recent update of this struct.
+    //
+    portTickType xTimeStampTicks;
+
+} sADXLData_t;
+
+extern sADXLData_t g_sADXLData;
+
 
 //*****************************************************************************
 //
-// Prototypes for the command task.
+// Prototypes for the switch task.
 //
 //*****************************************************************************
-extern uint32_t UITaskInit(void);
-
-//*****************************************************************************
-//
-// Forward declarations for command-line operations.
-//
-//*****************************************************************************
-
-
-#endif // __UI_TASK_H__
+extern uint32_t ADXLTaskInit(void);
+extern void ADXLDataPrint(float *pfRPY, float *pfQuaternion);
+void updateBSM( float* pfAcceleration, float* pfAngularVelocity);
+#endif // __ADXLM_TASK_H__
