@@ -148,6 +148,31 @@ ConfigureUART(uint32_t ui32SysClock)
 
 //*****************************************************************************
 //
+// Configure the UART and its pins.  This must be called before UARTprintf().
+//
+//*****************************************************************************
+void
+ConfigureLED()
+{
+    //
+    // Enable the GPIO Peripheral used by the LED.
+    //
+	ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPION);
+
+
+	// Configure the LEDs as outputs and turn them on.
+	//
+	ROM_GPIOPinTypeGPIOOutput(GPIO_PORTN_BASE, GPIO_PIN_0 | GPIO_PIN_1);
+	ROM_GPIOPinWrite(GPIO_PORTN_BASE, GPIO_PIN_0 | GPIO_PIN_1, GPIO_PIN_0);
+
+
+
+
+
+}
+
+//*****************************************************************************
+//
 // This function implements the "help" command.  It prints a simple list of the
 // available commands with a brief description.
 //
@@ -327,6 +352,7 @@ CommandTask(void *pvParameters)
     portTickType xLastWakeTime;
     char cInput[COMMAND_INPUT_BUF_SIZE];
     int iStatus;
+    int8_t led=0;
 
     //
     // Get the current time as a reference to start our delays.
@@ -347,6 +373,10 @@ CommandTask(void *pvParameters)
         // Could probably do this with just turning off/on UART interrupts.
         //
         vPortEnterCritical();
+
+        led ^= 1;
+        ROM_GPIOPinWrite(GPIO_PORTN_BASE, GPIO_PIN_0 | GPIO_PIN_1, led);
+
 
         //
         // Peek at the buffer to see if a \r is there.  If so we have a
@@ -426,6 +456,7 @@ uint32_t CommandTaskInit(void)
     //
     ConfigureUART(g_ui32SysClock);
 
+    ConfigureLED();
     //
     // Make sure the UARTStdioIntHandler priority is low to not interfere
     // with the RTOS. This may not be needed since the int handler does not
