@@ -49,6 +49,7 @@
 #include "ravvn.h"
 #include "drivers/pinout.h"
 #include "drivers/buttons.h"
+#include "driverlib/pin_map.h"
 
 
 extern xSemaphoreHandle g_xBsmDataSemaphore;
@@ -75,12 +76,6 @@ extern xSemaphoreHandle g_xI2CSemaphore;
 //*****************************************************************************
 #define ADXL_PRINT_SKIP_COUNT 50
 
-//*****************************************************************************
-//
-// Global instance structure for the ISL29023 sensor driver.
-//
-//*****************************************************************************
-//tMPU9150 g_sMPU9150Inst;
 
 //*****************************************************************************
 //
@@ -425,6 +420,38 @@ ADXLTask(void *pvParameters)
 
         //updateR(g_sADXLInst.pfAccel,g_sADXLInst.pfGyro);
     }
+}
+
+
+//initialize I2C module 0
+//Slightly modified version of TI's example code
+void InitI2C0(void)
+{
+    //enable I2C module 0
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_I2C0);
+
+    //reset module
+    SysCtlPeripheralReset(SYSCTL_PERIPH_I2C0);
+
+    //enable GPIO peripheral that contains I2C 0
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOB);
+
+    // Configure the pin muxing for I2C0 functions on port B2 and B3.
+    GPIOPinConfigure(GPIO_PB2_I2C0SCL);
+    GPIOPinConfigure(GPIO_PB3_I2C0SDA);
+
+    // Select the I2C function for these pins.
+    GPIOPinTypeI2CSCL(GPIO_PORTB_BASE, GPIO_PIN_2);
+    GPIOPinTypeI2C(GPIO_PORTB_BASE, GPIO_PIN_3);
+
+    // Enable and initialize the I2C0 master module.  Use the system clock for
+    // the I2C0 module.  The last parameter sets the I2C data transfer rate.
+    // If false the data rate is set to 100kbps and if true the data rate will
+    // be set to 400kbps.
+    I2CMasterInitExpClk(I2C0_BASE, SysCtlClockGet(), false);
+
+    //clear I2C FIFOs
+    HWREG(I2C0_BASE + I2C_O_FIFOCTL) = 80008000;
 }
 
 //*****************************************************************************

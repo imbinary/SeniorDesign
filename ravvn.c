@@ -200,25 +200,7 @@ void SensorCloudStatTimerConfig(void)
 
 }
 
-//*****************************************************************************
-//
-// Called by the NVIC as a result of I2C Interrupt. I2C7 is the I2C connection
-// to the Senshub BoosterPack for BoosterPack 1 interface.  I2C8 must be used
-// for BoosterPack 2 interface.  Must also move this function pointer in the
-// startup file interrupt vector table for your tool chain if using BoosterPack
-// 2 interface headers.
-//
-//*****************************************************************************
-void
-SensHubI2CIntHandler(void)
-{
-    //
-    // Pass through to the I2CM interrupt handler provided by sensor library.
-    // This is required to be at application level so that I2CMIntHandler can
-    // receive the instance structure pointer as an argument.
-    //
-    I2CMIntHandler(&g_sI2CInst);
-}
+
 
 //*****************************************************************************
 //

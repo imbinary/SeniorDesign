@@ -81,7 +81,9 @@ tADXL312;
 // Function prototypes.
 //
 //*****************************************************************************
-
+void I2CSend(uint8_t slave_addr, uint8_t num_of_args, ...);
+void I2CSendString(uint32_t slave_addr, char array[]);
+uint32_t I2CReceive(uint32_t slave_addr, uint8_t reg);
 
 //*****************************************************************************
 //

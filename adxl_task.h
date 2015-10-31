@@ -94,4 +94,5 @@ extern sADXLData_t g_sADXLData;
 extern uint32_t ADXLTaskInit(void);
 extern void ADXLDataPrint(float *pfRPY, float *pfQuaternion);
 void updateBSM( float* pfAcceleration, float* pfAngularVelocity);
+void InitI2C0(void);
 #endif // __ADXLM_TASK_H__

@@ -60,7 +60,6 @@ extern void lwIPEthernetIntHandler(void);
 extern void IntHandlerGPIOPortE(void);
 extern void IntHandlerGPIOPortH(void);
 extern void IntHandlerGPIOPortM(void);
-extern void SensHubI2CIntHandler(void);
 extern void xPortPendSVHandler(void);
 extern void vPortSVCHandler(void);
 extern void xPortSysTickHandler(void);
@@ -199,7 +198,7 @@ void (* const g_pfnVectors[])(void) =
     IntDefaultHandler,                      // Timer 7 subtimer A
     IntDefaultHandler,                      // Timer 7 subtimer B
     IntDefaultHandler,                      // I2C6 Master and Slave
-    SensHubI2CIntHandler,                   // I2C7 Master and Slave
+	IntDefaultHandler,                   // I2C7 Master and Slave
     IntDefaultHandler,                      // HIM Scan Matrix Keyboard 0
     IntDefaultHandler,                      // One Wire 0
     IntDefaultHandler,                      // HIM PS/2 0
