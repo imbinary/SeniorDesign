@@ -49,7 +49,6 @@
 #include "semphr.h"
 #include "uiuart.h"
 #include "adxl_task.h"
-
 #include "command_task.h"
 
 
@@ -146,30 +145,6 @@ ConfigureUART(uint32_t ui32SysClock)
     UARTStdioConfig(0, 115200, ui32SysClock);
 }
 
-//*****************************************************************************
-//
-// Configure the UART and its pins.  This must be called before UARTprintf().
-//
-//*****************************************************************************
-void
-ConfigureLED()
-{
-    //
-    // Enable the GPIO Peripheral used by the LED.
-    //
-	ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPION);
-
-
-	// Configure the LEDs as outputs and turn them on.
-	//
-	ROM_GPIOPinTypeGPIOOutput(GPIO_PORTN_BASE, GPIO_PIN_0 | GPIO_PIN_1);
-	ROM_GPIOPinWrite(GPIO_PORTN_BASE, GPIO_PIN_0 | GPIO_PIN_1, GPIO_PIN_0);
-
-
-
-
-
-}
 
 //*****************************************************************************
 //
@@ -374,9 +349,6 @@ CommandTask(void *pvParameters)
         //
         vPortEnterCritical();
 
-        led ^= 1;
-        ROM_GPIOPinWrite(GPIO_PORTN_BASE, GPIO_PIN_0 | GPIO_PIN_1, led);
-
 
         //
         // Peek at the buffer to see if a \r is there.  If so we have a
@@ -456,7 +428,6 @@ uint32_t CommandTaskInit(void)
     //
     ConfigureUART(g_ui32SysClock);
 
-    ConfigureLED();
     //
     // Make sure the UARTStdioIntHandler priority is low to not interfere
     // with the RTOS. This may not be needed since the int handler does not

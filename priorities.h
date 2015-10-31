@@ -36,5 +36,6 @@
 #define PRIORITY_COMPDCM_TASK       15
 #define PRIORITY_ADXL_TASK      	15
 #define PRIORITY_COMMAND_TASK       13
+#define PRIORITY_LED_TASK           15
 
 #endif // __PRIORITIES_H__

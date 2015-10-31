@@ -44,6 +44,7 @@
 #include "adxl_task.h"
 #include "xbee_task.h"
 #include "command_task.h"
+#include "led_task.h"
 #include "ui_task.h"
 #include "drivers/pinout.h"
 #include "drivers/buttons.h"
@@ -290,6 +291,24 @@ main(void)
         }
     }
 
+
+    //
+    // Create the xbee task.
+    //
+    if(LedTaskInit() != 0)
+    {
+        //
+        // Init returned an error. Print an alert to the user and
+        // spin forever.  Wait for reset or user to debug.
+        //
+        UARTprintf("LED: Task Init Failed!\n");
+        while(1)
+        {
+            //
+            // Do Nothing.
+            //
+        }
+    }
     //
     // Create the ui task.
     //
