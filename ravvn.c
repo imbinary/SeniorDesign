@@ -244,43 +244,6 @@ main(void)
     PinoutSet(false, false);
     ButtonsInit();
 
-    //
-    // The I2C7 peripheral must be enabled before use.
-    //
-    // For BoosterPack 2 interface use I2C8 and GPIOA.
-    //
-    ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOB);
-    ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_I2C0);
-
-    //
-    // Configure the pin muxing for I2C7 functions on port D0 and D1.
-    // This step is not necessary if your part does not support pin muxing.
-    //
-    // For BoosterPack 2 interface use PA2 and PA3.
-    //
-    ROM_GPIOPinConfigure(GPIO_PB2_I2C0SCL);
-    ROM_GPIOPinConfigure(GPIO_PB3_I2C0SDA);
-
-    //
-    // Select the I2C function for these pins.  This function will also
-    // configure the GPIO pins pins for I2C operation, setting them to
-    // open-drain operation with weak pull-ups.  Consult the data sheet
-    // to see which functions are allocated per pin.
-    //
-    // For BoosterPack 2 interface use PA2 and PA3.
-    //
-    GPIOPinTypeI2CSCL(GPIO_PORTB_BASE, GPIO_PIN_2);
-    ROM_GPIOPinTypeI2C(GPIO_PORTB_BASE, GPIO_PIN_3);
-
-    //
-    // Initialize I2C peripheral driver.
-    //
-    // For BoosterPack 2 interface use I2C8
-    //
-    //I2CMInit(&g_sI2CInst, I2C0_BASE, INT_I2C0, 0xff, 0xff, g_ui32SysClock);
-    //IntPrioritySet(INT_I2C0, 0xE0);
-
-    //
     // Create a mutex to guard the I2C.
     //
     g_xI2CSemaphore = xSemaphoreCreateMutex();
@@ -374,7 +337,7 @@ main(void)
         // Init returned an error. Print an alert to the user and
         // spin forever.  Wait for reset or user to debug.
         //
-        UARTprintf("CompDCM: Task Init Failed!\n");
+        UARTprintf("ADXL: Task Init Failed!\n");
         while(1)
         {
             //
