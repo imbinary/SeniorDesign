@@ -48,7 +48,7 @@
 #include "queue.h"
 #include "semphr.h"
 #include "uiuart.h"
-#include "compdcm_task.h"
+#include "adxl_task.h"
 
 #include "command_task.h"
 

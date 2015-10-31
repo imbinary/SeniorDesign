@@ -44,11 +44,6 @@ extern "C"
 //*****************************************************************************
 typedef struct
 {
-    //
-    // The pointer to the I2C master interface instance used to communicate
-    // with the MPU9150.
-    //
-    tI2CMInstance *psI2CInst;
 
     //
     // The I2C address of the MPU9150.
@@ -77,40 +72,7 @@ typedef struct
     //
     uint8_t pui8Data[24];
 
-    //
-    // The function that is called when the current request has completed
-    // processing.
-    //
-    tSensorCallback *pfnCallback;
 
-    //
-    // The callback data provided to the callback function.
-    //
-    void *pvCallbackData;
-
-    //
-    // A union of structures that are used for read, write and
-    // read-modify-write operations.  Since only one operation can be active at
-    // a time, it is safe to re-use the memory in this manner.
-    //
-    union
-    {
-        //
-        // A buffer used to store the write portion of a register read.
-        //
-        uint8_t pui8Buffer[6];
-
-        //
-        // The write state used to write register values.
-        //
-        tI2CMWrite8 sWriteState;
-
-        //
-        // The read-modify-write state used to modify register values.
-        //
-        tI2CMReadModifyWrite8 sReadModifyWriteState;
-    }
-    uCommand;
 }
 tADXL312;
 
@@ -119,35 +81,6 @@ tADXL312;
 // Function prototypes.
 //
 //*****************************************************************************
-extern uint_fast8_t ADXL312Init(tADXL312 *psInst, tI2CMInstance *psI2CInst,
-                                uint_fast8_t ui8I2CAddr,
-                                tSensorCallback *pfnCallback,
-                                void *pvCallbackData);
-extern uint_fast8_t ADXL312Read(tADXL312 *psInst, uint_fast8_t ui8Reg,
-                                uint8_t *pui8Data, uint_fast16_t ui16Count,
-                                tSensorCallback *pfnCallback,
-                                void *pvCallbackData);
-extern uint_fast8_t ADXL312Write(tADXL312 *psInst, uint_fast8_t ui8Reg,
-                                 const uint8_t *pui8Data,
-                                 uint_fast16_t ui16Count,
-                                 tSensorCallback *pfnCallback,
-                                 void *pvCallbackData);
-extern uint_fast8_t ADXL312ReadModifyWrite(tADXL312 *psInst,
-                                           uint_fast8_t ui8Reg,
-                                           uint_fast8_t ui8Mask,
-                                           uint_fast8_t ui8Value,
-                                           tSensorCallback *pfnCallback,
-                                           void *pvCallbackData);
-extern uint_fast8_t ADXL312DataRead(tADXL312 *psInst,
-                                    tSensorCallback *pfnCallback,
-                                    void *pvCallbackData);
-extern void ADXL312DataAccelGetRaw(tADXL312 *psInst,
-                                   uint_fast16_t *pui16AccelX,
-                                   uint_fast16_t *pui16AccelY,
-                                   uint_fast16_t *pui16AccelZ);
-extern void ADXL312DataAccelGetFloat(tADXL312 *psInst, float *pfAccelX,
-                                     float *pfAccelY, float *pfAccelZ);
-
 
 
 //*****************************************************************************

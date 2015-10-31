@@ -41,7 +41,7 @@
 #include "queue.h"
 #include "semphr.h"
 #include "GPS_task.h"
-#include "compdcm_task.h"
+#include "adxl_task.h"
 #include "xbee_task.h"
 #include "command_task.h"
 #include "ui_task.h"
@@ -267,8 +267,8 @@ main(void)
     //
     // For BoosterPack 2 interface use I2C8 and GPIOA.
     //
-    ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOD);
-    ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_I2C7);
+    ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOB);
+    ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_I2C0);
 
     //
     // Configure the pin muxing for I2C7 functions on port D0 and D1.
@@ -276,8 +276,8 @@ main(void)
     //
     // For BoosterPack 2 interface use PA2 and PA3.
     //
-    ROM_GPIOPinConfigure(GPIO_PD0_I2C7SCL);
-    ROM_GPIOPinConfigure(GPIO_PD1_I2C7SDA);
+    ROM_GPIOPinConfigure(GPIO_PB2_I2C0SCL);
+    ROM_GPIOPinConfigure(GPIO_PB3_I2C0SDA);
 
     //
     // Select the I2C function for these pins.  This function will also
@@ -287,16 +287,16 @@ main(void)
     //
     // For BoosterPack 2 interface use PA2 and PA3.
     //
-    GPIOPinTypeI2CSCL(GPIO_PORTD_BASE, GPIO_PIN_0);
-    ROM_GPIOPinTypeI2C(GPIO_PORTD_BASE, GPIO_PIN_1);
+    GPIOPinTypeI2CSCL(GPIO_PORTB_BASE, GPIO_PIN_2);
+    ROM_GPIOPinTypeI2C(GPIO_PORTB_BASE, GPIO_PIN_3);
 
     //
     // Initialize I2C peripheral driver.
     //
     // For BoosterPack 2 interface use I2C8
     //
-    I2CMInit(&g_sI2CInst, I2C7_BASE, INT_I2C7, 0xff, 0xff, g_ui32SysClock);
-    IntPrioritySet(INT_I2C7, 0xE0);
+    //I2CMInit(&g_sI2CInst, I2C0_BASE, INT_I2C0, 0xff, 0xff, g_ui32SysClock);
+    //IntPrioritySet(INT_I2C0, 0xE0);
 
     //
     // Create a mutex to guard the I2C.
@@ -386,7 +386,7 @@ main(void)
     //
     // Create the CompDCM 9 axis sensor task.
     //
-    if(CompDCMTaskInit() != 0)
+    if(ADXLTaskInit() != 0)
     {
         //
         // Init returned an error. Print an alert to the user and

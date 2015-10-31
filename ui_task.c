@@ -47,7 +47,7 @@
 #include "task.h"
 #include "queue.h"
 #include "semphr.h"
-#include "compdcm_task.h"
+#include "adxl_task.h"
 #include "command_task.h"
 #include "ui_task.h"
 #include "uiuart.h"
@@ -189,7 +189,7 @@ static void UITask(void *pvParameters) {
 		int i;
 		for(i=0;i<4;i++){
 			uiUARTprintf("$%c%c",byte1,byte2);
-			UARTprintf("$%c%c",byte1,byte2);
+			//UARTprintf("$%c%c",byte1,byte2);
 		}
 		color += 4;
 		dir += 3;

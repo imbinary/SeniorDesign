@@ -34,7 +34,8 @@
 #include "driverlib/sysctl.h"
 #include "driverlib/gpio.h"
 #include "driverlib/rom.h"
-#include "sensorlib/i2cm_drv.h"
+#include "inc/hw_i2c.h"
+#include "driverlib/i2c.h"
 #include "utils/uartstdio.h"
 #include "utils/ustdlib.h"
 #include "utils/adxl312.h"
@@ -58,12 +59,6 @@ extern xSemaphoreHandle g_xBsmDataSemaphore;
 //*****************************************************************************
 extern xSemaphoreHandle g_xI2CSemaphore;
 
-//*****************************************************************************
-//
-// Global instance structure for the I2C master driver.
-//
-//*****************************************************************************
-extern tI2CMInstance g_sI2CInst;
 
 //*****************************************************************************
 //
@@ -287,92 +282,6 @@ luftostr(char * pcStr, uint32_t ui32Size, uint32_t ui32Precision, float fValue)
 }
 
 //*****************************************************************************
-//
-// ADXL Sensor callback function.  Called at the end of sensor driver
-// transactions. This is called from I2C interrupt context. Therefore, we just
-// give the Transaction complete semaphore so that task is triggered to do the
-// bulk of data handling.
-//
-//*****************************************************************************
-void
-ADXLAppCallback(void *pvCallbackData, uint_fast8_t ui8Status)
-{
-    portBASE_TYPE xHigherPriorityTaskWokenTransaction;
-
-    xHigherPriorityTaskWokenTransaction = pdFALSE;
-
-    //
-    // Let the task resume so that it can check the status flag and process
-    // data.
-    //
-    xSemaphoreGiveFromISR(g_xADXLTransactionCompleteSemaphore,
-                          &xHigherPriorityTaskWokenTransaction);
-
-    //
-    // Store the most recent status in case it was an error condition
-    //
-    g_vui8ADXLI2CErrorStatus = ui8Status;
-
-    //
-    // If a higher priority task was waiting for a semaphore released by this
-    // isr then that high priority task will run when the ISR exits.
-    //
-    if(xHigherPriorityTaskWokenTransaction == pdTRUE)
-    {
-        portYIELD_FROM_ISR(true);
-    }
-}
-
-//*****************************************************************************
-//
-// ADXL Application error handler.
-//
-//*****************************************************************************
-void
-ADXLAppErrorHandler(char *pcFilename, uint_fast32_t ui32Line)
-{
-    //
-    // Take the UART semaphore to guarantee the sequence of messages on VCP.
-    //
-    xSemaphoreTake(g_xUARTSemaphore, portMAX_DELAY);
-
-    //
-    // Set terminal color to red and print error status and locations
-    //
-    UARTprintf("\033[31;1mADXL I2C Error: %d, File: %s, Line: %d\n",
-               g_vui8ADXLI2CErrorStatus, pcFilename, ui32Line);
-
-    //
-    // Tell users where to find more information about I2C errors and
-    // reset the terminal color to normal.
-    //
-    UARTprintf("See I2C status definitions in utils\\i2cm_drv.h\n\033[0m");
-
-    //
-    // Give back the UART Semaphore.
-    //
-    xSemaphoreGive(g_xUARTSemaphore);
-
-    //
-    // Change the active flag in the cloud data struct to show this sensor
-    // is no longer being actively updated.
-    //
-
-    //
-    // Since we got an I2C error we will suspend this task and let other
-    // tasks continue.  We will never again execute unless some other task
-    // calls vTaskResume on us.
-    //
-    vTaskSuspend(NULL);
-}
-
-
-//*****************************************************************************
-//
-// ADXL Data print function.  Takes the float versions of ambient and object
-// temperature and prints them to the UART in a pretty format.
-//
-//*****************************************************************************
 void ADXLDataPrint(float *pfRPY, float *pfQuaternion)
 {
     uint32_t ui32Idx;
@@ -445,102 +354,24 @@ void ADXLDataPrint(float *pfRPY, float *pfQuaternion)
 static void
 ADXLTask(void *pvParameters)
 {
-    float pfMag[3], pfAccel[3], pfGyro[3];
-    float pfQuaternion[4], pfEuler[3];
+    float pfAccel[3];
     uint32_t ui32ADXLStarted;
 //    uint32_t ui32Idx;
 
     //
-    // The binary semaphore is created full so we take it up front and use it
-    // later to sync between this task and the AppCallback function which is in
-    // the I2C interrupt context. Likewise the GPIO port interrupt.
-    //
-    xSemaphoreTake(g_xADXLTransactionCompleteSemaphore, 0);
-    xSemaphoreTake(g_xADXLDataReadySemaphore, 0);
-
-    //
-    // Take the I2C semaphore. Keep it until all init is complete for this
-    // sensor.
-    //
-    xSemaphoreTake(g_xI2CSemaphore, portMAX_DELAY);
-
-    //
-    // Initialize the MPU9150 Driver.
-    //
-    //MPU9150Init(&g_sMPU9150Inst, &g_sI2CInst, MPU9150_I2C_ADDRESS,
-      //          ADXLAppCallback, &g_sMPU9150Inst);
-
-    //
-    // Wait for transaction to complete
-    //
-    xSemaphoreTake(g_xADXLTransactionCompleteSemaphore, portMAX_DELAY);
-
-    //
-    // Give back the I2C Semaphore so other can use the I2C interface.
-    //
-    xSemaphoreGive(g_xI2CSemaphore);
-
-    //
-    // Check for I2C Errors and responds
-    //
-    if(g_vui8ADXLI2CErrorStatus)
-    {
-        ADXLAppErrorHandler(__FILE__, __LINE__);
-    }
-
     //
     // Take the I2C semaphore.
     //
     xSemaphoreTake(g_xI2CSemaphore, portMAX_DELAY);
 
-    //
-    // Write application specific sensor configuration such as filter settings
-    // and sensor range settings.
-    //
 
-    //
-    // Wait for transaction to complete
-    //
-    xSemaphoreTake(g_xADXLTransactionCompleteSemaphore, portMAX_DELAY);
-
-    //
-    // Check for I2C Errors and responds
-    //
-    if(g_vui8ADXLI2CErrorStatus)
-    {
-        //
-        // Give back the I2C Semaphore so other can use the I2C interface.
-        //
-        xSemaphoreGive(g_xI2CSemaphore);
-
-        //
-        // Call the error handler.
-        //
-        ADXLAppErrorHandler(__FILE__, __LINE__);
-    }
-
-    //
-    // Configure the data ready interrupt pin output of the MPU9150.
-    //
-
-
-    //
-    // Wait for transaction to complete
-    //
-    xSemaphoreTake(g_xADXLTransactionCompleteSemaphore, portMAX_DELAY);
 
     //
     // Give back the I2C Semaphore so other can use the I2C interface.
     //
     xSemaphoreGive(g_xI2CSemaphore);
 
-    //
-    // Check for I2C Errors and responds
-    //
-    if(g_vui8ADXLI2CErrorStatus)
-    {
-        ADXLAppErrorHandler(__FILE__, __LINE__);
-    }
+
 
     //
     // Initialize the DCM system. 50 hz sample rate.
@@ -556,38 +387,9 @@ ADXLTask(void *pvParameters)
 
     while(1)
     {
-        //
-        // wait for the GPIO interrupt that tells us MPU9150 has data.
-        //
-        xSemaphoreTake(g_xADXLDataReadySemaphore, portMAX_DELAY);
 
-        //
-        // Take the I2C semaphore.
-        //
-        xSemaphoreTake(g_xI2CSemaphore, portMAX_DELAY);
 
-        //
-        // Use I2C to go get data from the sensor into local memory.
-        //
-        //MPU9150DataRead(&g_sMPU9150Inst, ADXLAppCallback, &g_sMPU9150Inst);
 
-        //
-        // Wait for transaction to complete
-        //
-        xSemaphoreTake(g_xADXLTransactionCompleteSemaphore, portMAX_DELAY);
-
-        //
-        // Give back the I2C Semaphore so other can use the I2C interface.
-        //
-        xSemaphoreGive(g_xI2CSemaphore);
-
-        //
-        // Check for I2C Errors and responds
-        //
-        if(g_vui8ADXLI2CErrorStatus)
-        {
-            ADXLAppErrorHandler(__FILE__, __LINE__);
-        }
 
         //
         // Get floating point version of the Accel Data in m/s^2.
@@ -633,39 +435,7 @@ ADXLTask(void *pvParameters)
 uint32_t
 ADXLTaskInit(void)
 {
-    //
-    // Reset the GPIO port M to make sure that all previous configuration is
-    // cleared.
-    //
-    SysCtlPeripheralReset(SYSCTL_PERIPH_GPIOM);
-    while(!SysCtlPeripheralReady(SYSCTL_PERIPH_GPIOM))
-    {
-        //
-        // Do nothing, waiting.
-        //
-    }
 
-    //
-    // Configure and Enable the GPIO interrupt. Used for DRDY from the MPU9150
-    //
-    ROM_GPIOPinTypeGPIOInput(GPIO_PORTM_BASE, GPIO_PIN_3);
-    GPIOIntEnable(GPIO_PORTM_BASE, GPIO_PIN_3);
-    ROM_GPIOIntTypeSet(GPIO_PORTM_BASE, GPIO_PIN_3, GPIO_FALLING_EDGE);
-
-    //
-    // Must adjust the priority of the interrupt so that it can call FreeRTOS
-    // APIs.
-    //
-    IntPrioritySet(INT_GPIOM, 0xE0);
-    ROM_IntEnable(INT_GPIOM);
-
-    //
-    // Create binary semaphores for flow control of the task synchronizing with
-    // the I2C data read complete ISR (callback) and the GPIO pin ISR that
-    // alerts software that the sensor has data ready to be read.
-    //
-    vSemaphoreCreateBinary(g_xADXLDataReadySemaphore);
-    vSemaphoreCreateBinary(g_xADXLTransactionCompleteSemaphore);
 
     //
     // Create the compdcm task itself.
@@ -680,17 +450,7 @@ ADXLTaskInit(void)
         return(1);
     }
 
-    //
-    // Check if Semaphore creation was successful.
-    //
-    if((g_xADXLDataReadySemaphore == NULL) ||
-       (g_xADXLTransactionCompleteSemaphore == NULL))
-    {
-        //
-        // At least one semaphore was not created successfully.
-        //
-        return(1);
-    }
+
 
     //
     // Set the active flag that shows this task is running properly.
