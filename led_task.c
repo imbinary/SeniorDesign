@@ -61,7 +61,7 @@ static void
 LedTask(void *pvParameters)
 {
     portTickType xLastWakeTime;
-    int8_t led=0;
+    int8_t led=1;
 
     //
     // Get the current time as a reference to start our delays.
