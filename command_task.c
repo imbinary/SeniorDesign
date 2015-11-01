@@ -327,7 +327,6 @@ CommandTask(void *pvParameters)
     portTickType xLastWakeTime;
     char cInput[COMMAND_INPUT_BUF_SIZE];
     int iStatus;
-    int8_t led=0;
 
     //
     // Get the current time as a reference to start our delays.

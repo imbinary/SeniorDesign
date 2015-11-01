@@ -42,6 +42,7 @@
 #include "semphr.h"
 #include "GPS_task.h"
 #include "adxl_task.h"
+#include "mpu_task.h"
 #include "xbee_task.h"
 #include "command_task.h"
 #include "led_task.h"

@@ -237,7 +237,7 @@ luftostr(char * pcStr, uint32_t ui32Size, uint32_t ui32Precision, float fValue)
 
 uint8_t ReadAccel(uint8_t reg)
 {
-    uint8_t accelData =  I2CReceive(ADXL312_I2CADR_ALT, reg);
+    uint8_t accelData =  I2CReceive(ADXL312_I2CADR, reg);
 
     return accelData;
 }
@@ -253,6 +253,8 @@ static void
 ADXLTask(void *pvParameters)
 {
     float pfAccel[3];
+    uint8_t x1,y1,z1,x2,y2,z2;
+    uint16_t x,y,z;
 	portTickType xLastWakeTime;
 	//
 	// Get the current time as a reference to start our delays.
@@ -273,15 +275,22 @@ ADXLTask(void *pvParameters)
         //
         xSemaphoreTake(g_xI2CSemaphore, portMAX_DELAY);
 
-        pfAccel[0] = ReadAccel(ADXL_DATAX0);
-        pfAccel[1] = ReadAccel(ADXL_DATAY0);
-        pfAccel[2] = ReadAccel(ADXL_DATAZ0);
+        x1 = ReadAccel(ADXL_DATAX0);
+        y1 = ReadAccel(ADXL_DATAY0);
+        z1 = ReadAccel(ADXL_DATAZ0);
+        x2 = ReadAccel(ADXL_DATAX1);
+		y2 = ReadAccel(ADXL_DATAY1);
+		z2 = ReadAccel(ADXL_DATAZ1);
 
-        //
+		x = (x2<<8)|x1;
+		y = (y2<<8)|y1;
+		z = (z2<<8)|z1;
+
         // Give back the I2C Semaphore so other can use the I2C interface.
         //
         xSemaphoreGive(g_xI2CSemaphore);
 
+        UARTprintf("%d, %d, %d\n",x,y,z);
 
         updateBSM(pfAccel,0);
     }
