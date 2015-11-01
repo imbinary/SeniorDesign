@@ -34,6 +34,8 @@
 #include "driverlib/sysctl.h"
 #include "driverlib/gpio.h"
 #include "driverlib/rom.h"
+#include "driverlib/rom_map.h"
+#include "driverlib/sysctl.h"
 #include "inc/hw_i2c.h"
 #include "driverlib/i2c.h"
 #include "utils/uartstdio.h"
@@ -60,7 +62,7 @@ extern xSemaphoreHandle g_xBsmDataSemaphore;
 //*****************************************************************************
 extern xSemaphoreHandle g_xI2CSemaphore;
 
-
+extern uint32_t g_ui32SysClock;
 
 //*****************************************************************************
 //
@@ -101,7 +103,7 @@ void mupdateBSM( float* pfAcceleration, float* pfAngularVelocity){
 
 uint8_t mpuReadAccel(uint8_t reg)
 {
-    uint8_t accelData =  mI2CReceive(0x0c, 0x00);
+    uint8_t accelData =  mI2CReceive(MPU9150_ADDRESS, reg);
 
     return accelData;
 }
@@ -116,9 +118,8 @@ uint8_t mpuReadAccel(uint8_t reg)
 static void
 MPUTask(void *pvParameters)
 {
-    float pfAccel[3];
-    uint8_t x1,y1,z1,x2,y2,z2,me;
-    uint16_t x,y,z;
+    uint8_t me;
+
 	portTickType xLastWakeTime;
 	//
 	// Get the current time as a reference to start our delays.
@@ -137,26 +138,21 @@ MPUTask(void *pvParameters)
         //
         // Take the I2C semaphore.
         //
-        //xSemaphoreTake(g_xI2CSemaphore, portMAX_DELAY);
+        xSemaphoreTake(g_xI2CSemaphore, portMAX_DELAY);
 
-        x1 = mpuReadAccel(MPU9150_ACCEL_XOUT_L);
-        y1 = mpuReadAccel(MPU9150_ACCEL_YOUT_L);
-        z1 = mpuReadAccel(MPU9150_ACCEL_ZOUT_L);
-        x2 = mpuReadAccel(MPU9150_ACCEL_XOUT_H);
-        y2 = mpuReadAccel(MPU9150_ACCEL_YOUT_H);
-        z2 = mpuReadAccel(MPU9150_ACCEL_ZOUT_H);
 
-        me = mpuReadAccel(0x00);
-        x= x2<<8+x1;
-        y= y2<<8+y1;
-        z= z2<<8+z1;
+        me = mI2CReceive(MPU9150_ADDRESS, MPU9150_ACCEL_ZOUT_L);
+
         //
         // Give back the I2C Semaphore so other can use the I2C interface.
         //
-        //xSemaphoreGive(g_xI2CSemaphore);
-        UARTprintf("%d, %d, %d, %d\n",x,y,z,me);
+        xSemaphoreGive(g_xI2CSemaphore);
+        xSemaphoreTake(g_xUARTSemaphore, portMAX_DELAY);
 
-        //mupdateBSM(pfAccel,me);
+        UARTprintf("MPU %x\n",me);
+
+		xSemaphoreGive(g_xUARTSemaphore);
+
     }
 }
 
@@ -165,6 +161,7 @@ MPUTask(void *pvParameters)
 //Slightly modified version of TI's example code
 void InitI2C7(void)
 {
+
     //enable I2C module 0
 	ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_I2C7);
 
@@ -186,8 +183,11 @@ void InitI2C7(void)
     // the I2C0 module.  The last parameter sets the I2C data transfer rate.
     // If false the data rate is set to 100kbps and if true the data rate will
     // be set to 400kbps.
-    ROM_I2CMasterInitExpClk(I2C7_BASE, SysCtlClockGet(), false);
+    ROM_I2CMasterInitExpClk(I2C7_BASE, g_ui32SysClock, false);
 
+    I2CSlaveEnable(I2C7_BASE);
+    //I2CSlaveInit(I2C7_BASE, MPU9150_ADDRESS);
+    //I2CMasterSlaveAddrSet(I2C7_BASE, MPU9150_ADDRESS, false);
     //clear I2C FIFOs
     HWREG(I2C7_BASE + I2C_O_FIFOCTL) = 80008000;
 }

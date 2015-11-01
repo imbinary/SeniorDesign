@@ -39,7 +39,7 @@
 //*****************************************************************************
 extern xTaskHandle g_xADXLHandle;
 
-#define ADXL_TASK_PERIOD_MS         100        // periodic rate of the task
+#define ADXL_TASK_PERIOD_MS         200        // periodic rate of the task
 
 //*****************************************************************************
 //

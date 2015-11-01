@@ -106,7 +106,7 @@
 #define MPU9150_READBIT 0x01
 
 // I2C address 0x69 could be 0x68 depends on your wiring.
-#define MPU9150_ADDRESS = (0x68)
+#define MPU9150_ADDRESS 		(0x68)
 
 
 //*****************************************************************************

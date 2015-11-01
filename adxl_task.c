@@ -61,7 +61,7 @@ extern xSemaphoreHandle g_xBsmDataSemaphore;
 //*****************************************************************************
 extern xSemaphoreHandle g_xI2CSemaphore;
 
-
+extern uint32_t g_ui32SysClock;
 
 //*****************************************************************************
 //
@@ -237,18 +237,12 @@ luftostr(char * pcStr, uint32_t ui32Size, uint32_t ui32Precision, float fValue)
 
 uint8_t ReadAccel(uint8_t reg)
 {
-    uint8_t accelData =  I2CReceive(ADXL312_I2CADR, reg);
+    uint8_t accelData =  I2CReceive(ADXL312_I2CADR_ALT, reg);
 
     return accelData;
 }
 
-//*****************************************************************************
-//
-// This task gathers data from the MPU9150, calculates board orientation in
-// Euler angles (roll, pitch and yaw) as well as Quaternions. It then makes
-// this data available to the other tasks.
-//
-//*****************************************************************************
+
 static void
 ADXLTask(void *pvParameters)
 {
@@ -256,6 +250,10 @@ ADXLTask(void *pvParameters)
     uint8_t x1,y1,z1,x2,y2,z2;
     uint16_t x,y,z;
 	portTickType xLastWakeTime;
+
+
+	I2CSend(ADXL312_I2CADR_ALT, 2,ADXL_POWER_CTL,0x08 );
+
 	//
 	// Get the current time as a reference to start our delays.
 	//
@@ -275,23 +273,20 @@ ADXLTask(void *pvParameters)
         //
         xSemaphoreTake(g_xI2CSemaphore, portMAX_DELAY);
 
-        x1 = ReadAccel(ADXL_DATAX0);
-        y1 = ReadAccel(ADXL_DATAY0);
-        z1 = ReadAccel(ADXL_DATAZ0);
-        x2 = ReadAccel(ADXL_DATAX1);
-		y2 = ReadAccel(ADXL_DATAY1);
-		z2 = ReadAccel(ADXL_DATAZ1);
+        //x1 = I2CReceive(ADXL312_I2CADR_ALT, ADXL_DEVID);
+        x1 = I2CReceive(ADXL312_I2CADR_ALT, ADXL_DATAZ0);
+        x2 = 0;//I2CReceive(ADXL312_I2CADR_ALT, ADXL_DATAZ1);
 
-		x = (x2<<8)|x1;
-		y = (y2<<8)|y1;
-		z = (z2<<8)|z1;
 
         // Give back the I2C Semaphore so other can use the I2C interface.
         //
         xSemaphoreGive(g_xI2CSemaphore);
 
-        UARTprintf("%d, %d, %d\n",x,y,z);
+        xSemaphoreTake(g_xUARTSemaphore, portMAX_DELAY);
 
+        UARTprintf("adxl: %x, %x\n",x1,x2);
+
+		xSemaphoreGive(g_xUARTSemaphore);
         updateBSM(pfAccel,0);
     }
 }
@@ -322,8 +317,10 @@ void InitI2C0(void)
     // the I2C0 module.  The last parameter sets the I2C data transfer rate.
     // If false the data rate is set to 100kbps and if true the data rate will
     // be set to 400kbps.
-    I2CMasterInitExpClk(I2C0_BASE, SysCtlClockGet(), false);
+    I2CMasterInitExpClk(I2C0_BASE, g_ui32SysClock, false);
 
+    I2CSlaveEnable(I2C0_BASE);
+    //I2CSlaveInit(I2C0_BASE, ADXL312_I2CADR_ALT);
     //clear I2C FIFOs
     HWREG(I2C0_BASE + I2C_O_FIFOCTL) = 80008000;
 }

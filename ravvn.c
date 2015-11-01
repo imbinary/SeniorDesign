@@ -350,14 +350,14 @@ main(void)
 
     //
     // Create the CompDCM 9 axis sensor task.
-    //
-    if(ADXLTaskInit() != 0)
+    /*
+    if(MPUTaskInit() != 0)
     {
         //
         // Init returned an error. Print an alert to the user and
         // spin forever.  Wait for reset or user to debug.
         //
-        UARTprintf("ADXL: Task Init Failed!\n");
+        UARTprintf("MPU: Task Init Failed!\n");
         while(1)
         {
             //
@@ -365,6 +365,24 @@ main(void)
             //
         }
     }
+*/
+    //
+     // Create the CompDCM 9 axis sensor task.
+
+     if(ADXLTaskInit() != 0)
+     {
+         //
+         // Init returned an error. Print an alert to the user and
+         // spin forever.  Wait for reset or user to debug.
+         //
+         UARTprintf("ADXL: Task Init Failed!\n");
+         while(1)
+         {
+             //
+             // Do Nothing.
+             //
+         }
+     }
 
 
     //

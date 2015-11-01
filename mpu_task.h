@@ -39,7 +39,7 @@
 //*****************************************************************************
 extern xTaskHandle g_xMPUHandle;
 
-#define MPU_TASK_PERIOD_MS         100        // periodic rate of the task
+#define MPU_TASK_PERIOD_MS         500        // periodic rate of the task
 
 //*****************************************************************************
 //
