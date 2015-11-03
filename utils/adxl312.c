@@ -179,3 +179,45 @@ uint32_t I2CReceive(uint32_t slave_addr, uint8_t reg)
     //return data pulled from the specified register
     return I2CMasterDataGet(I2C0_BASE);
 }
+
+//read specified register on slave device
+uint32_t I2CReceiveMulti(uint32_t slave_addr, uint8_t reg,uint8_t count)
+{
+	uint16_t result;
+    //specify that we are writing (a register address) to the
+    //slave device
+    I2CMasterSlaveAddrSet(I2C0_BASE, slave_addr, false);
+
+    //specify register to be read
+    I2CMasterDataPut(I2C0_BASE, reg);
+
+    //send control byte and register address byte to slave device
+    I2CMasterControl(I2C0_BASE, I2C_MASTER_CMD_BURST_SEND_START);
+
+    //wait for MCU to finish transaction
+    while(I2CMasterBusy(I2C0_BASE));
+
+    //specify that we are going to read from slave device
+    I2CMasterSlaveAddrSet(I2C0_BASE, slave_addr, true);
+
+    //send control byte and read from the register we
+    //specified
+    I2CMasterControl(I2C0_BASE, I2C_MASTER_CMD_BURST_RECEIVE_START);
+
+    //wait for MCU to finish transaction
+    while(I2CMasterBusy(I2C0_BASE));
+
+    //return data pulled from the specified register
+    result = I2CMasterDataGet(I2C0_BASE);
+    //send control byte and read from the register we
+    //specified
+    I2CMasterControl(I2C0_BASE, I2C_MASTER_CMD_BURST_RECEIVE_FINISH);
+
+    //wait for MCU to finish transaction
+    while(I2CMasterBusy(I2C0_BASE));
+
+    //return data pulled from the specified register
+    result |= (I2CMasterDataGet(I2C0_BASE)<<8);
+
+    return result;
+}

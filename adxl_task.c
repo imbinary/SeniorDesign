@@ -246,7 +246,7 @@ uint8_t ReadAccel(uint8_t reg)
 static void
 ADXLTask(void *pvParameters)
 {
-	uint8_t x1,x2;
+	uint8_t x0,x1,x2,x3,x4;
 	portTickType xLastWakeTime;
 
 
@@ -272,18 +272,29 @@ ADXLTask(void *pvParameters)
         xSemaphoreTake(g_xI2CSemaphore, portMAX_DELAY);
         //I2CSend(ADXL312_I2CADR_ALT, 2, ADXL_POWER_CTL, 0x08 );
 
-        x1 = I2CReceive(ADXL312_I2CADR_ALT, ADXL_DEVID);
-        //x1 = I2CReceive(ADXL312_I2CADR_ALT, ADXL_DATAZ0);
-        x2 = 0;//I2CReceive(ADXL312_I2CADR_ALT, ADXL_DATAZ1);
-
-
+        x0 = I2CReceive(ADXL312_I2CADR_ALT, ADXL_DEVID);
+        //SysCtlDelay(g_ui32SysClock / 10 / 3);
+        //x4 = I2CReceive(ADXL312_I2CADR_ALT, ADXL_POWER_CTL);
+        //SysCtlDelay(g_ui32SysClock / 10 / 3);
+        //x1 = I2CReceiveMulti(ADXL312_I2CADR_ALT, ADXL_DATAX0,2);
+        //SysCtlDelay(g_ui32SysClock / 10 / 3);
+		//x2 = I2CReceiveMulti(ADXL312_I2CADR_ALT, ADXL_DATAY0,2);
+		//SysCtlDelay(g_ui32SysClock / 10 / 3);
+		//x3 = I2CReceiveMulti(ADXL312_I2CADR_ALT, ADXL_DATAZ0,2);
+		int16_t x,y,z;
+		x = (int16_t)(x1);
+		x=x*2.9/100;
+		y = (int16_t)(x2);
+		y=y*2.9/100;
+		z = (int16_t)(x3);
+		z=z*2.9/100;
         // Give back the I2C Semaphore so other can use the I2C interface.
         //
         xSemaphoreGive(g_xI2CSemaphore);
 
         xSemaphoreTake(g_xUARTSemaphore, portMAX_DELAY);
 
-        UARTprintf("adxl: %x, %x\n",x1,x2);
+    	UARTprintf("adxl:%x %x X(%d), Y(%d), Z(%d)\n",x0,x4,x,y,z);
 
 		xSemaphoreGive(g_xUARTSemaphore);
    //     updateBSM(pfAccel,0);

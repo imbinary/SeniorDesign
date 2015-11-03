@@ -24,6 +24,7 @@ extern "C"
 void I2CSend(uint8_t slave_addr, uint8_t num_of_args, ...);
 void I2CSendString(uint32_t slave_addr, char array[]);
 uint32_t I2CReceive(uint32_t slave_addr, uint8_t reg);
+uint32_t I2CReceiveMulti(uint32_t slave_addr, uint8_t reg,uint8_t count);
 
 //*****************************************************************************
 //
