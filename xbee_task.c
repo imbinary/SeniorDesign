@@ -112,7 +112,7 @@ bsmSend(){
 	//g_rBSMData.latitiude = 81.1;
 
 	if(DTYPE){
-		sprintf(bsm, "$B,%0.4f,%0.4f,%0.2f,%d,%0.1f,%d,%0.3f,%0.3f,%0.3f,%0.5f", g_rBSMData.latitiude,
+		sprintf(bsm, "$B,%0.4f,%0.4f,%0.2f,%d,%0.1f,%d,%d,%d,%d,%0.5f", g_rBSMData.latitiude,
 				g_rBSMData.longitude, g_rBSMData.speed, g_rBSMData.heading, g_rBSMData.time, g_rBSMData.date,
 				g_rBSMData.latAccel, g_rBSMData.longAccel, g_rBSMData.vertAccel, g_rBSMData.yawRate);
 		xbeeUARTprintf("%s\n", bsm);

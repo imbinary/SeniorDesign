@@ -81,15 +81,15 @@ xTaskHandle g_xADXLHandle;
 
 
 
-void updateBSM( float* pfAcceleration, float* pfAngularVelocity){
+void updateBSM( int16_t x, int16_t y, int16_t z){
 
 
     xSemaphoreTake(g_xBsmDataSemaphore, portMAX_DELAY);
 
 
-    g_rBSMData.longAccel = pfAcceleration[1];
-    g_rBSMData.latAccel = pfAcceleration[0];
-    g_rBSMData.vertAccel = pfAcceleration[2];
+    g_rBSMData.longAccel = x;
+    g_rBSMData.latAccel = y;
+    g_rBSMData.vertAccel = z;
     g_rBSMData.yawRate = 5.5; //pfAngularVelocity[1];
 
 
@@ -297,7 +297,7 @@ ADXLTask(void *pvParameters)
     	UARTprintf("adxl:%x %x X(%d), Y(%d), Z(%d)\n",x0,x4,x,y,z);
 
 		xSemaphoreGive(g_xUARTSemaphore);
-   //     updateBSM(pfAccel,0);
+        updateBSM(x,y,z);
     }
 }
 

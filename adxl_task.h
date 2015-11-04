@@ -47,7 +47,7 @@ extern xTaskHandle g_xADXLHandle;
 //
 //*****************************************************************************
 extern uint32_t ADXLTaskInit(void);
-extern void updateBSM( float* pfAcceleration, float* pfAngularVelocity);
+extern void updateBSM( int16_t x, int16_t y, int16_t z);
 extern void InitI2C0(void);
 uint8_t ReadAccel(uint8_t reg);
 #endif // __ADXLM_TASK_H__
