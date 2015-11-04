@@ -48,8 +48,7 @@
 #include "queue.h"
 #include "semphr.h"
 #include "uiuart.h"
-#include "compdcm_task.h"
-
+#include "adxl_task.h"
 #include "command_task.h"
 
 
@@ -145,6 +144,7 @@ ConfigureUART(uint32_t ui32SysClock)
     //
     UARTStdioConfig(0, 115200, ui32SysClock);
 }
+
 
 //*****************************************************************************
 //
@@ -347,6 +347,7 @@ CommandTask(void *pvParameters)
         // Could probably do this with just turning off/on UART interrupts.
         //
         vPortEnterCritical();
+
 
         //
         // Peek at the buffer to see if a \r is there.  If so we have a

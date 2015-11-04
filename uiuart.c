@@ -123,7 +123,7 @@ static volatile uint32_t ui_gui32UARTRxReadIndex = 0;
 // The base address of the chosen UART.
 //
 //*****************************************************************************
-static uint32_t ui_gui32Base = 5;
+static uint32_t ui_gui32Base = 7;
 
 //*****************************************************************************
 //
@@ -138,9 +138,9 @@ static const char * const ui_gpcHex = "0123456789abcdef";
 // The list of possible base addresses for the console UART.
 //
 //*****************************************************************************
-static const uint32_t ui_gui32UARTBase[6] =
+static const uint32_t ui_gui32UARTBase[8] =
 {
-    UART0_BASE, UART1_BASE, UART2_BASE, UART3_BASE, UART4_BASE, UART5_BASE
+    UART0_BASE, UART1_BASE, UART2_BASE, UART3_BASE, UART4_BASE, UART5_BASE, UART6_BASE, UART7_BASE
 };
 
 #ifdef UART_BUFFERED
@@ -149,9 +149,9 @@ static const uint32_t ui_gui32UARTBase[6] =
 // The list of possible interrupts for the console UART.
 //
 //*****************************************************************************
-static const uint32_t ui_gui32UARTInt[6] =
+static const uint32_t ui_gui32UARTInt[8] =
 {
-    INT_UART0, INT_UART1, INT_UART2, INT_UART3, INT_UART4, INT_UART5
+    INT_UART0, INT_UART1, INT_UART2, INT_UART3, INT_UART4, INT_UART5, INT_UART6, INT_UART7
 };
 
 //*****************************************************************************
@@ -167,9 +167,9 @@ static uint32_t ui_gui32PortNum;
 // The list of UART peripherals.
 //
 //*****************************************************************************
-static const uint32_t ui_gui32UARTPeriph[6] =
+static const uint32_t ui_gui32UARTPeriph[8] =
 {
-    SYSCTL_PERIPH_UART0, SYSCTL_PERIPH_UART1, SYSCTL_PERIPH_UART2, SYSCTL_PERIPH_UART3, SYSCTL_PERIPH_UART4, SYSCTL_PERIPH_UART5
+    SYSCTL_PERIPH_UART0, SYSCTL_PERIPH_UART1, SYSCTL_PERIPH_UART2, SYSCTL_PERIPH_UART3, SYSCTL_PERIPH_UART4, SYSCTL_PERIPH_UART5, SYSCTL_PERIPH_UART6, SYSCTL_PERIPH_UART7
 };
 
 //*****************************************************************************
@@ -344,7 +344,7 @@ uiUARTxConfig(uint32_t ui32PortNum, uint32_t ui32Baud, uint32_t ui32SrcClock)
     //
     // In buffered mode, we only allow a single instance to be opened.
     //
-    ASSERT(ui_gui32Base == 5);
+    ASSERT(ui_gui32Base == 7);
 #endif
 
     //

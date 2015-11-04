@@ -22,76 +22,32 @@
 //
 //*****************************************************************************
 
-#ifndef __CompDCM_TASK_H__
-#define __CompDCM_TASK_H__
+#ifndef __MPU_TASK_H__
+#define __MPU_TASK_H__
 
 //*****************************************************************************
 //
 // The stack size for the display task.
 //
 //*****************************************************************************
-#define COMPDCM_TASK_STACK_SIZE        1024         // Stack size in words
+#define MPU_TASK_STACK_SIZE        1024         // Stack size in words
 
 //*****************************************************************************
 //
 // A handle by which this task and others can refer to this task.
 //
 //*****************************************************************************
-extern xTaskHandle g_xCompDCMHandle;
+extern xTaskHandle g_xMPUHandle;
 
-//*****************************************************************************
-//
-// Structure to hold the sensor data and provide access to other tasks.
-//
-//*****************************************************************************
-typedef struct sCompDCMDataStruct
-{
-    //
-    // boolean flag to indicate if the task is still actively updating data.
-    //
-    bool bActive;
-
-    //
-    // Array of Euler angles. Roll, Pitch, Yaw.
-    //
-    float pfEuler[3];
-
-    //
-    // Array of quaternion values
-    //
-    float pfQuaternion[4];
-
-    //
-    // Array of raw angular velocities from the sensor.
-    //
-    float pfAngularVelocity[3];
-
-    //
-    // Array of raw magnetic field strength sensor measurements.
-    //
-    float pfMagneticField[3];
-
-    //
-    // Array of raw accelerometer readings from the sensor.
-    //
-    float pfAcceleration[3];
-
-    //
-    // Tick counter time stamp at the most recent update of this struct.
-    //
-    portTickType xTimeStampTicks;
-
-} sCompDCMData_t;
-
-extern sCompDCMData_t g_sCompDCMData;
-
+#define MPU_TASK_PERIOD_MS         500        // periodic rate of the task
 
 //*****************************************************************************
 //
 // Prototypes for the switch task.
 //
 //*****************************************************************************
-extern uint32_t CompDCMTaskInit(void);
-extern void CompDCMDataPrint(float *pfRPY, float *pfQuaternion);
-void updateR( float* pfAcceleration, float* pfAngularVelocity);
-#endif // __CompDCM_TASK_H__
+extern uint32_t MPUTaskInit(void);
+extern void mupdateBSM( float* pfAcceleration, float* pfAngularVelocity);
+extern void InitI2C7(void);
+uint8_t mpuReadAccel(uint8_t reg);
+#endif // __MPU_TASK_H__

@@ -39,52 +39,7 @@
 //*****************************************************************************
 extern xTaskHandle g_xADXLHandle;
 
-//*****************************************************************************
-//
-// Structure to hold the sensor data and provide access to other tasks.
-//
-//*****************************************************************************
-typedef struct sADXLDataStruct
-{
-    //
-    // boolean flag to indicate if the task is still actively updating data.
-    //
-    bool bActive;
-
-    //
-    // Array of Euler angles. Roll, Pitch, Yaw.
-    //
-    float pfEuler[3];
-
-    //
-    // Array of quaternion values
-    //
-    float pfQuaternion[4];
-
-    //
-    // Array of raw angular velocities from the sensor.
-    //
-    float pfAngularVelocity[3];
-
-    //
-    // Array of raw magnetic field strength sensor measurements.
-    //
-    float pfMagneticField[3];
-
-    //
-    // Array of raw accelerometer readings from the sensor.
-    //
-    float pfAcceleration[3];
-
-    //
-    // Tick counter time stamp at the most recent update of this struct.
-    //
-    portTickType xTimeStampTicks;
-
-} sADXLData_t;
-
-extern sADXLData_t g_sADXLData;
-
+#define ADXL_TASK_PERIOD_MS         200        // periodic rate of the task
 
 //*****************************************************************************
 //
@@ -92,6 +47,7 @@ extern sADXLData_t g_sADXLData;
 //
 //*****************************************************************************
 extern uint32_t ADXLTaskInit(void);
-extern void ADXLDataPrint(float *pfRPY, float *pfQuaternion);
-void updateBSM( float* pfAcceleration, float* pfAngularVelocity);
+extern void updateBSM( int16_t x, int16_t y, int16_t z);
+extern void InitI2C0(void);
+uint8_t ReadAccel(uint8_t reg);
 #endif // __ADXLM_TASK_H__

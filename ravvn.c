@@ -41,9 +41,11 @@
 #include "queue.h"
 #include "semphr.h"
 #include "GPS_task.h"
-#include "compdcm_task.h"
+#include "adxl_task.h"
+#include "mpu_task.h"
 #include "xbee_task.h"
 #include "command_task.h"
+#include "led_task.h"
 #include "ui_task.h"
 #include "drivers/pinout.h"
 #include "drivers/buttons.h"
@@ -200,25 +202,7 @@ void SensorCloudStatTimerConfig(void)
 
 }
 
-//*****************************************************************************
-//
-// Called by the NVIC as a result of I2C Interrupt. I2C7 is the I2C connection
-// to the Senshub BoosterPack for BoosterPack 1 interface.  I2C8 must be used
-// for BoosterPack 2 interface.  Must also move this function pointer in the
-// startup file interrupt vector table for your tool chain if using BoosterPack
-// 2 interface headers.
-//
-//*****************************************************************************
-void
-SensHubI2CIntHandler(void)
-{
-    //
-    // Pass through to the I2CM interrupt handler provided by sensor library.
-    // This is required to be at application level so that I2CMIntHandler can
-    // receive the instance structure pointer as an argument.
-    //
-    I2CMIntHandler(&g_sI2CInst);
-}
+
 
 //*****************************************************************************
 //
@@ -262,43 +246,6 @@ main(void)
     PinoutSet(false, false);
     ButtonsInit();
 
-    //
-    // The I2C7 peripheral must be enabled before use.
-    //
-    // For BoosterPack 2 interface use I2C8 and GPIOA.
-    //
-    ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOD);
-    ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_I2C7);
-
-    //
-    // Configure the pin muxing for I2C7 functions on port D0 and D1.
-    // This step is not necessary if your part does not support pin muxing.
-    //
-    // For BoosterPack 2 interface use PA2 and PA3.
-    //
-    ROM_GPIOPinConfigure(GPIO_PD0_I2C7SCL);
-    ROM_GPIOPinConfigure(GPIO_PD1_I2C7SDA);
-
-    //
-    // Select the I2C function for these pins.  This function will also
-    // configure the GPIO pins pins for I2C operation, setting them to
-    // open-drain operation with weak pull-ups.  Consult the data sheet
-    // to see which functions are allocated per pin.
-    //
-    // For BoosterPack 2 interface use PA2 and PA3.
-    //
-    GPIOPinTypeI2CSCL(GPIO_PORTD_BASE, GPIO_PIN_0);
-    ROM_GPIOPinTypeI2C(GPIO_PORTD_BASE, GPIO_PIN_1);
-
-    //
-    // Initialize I2C peripheral driver.
-    //
-    // For BoosterPack 2 interface use I2C8
-    //
-    I2CMInit(&g_sI2CInst, I2C7_BASE, INT_I2C7, 0xff, 0xff, g_ui32SysClock);
-    IntPrioritySet(INT_I2C7, 0xE0);
-
-    //
     // Create a mutex to guard the I2C.
     //
     g_xI2CSemaphore = xSemaphoreCreateMutex();
@@ -345,6 +292,24 @@ main(void)
         }
     }
 
+
+    //
+    // Create the xbee task.
+    //
+    if(LedTaskInit() != 0)
+    {
+        //
+        // Init returned an error. Print an alert to the user and
+        // spin forever.  Wait for reset or user to debug.
+        //
+        UARTprintf("LED: Task Init Failed!\n");
+        while(1)
+        {
+            //
+            // Do Nothing.
+            //
+        }
+    }
     //
     // Create the ui task.
     //
@@ -385,14 +350,14 @@ main(void)
 
     //
     // Create the CompDCM 9 axis sensor task.
-    //
-    if(CompDCMTaskInit() != 0)
+    /*
+    if(MPUTaskInit() != 0)
     {
         //
         // Init returned an error. Print an alert to the user and
         // spin forever.  Wait for reset or user to debug.
         //
-        UARTprintf("CompDCM: Task Init Failed!\n");
+        UARTprintf("MPU: Task Init Failed!\n");
         while(1)
         {
             //
@@ -400,6 +365,24 @@ main(void)
             //
         }
     }
+*/
+    //
+     // Create the CompDCM 9 axis sensor task.
+
+     if(ADXLTaskInit() != 0)
+     {
+         //
+         // Init returned an error. Print an alert to the user and
+         // spin forever.  Wait for reset or user to debug.
+         //
+         UARTprintf("ADXL: Task Init Failed!\n");
+         while(1)
+         {
+             //
+             // Do Nothing.
+             //
+         }
+     }
 
 
     //

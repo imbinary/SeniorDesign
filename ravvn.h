@@ -22,9 +22,9 @@ typedef struct rBSMDataStruct
 	float speed;
 	uint16_t heading;
 	uint16_t steeringAngle;
-	float longAccel;
-	float latAccel;
-	float vertAccel;
+	uint16_t longAccel;
+	uint16_t latAccel;
+	uint16_t vertAccel;
 	float yawRate;
 	bool brake;
 	uint16_t length;

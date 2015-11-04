@@ -60,7 +60,6 @@ extern void lwIPEthernetIntHandler(void);
 extern void IntHandlerGPIOPortE(void);
 extern void IntHandlerGPIOPortH(void);
 extern void IntHandlerGPIOPortM(void);
-extern void SensHubI2CIntHandler(void);
 extern void xPortPendSVHandler(void);
 extern void vPortSVCHandler(void);
 extern void xPortSysTickHandler(void);
@@ -104,7 +103,7 @@ void (* const g_pfnVectors[])(void) =
     UARTStdioIntHandler,                    // UART0 Rx and Tx
     IntDefaultHandler,                      // UART1 Rx and Tx
     IntDefaultHandler,                      // SSI0 Rx and Tx
-    IntDefaultHandler,                      // I2C0 Master and Slave
+	IntDefaultHandler,                      // I2C0 Master and Slave
     IntDefaultHandler,                      // PWM Fault
     IntDefaultHandler,                      // PWM Generator 0
     IntDefaultHandler,                      // PWM Generator 1
@@ -154,9 +153,9 @@ void (* const g_pfnVectors[])(void) =
     IntDefaultHandler,                      // SSI3 Rx and Tx
 	gpsUARTxIntHandler,                      // UART3 Rx and Tx
 	xbeeUARTxIntHandler,                      // UART4 Rx and Tx
-	uiUARTxIntHandler,                      // UART5 Rx and Tx
+	IntDefaultHandler,                      // UART5 Rx and Tx
     IntDefaultHandler,                      // UART6 Rx and Tx
-    IntDefaultHandler,                      // UART7 Rx and Tx
+	uiUARTxIntHandler,                      // UART7 Rx and Tx
     IntDefaultHandler,                      // I2C2 Master and Slave
     IntDefaultHandler,                      // I2C3 Master and Slave
     IntDefaultHandler,                      // Timer 4 subtimer A
@@ -168,7 +167,7 @@ void (* const g_pfnVectors[])(void) =
     0,                                      // Reserved
     IntDefaultHandler,                      // I2C4 Master and Slave
     IntDefaultHandler,                      // I2C5 Master and Slave
-    IntHandlerGPIOPortM,                    // GPIO Port M
+	IntDefaultHandler,                    // GPIO Port M
     IntDefaultHandler,                      // GPIO Port N
     0,                                      // Reserved
     IntDefaultHandler,                      // Tamper
@@ -199,7 +198,7 @@ void (* const g_pfnVectors[])(void) =
     IntDefaultHandler,                      // Timer 7 subtimer A
     IntDefaultHandler,                      // Timer 7 subtimer B
     IntDefaultHandler,                      // I2C6 Master and Slave
-    SensHubI2CIntHandler,                   // I2C7 Master and Slave
+	IntDefaultHandler,                   // I2C7 Master and Slave
     IntDefaultHandler,                      // HIM Scan Matrix Keyboard 0
     IntDefaultHandler,                      // One Wire 0
     IntDefaultHandler,                      // HIM PS/2 0

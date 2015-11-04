@@ -47,7 +47,7 @@
 #include "task.h"
 #include "queue.h"
 #include "semphr.h"
-#include "compdcm_task.h"
+#include "adxl_task.h"
 #include "command_task.h"
 #include "GPS_task.h"
 #include "gpsuart.h"
