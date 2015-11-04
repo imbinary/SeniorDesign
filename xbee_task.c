@@ -136,7 +136,6 @@ ConfigureXBEEUART(uint32_t ui32SysClock)
     //
     // Enable the GPIO Peripheral used by the UART.
     //
-    //ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOA);
     ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOK);
     //
     // Enable UART3
@@ -146,20 +145,11 @@ ConfigureXBEEUART(uint32_t ui32SysClock)
     //
     // Configure GPIO Pins for UART mode.
     //
-    //ROM_GPIOPinConfigure(GPIO_PA6_U2RX);
-    //ROM_GPIOPinConfigure(GPIO_PA7_U2TX);
-    //ROM_GPIOPinTypeUART(GPIO_PORTA_BASE, GPIO_PIN_6 | GPIO_PIN_7);
 
     ROM_GPIOPinConfigure(GPIO_PK0_U4RX);
     ROM_GPIOPinConfigure(GPIO_PK1_U4TX);
     ROM_GPIOPinTypeUART(GPIO_PORTK_BASE, GPIO_PIN_0 | GPIO_PIN_1);
 
-    //
-    // Configure the UART for 115,200, 8-N-1 operation. xbee
-    //
-  //  UARTConfigSetExpClk(UART3_BASE, g_ui32SysClock, 9600,
-   //                         (UART_CONFIG_WLEN_8 | UART_CONFIG_STOP_ONE |
-   //                          UART_CONFIG_PAR_NONE));
 
     //
     // Use the system clock for the UART.
