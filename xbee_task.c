@@ -64,7 +64,7 @@
 //
 //*****************************************************************************
 xTaskHandle g_xXBEEHandle;
-
+extern xQueueHandle xQueue1;
 //*****************************************************************************
 //
 // A mutex semaphore to manage the UART buffer in utils\uartstdio.  Before
@@ -139,6 +139,7 @@ bsmParse(char *cInput){
 	rBSMData_t tmpBSMData;
 	char** tokens;
 	char bsm[BSM_SIZE];
+	struct AMessage *pxMessage;
 
 
 	tokens = str_split(cInput, ',');
@@ -166,7 +167,7 @@ bsmParse(char *cInput){
 			sprintf(bsm, "$B,%0.4f,%0.4f,%0.2f,%d,%0.1f,%d,%d,%d,%d,%0.5f,%0.2f", tmpBSMData.latitiude,
 					tmpBSMData.longitude, tmpBSMData.speed, tmpBSMData.heading, tmpBSMData.time, tmpBSMData.date,
 					tmpBSMData.latAccel, tmpBSMData.longAccel, tmpBSMData.vertAccel, tmpBSMData.yawRate,distance(28.505121,-81.429598,28.522604,-81.464130,'K'));
-			UARTprintf("%s\n", bsm);
+			//UARTprintf("%s\n", bsm);
 		}
 		// free memory
 		for (i = 0; *(tokens + i); i++)
@@ -179,6 +180,21 @@ bsmParse(char *cInput){
 	}
 
 	//TODO calculate stuff
+
+
+	 if( xQueue1 != 0 )
+	    {
+		 	xMessage.color = 12;
+	        /* Send a pointer to a struct AMessage object.  Don't block if the
+	        queue is already full. */
+		 	pxMessage = & xMessage;
+	        xQueueSend( xQueue1, ( void * ) &pxMessage, 0 );
+
+		 	xMessage.color = 14;
+			/* Send a pointer to a struct AMessage object.  Don't block if the
+			queue is already full. */
+			xQueueSend( xQueue1, ( void * ) &pxMessage, 0 );
+	    }
 
 }
 //*****************************************************************************

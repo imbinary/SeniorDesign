@@ -49,6 +49,7 @@ void I2CSend(uint8_t slave_addr, uint8_t num_of_args, ...)
         I2CMasterControl(I2C0_BASE, I2C_MASTER_CMD_SINGLE_SEND);
 
         // Wait until MCU is done transferring.
+        while(!I2CMasterBusy(I2C0_BASE));
         while(I2CMasterBusy(I2C0_BASE));
 
         //"close" variable argument list
@@ -63,6 +64,7 @@ void I2CSend(uint8_t slave_addr, uint8_t num_of_args, ...)
         I2CMasterControl(I2C0_BASE, I2C_MASTER_CMD_BURST_SEND_START);
 
         // Wait until MCU is done transferring.
+        while(!I2CMasterBusy(I2C0_BASE));
         while(I2CMasterBusy(I2C0_BASE));
 
         //send num_of_args-2 pieces of data, using the
@@ -76,6 +78,7 @@ void I2CSend(uint8_t slave_addr, uint8_t num_of_args, ...)
             I2CMasterControl(I2C0_BASE, I2C_MASTER_CMD_BURST_SEND_CONT);
 
             // Wait until MCU is done transferring.
+            while(!I2CMasterBusy(I2C0_BASE));
             while(I2CMasterBusy(I2C0_BASE));
         }
 
@@ -84,6 +87,7 @@ void I2CSend(uint8_t slave_addr, uint8_t num_of_args, ...)
         //send next data that was just placed into FIFO
         I2CMasterControl(I2C0_BASE, I2C_MASTER_CMD_BURST_SEND_FINISH);
         // Wait until MCU is done transferring.
+        while(!I2CMasterBusy(I2C0_BASE));
         while(I2CMasterBusy(I2C0_BASE));
 
         //"close" variable args list
@@ -109,6 +113,7 @@ void I2CSendString(uint32_t slave_addr, char array[])
         I2CMasterControl(I2C0_BASE, I2C_MASTER_CMD_SINGLE_SEND);
 
         // Wait until MCU is done transferring.
+        while(!I2CMasterBusy(I2C0_BASE));
         while(I2CMasterBusy(I2C0_BASE));
     }
 
@@ -120,6 +125,7 @@ void I2CSendString(uint32_t slave_addr, char array[])
         I2CMasterControl(I2C0_BASE, I2C_MASTER_CMD_BURST_SEND_START);
 
         // Wait until MCU is done transferring.
+        while(!I2CMasterBusy(I2C0_BASE));
         while(I2CMasterBusy(I2C0_BASE));
 
         //initialize index into array
@@ -136,6 +142,7 @@ void I2CSendString(uint32_t slave_addr, char array[])
             I2CMasterControl(I2C0_BASE, I2C_MASTER_CMD_BURST_SEND_CONT);
 
             // Wait until MCU is done transferring.
+            while(!I2CMasterBusy(I2C0_BASE));
             while(I2CMasterBusy(I2C0_BASE));
         }
 
@@ -146,6 +153,7 @@ void I2CSendString(uint32_t slave_addr, char array[])
         I2CMasterControl(I2C0_BASE, I2C_MASTER_CMD_BURST_SEND_FINISH);
 
         // Wait until MCU is done transferring.
+        while(!I2CMasterBusy(I2C0_BASE));
         while(I2CMasterBusy(I2C0_BASE));
     }
 }
@@ -164,6 +172,7 @@ uint32_t I2CReceive(uint32_t slave_addr, uint8_t reg)
     I2CMasterControl(I2C0_BASE, I2C_MASTER_CMD_BURST_SEND_START);
 
     //wait for MCU to finish transaction
+    while(!I2CMasterBusy(I2C0_BASE));
     while(I2CMasterBusy(I2C0_BASE));
 
     //specify that we are going to read from slave device
@@ -174,6 +183,7 @@ uint32_t I2CReceive(uint32_t slave_addr, uint8_t reg)
     I2CMasterControl(I2C0_BASE, I2C_MASTER_CMD_SINGLE_RECEIVE);
 
     //wait for MCU to finish transaction
+    while(!I2CMasterBusy(I2C0_BASE));
     while(I2CMasterBusy(I2C0_BASE));
 
     //return data pulled from the specified register
@@ -195,6 +205,7 @@ uint32_t I2CReceiveMulti(uint32_t slave_addr, uint8_t reg,uint8_t count)
     I2CMasterControl(I2C0_BASE, I2C_MASTER_CMD_BURST_SEND_START);
 
     //wait for MCU to finish transaction
+    while(!I2CMasterBusy(I2C0_BASE));
     while(I2CMasterBusy(I2C0_BASE));
 
     //specify that we are going to read from slave device
@@ -205,6 +216,7 @@ uint32_t I2CReceiveMulti(uint32_t slave_addr, uint8_t reg,uint8_t count)
     I2CMasterControl(I2C0_BASE, I2C_MASTER_CMD_BURST_RECEIVE_START);
 
     //wait for MCU to finish transaction
+    while(!I2CMasterBusy(I2C0_BASE));
     while(I2CMasterBusy(I2C0_BASE));
 
     //return data pulled from the specified register
@@ -214,6 +226,7 @@ uint32_t I2CReceiveMulti(uint32_t slave_addr, uint8_t reg,uint8_t count)
     I2CMasterControl(I2C0_BASE, I2C_MASTER_CMD_BURST_RECEIVE_FINISH);
 
     //wait for MCU to finish transaction
+    while(!I2CMasterBusy(I2C0_BASE));
     while(I2CMasterBusy(I2C0_BASE));
 
     //return data pulled from the specified register
