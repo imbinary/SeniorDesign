@@ -162,9 +162,10 @@ bsmParse(char *cInput){
 			tmpBSMData.longAccel = strtod(tokens[8],NULL);
 			tmpBSMData.vertAccel = strtod(tokens[9],NULL);
 			tmpBSMData.yawRate = strtol(tokens[10],NULL,10);
-			sprintf(bsm, "$B,%0.4f,%0.4f,%0.2f,%d,%0.1f,%d,%d,%d,%d,%0.5f", tmpBSMData.latitiude,
+
+			sprintf(bsm, "$B,%0.4f,%0.4f,%0.2f,%d,%0.1f,%d,%d,%d,%d,%0.5f,%0.2f", tmpBSMData.latitiude,
 					tmpBSMData.longitude, tmpBSMData.speed, tmpBSMData.heading, tmpBSMData.time, tmpBSMData.date,
-					tmpBSMData.latAccel, tmpBSMData.longAccel, tmpBSMData.vertAccel, tmpBSMData.yawRate);
+					tmpBSMData.latAccel, tmpBSMData.longAccel, tmpBSMData.vertAccel, tmpBSMData.yawRate,distance(28.505121,-81.429598,28.522604,-81.464130,'K'));
 			UARTprintf("%s\n", bsm);
 		}
 		// free memory
