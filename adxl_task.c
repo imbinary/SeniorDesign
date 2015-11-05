@@ -294,7 +294,7 @@ ADXLTask(void *pvParameters)
 
         xSemaphoreTake(g_xUARTSemaphore, portMAX_DELAY);
 
-    	UARTprintf("adxl:%x %x X(%d), Y(%d), Z(%d)\n",x0,x4,x,y,z);
+    	//UARTprintf("adxl:%x %x X(%d), Y(%d), Z(%d)\n",x0,x4,x,y,z);
 
 		xSemaphoreGive(g_xUARTSemaphore);
         updateBSM(x,y,z);

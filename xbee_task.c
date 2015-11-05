@@ -22,8 +22,9 @@
 //
 //*****************************************************************************
 
-#include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <stdint.h>
 #include <stdbool.h>
 #include <string.h>
 #include "inc/hw_memmap.h"
@@ -53,6 +54,7 @@
 #include "xbee_task.h"
 #include "xbeeuart.h"
 #include "ravvn.h"
+#include "util.h"
 
 #define XBEE_INPUT_BUF_SIZE  80
 #define BSM_SIZE  50
@@ -122,9 +124,63 @@ bsmSend(){
 		sprintf(bsm, "$I,%0.4f,%0.4f,%d,%0.1f", g_rBSMData.latitiude, g_rBSMData.longitude, g_rBSMData.heading, g_rBSMData.time);
 		xbeeUARTprintf("%s\n", bsm);
 	}
-
+	bsmParse(bsm);
 }
 
+
+//*****************************************************************************
+//
+//
+//
+//*****************************************************************************
+void
+bsmParse(char *cInput){
+	//g_rBSMData.latitiude = 81.1;
+	rBSMData_t tmpBSMData;
+	char** tokens;
+	char bsm[BSM_SIZE];
+
+
+	tokens = str_split(cInput, ',');
+	/*
+	sprintf(bsm, "$B,%0.4f,%0.4f,%0.2f,%d,%0.1f,%d,%d,%d,%d,%0.5f", g_rBSMData.latitiude,
+					g_rBSMData.longitude, g_rBSMData.speed, g_rBSMData.heading, g_rBSMData.time, g_rBSMData.date,
+					g_rBSMData.latAccel, g_rBSMData.longAccel, g_rBSMData.vertAccel, g_rBSMData.yawRate);
+
+	*/
+	if (tokens)
+	{
+		int i;
+		if(!strcmp(tokens[0],"$B")){
+			tmpBSMData.latitiude = strtod(tokens[1],NULL);
+			tmpBSMData.longitude = strtod(tokens[2],NULL);
+			tmpBSMData.speed = strtol(tokens[3],NULL,10);
+			tmpBSMData.heading = strtod(tokens[4],NULL);
+			tmpBSMData.time = strtol(tokens[5],NULL,10);
+			tmpBSMData.date = strtod(tokens[6],NULL);
+			tmpBSMData.latAccel = strtod(tokens[7],NULL);
+			tmpBSMData.longAccel = strtod(tokens[8],NULL);
+			tmpBSMData.vertAccel = strtod(tokens[9],NULL);
+			tmpBSMData.yawRate = strtol(tokens[10],NULL,10);
+
+			sprintf(bsm, "$B,%0.4f,%0.4f,%0.2f,%d,%0.1f,%d,%d,%d,%d,%0.5f,%0.2f", tmpBSMData.latitiude,
+					tmpBSMData.longitude, tmpBSMData.speed, tmpBSMData.heading, tmpBSMData.time, tmpBSMData.date,
+					tmpBSMData.latAccel, tmpBSMData.longAccel, tmpBSMData.vertAccel, tmpBSMData.yawRate,distance(28.505121,-81.429598,28.522604,-81.464130,'K'));
+			UARTprintf("%s\n", bsm);
+		}
+		// free memory
+		for (i = 0; *(tokens + i); i++)
+		{
+		   // UARTprintf("parts=[%s]\n", *(tokens + i));
+			vPortFree(*(tokens + i));
+		}
+		//UARTprintf("\n");
+		vPortFree(tokens);
+	}
+
+	//TODO calculate stuff
+
+}
 //*****************************************************************************
 //
 // Configure the UART and its pins.  This must be called before UARTprintf().
@@ -136,7 +192,6 @@ ConfigureXBEEUART(uint32_t ui32SysClock)
     //
     // Enable the GPIO Peripheral used by the UART.
     //
-    //ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOA);
     ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOK);
     //
     // Enable UART3
@@ -146,20 +201,11 @@ ConfigureXBEEUART(uint32_t ui32SysClock)
     //
     // Configure GPIO Pins for UART mode.
     //
-    //ROM_GPIOPinConfigure(GPIO_PA6_U2RX);
-    //ROM_GPIOPinConfigure(GPIO_PA7_U2TX);
-    //ROM_GPIOPinTypeUART(GPIO_PORTA_BASE, GPIO_PIN_6 | GPIO_PIN_7);
 
     ROM_GPIOPinConfigure(GPIO_PK0_U4RX);
     ROM_GPIOPinConfigure(GPIO_PK1_U4TX);
     ROM_GPIOPinTypeUART(GPIO_PORTK_BASE, GPIO_PIN_0 | GPIO_PIN_1);
 
-    //
-    // Configure the UART for 115,200, 8-N-1 operation. xbee
-    //
-  //  UARTConfigSetExpClk(UART3_BASE, g_ui32SysClock, 9600,
-   //                         (UART_CONFIG_WLEN_8 | UART_CONFIG_STOP_ONE |
-   //                          UART_CONFIG_PAR_NONE));
 
     //
     // Use the system clock for the UART.
@@ -216,6 +262,7 @@ XBEETask(void *pvParameters)
 				//xbeereadUART();
 				xbeeUARTgets(cInput, XBEE_INPUT_BUF_SIZE);
 				UARTprintf("%s\n",cInput);
+				bsmParse(cInput);
 				xSemaphoreGive(g_xbeeUARTSemaphore);
 			}
 		bsmSend();
