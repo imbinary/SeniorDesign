@@ -54,6 +54,7 @@
 
 
 extern xSemaphoreHandle g_xBsmDataSemaphore;
+extern xQueueHandle xQueue1;
 //*****************************************************************************
 //
 // The I2C mutex
@@ -99,6 +100,9 @@ void updateBSM( int16_t x, int16_t y, int16_t z){
 
 }
 
+
+#define THRESHOLD 15
+int16_t xo,yo,zo;
 
 //*****************************************************************************
 //
@@ -246,7 +250,6 @@ uint8_t ReadAccel(uint8_t reg)
 static void
 ADXLTask(void *pvParameters)
 {
-	uint8_t x0,x1,x2,x3,x4;
 	portTickType xLastWakeTime;
 
 
@@ -270,34 +273,61 @@ ADXLTask(void *pvParameters)
         // Take the I2C semaphore.
         //
         xSemaphoreTake(g_xI2CSemaphore, portMAX_DELAY);
-        //I2CSend(ADXL312_I2CADR_ALT, 2, ADXL_POWER_CTL, 0x08 );
 
-        x0 = I2CReceive(ADXL312_I2CADR_ALT, ADXL_DEVID);
-        //SysCtlDelay(g_ui32SysClock / 10 / 3);
-        //x4 = I2CReceive(ADXL312_I2CADR_ALT, ADXL_POWER_CTL);
-        //SysCtlDelay(g_ui32SysClock / 10 / 3);
-        //x1 = I2CReceiveMulti(ADXL312_I2CADR_ALT, ADXL_DATAX0,2);
-        //SysCtlDelay(g_ui32SysClock / 10 / 3);
-		//x2 = I2CReceiveMulti(ADXL312_I2CADR_ALT, ADXL_DATAY0,2);
-		//SysCtlDelay(g_ui32SysClock / 10 / 3);
-		//x3 = I2CReceiveMulti(ADXL312_I2CADR_ALT, ADXL_DATAZ0,2);
+        uint16_t x1=0,x2=0,x3=0;
+
+
+		x1 = I2CReceiveMulti(ADXL312_I2CADR_ALT, ADXL_DATAX0,2);
+		//x1 = I2CReceive(ADXL312_I2CADR_ALT, ADXL_DATAX0);
+		x2 = I2CReceiveMulti(ADXL312_I2CADR_ALT, ADXL_DATAY0,2);
+		//x2 = I2CReceive(ADXL312_I2CADR_ALT, ADXL_DATAY0);
+		x3 = I2CReceiveMulti(ADXL312_I2CADR_ALT, ADXL_DATAZ0,2);
+		//x3 = I2CReceive(ADXL312_I2CADR_ALT, ADXL_DATAZ0);
+
 		int16_t x,y,z;
 		x = (int16_t)(x1);
-		x=x*2.9/100;
 		y = (int16_t)(x2);
-		y=y*2.9/100;
 		z = (int16_t)(x3);
-		z=z*2.9/100;
+
+
+		if(abs(xo-x) > THRESHOLD|| abs(yo-y) > THRESHOLD ||abs(zo-z) > THRESHOLD)
+		{
+			z=z*2.9/100;
+			y=y*2.9/100;
+			x=x*2.9/100;
+
+			xSemaphoreTake(g_xUARTSemaphore, portMAX_DELAY);
+			UARTprintf("adxl: X(%d), Y(%d), Z(%x)\n",x,y,z);
+			xSemaphoreGive(g_xUARTSemaphore);
+		}
+
+
+		xo=x;
+		yo=y;
+		zo=z;
+
         // Give back the I2C Semaphore so other can use the I2C interface.
         //
         xSemaphoreGive(g_xI2CSemaphore);
 
-        xSemaphoreTake(g_xUARTSemaphore, portMAX_DELAY);
 
-    	//UARTprintf("adxl:%x %x X(%d), Y(%d), Z(%d)\n",x0,x4,x,y,z);
-
-		xSemaphoreGive(g_xUARTSemaphore);
         updateBSM(x,y,z);
+
+        //TODO remove this
+
+        struct AMessage *pxRxedMessage;
+
+		if( xQueue1 != 0 )
+		{
+			// Receive a message on the created queue.  Block for 10 ticks if a
+			// message is not immediately available.
+			if( xQueueReceive( xQueue1, &( pxRxedMessage ),  0 ) )
+			{
+				UARTprintf("queue:%d\n",pxRxedMessage->color);
+			}
+		}
+
+
     }
 }
 
@@ -327,7 +357,7 @@ void InitI2C0(void)
     // the I2C0 module.  The last parameter sets the I2C data transfer rate.
     // If false the data rate is set to 100kbps and if true the data rate will
     // be set to 400kbps.
-    I2CMasterInitExpClk(I2C0_BASE, g_ui32SysClock, false);
+    I2CMasterInitExpClk(I2C0_BASE, SysCtlClockGet(), false);
 
     I2CSlaveEnable(I2C0_BASE);
     //I2CSlaveInit(I2C0_BASE, ADXL312_I2CADR_ALT);
