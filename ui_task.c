@@ -51,7 +51,7 @@
 #include "command_task.h"
 #include "ui_task.h"
 #include "uiuart.h"
-
+#include "ravvn.h"
 #define UI_INPUT_BUF_SIZE  80
 
 //*****************************************************************************
@@ -60,7 +60,7 @@
 //
 //*****************************************************************************
 xTaskHandle g_xUIHandle;
-
+extern xQueueHandle xQueue1;
 //*****************************************************************************
 //
 // A mutex semaphore to manage the UART buffer in utils
@@ -146,12 +146,8 @@ static void UITask(void *pvParameters) {
 	portTickType xLastWakeTime;
 	int32_t i32DollarPosition;
 	char cInput[UI_INPUT_BUF_SIZE];
-	uint8_t color=0x01;
-	uint8_t dir=0;
-	uint16_t tim = 0;
+	struct AMessage *UIQpointer;
 	uint8_t night = 0;
-	uint8_t siz = 0;
-	struct Amessage *UIQpointer;
 	//int8_t test=0;
 
 	//
@@ -192,18 +188,15 @@ static void UITask(void *pvParameters) {
 		for(j=0;j<32;j++){
 			if(xQueueReceive(xQueue1, &(UIQpointer),0)){
 		//copy over values
-				tim = UIQpointer.time;
-				dir = UIQpointer.dir;
-				color = UIQpointer.color;
-				siz = UIQpointer.size;
+
 
 		//set night bit
-				if(tim > 20000 && tim < 140000) night = 1;
+				if(UIQpointer->time > 20000 && UIQpointer->time < 140000) night = 1;
 				else night = 0;
 
 		//construct the bytes
-				byte1 = dir * 8 + siz;
-				byte2 = color + night * 128;
+				byte1 = UIQpointer->dir * 8 +UIQpointer->size;
+				byte2 = UIQpointer->color + night * 128;
 				int i;
 				for(i=0;i<4;i++){
 					uiUARTprintf("$%c%c",byte1,byte2);
@@ -215,6 +208,15 @@ static void UITask(void *pvParameters) {
 		}
 		/* DEMO STUFF */
 		/*
+		  		uint8_t color=0x01;
+				uint8_t dir=0;
+				uint16_t tim = 0;
+
+				uint8_t siz = 0;
+		  		tim = UIQpointer->time;
+				dir = UIQpointer->dir;
+				color = UIQpointer->color;
+				siz = UIQpointer->size;
 				byte1 = dir * 8 + siz;
 				byte2 = color + night * 128;
 				int i;
