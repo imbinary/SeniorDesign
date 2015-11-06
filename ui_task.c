@@ -146,7 +146,12 @@ static void UITask(void *pvParameters) {
 	portTickType xLastWakeTime;
 	int32_t i32DollarPosition;
 	char cInput[UI_INPUT_BUF_SIZE];
-	uint8_t color=0x01, dir=0;
+	uint8_t color=0x01;
+	uint8_t dir=0;
+	uint16_t tim = 0;
+	uint8_t night = 0;
+	uint8_t siz = 0;
+	struct Amessage *UIQpointer;
 	//int8_t test=0;
 
 	//
@@ -183,24 +188,50 @@ static void UITask(void *pvParameters) {
 		//test = ++test%10;
 
 		uint8_t byte1, byte2;
+		int j;
+		for(j=0;j<32;j++){
+			if(xQueueReceive(xQueue1, &(UIQpointer),0)){
+		//copy over values
+				tim = UIQpointer.time;
+				dir = UIQpointer.dir;
+				color = UIQpointer.color;
+				siz = UIQpointer.size;
 
-		byte1 = dir * 8;
-		byte2 = color;
-		int i;
-		for(i=0;i<4;i++){
-			uiUARTprintf("$%c%c",byte1,byte2);
-			//UARTprintf("$%c%c",byte1,byte2);
+		//set night bit
+				if(tim > 20000 && tim < 140000) night = 1;
+				else night = 0;
+
+		//construct the bytes
+				byte1 = dir * 8 + siz;
+				byte2 = color + night * 128;
+				int i;
+				for(i=0;i<4;i++){
+					uiUARTprintf("$%c%c",byte1,byte2);
+					//UARTprintf("$%c%c",byte1,byte2);
+				}
+
+			}
+
 		}
-		color += 4;
-		dir += 3;
-		if(color >= 0x6b)
-			color = 0x01;
-		if(dir >= 32)
-			dir = 0;
+		/* DEMO STUFF */
+		/*
+				byte1 = dir * 8 + siz;
+				byte2 = color + night * 128;
+				int i;
+				for(i=0;i<4;i++){
+					uiUARTprintf("$%c%c",byte1,byte2);
+					UARTprintf("$%c%c",byte1,byte2);
+				}
+				dir += 3;
 
+				if(dir >= 32){
+					dir = 0;
+					color += 4;
+					if(color >= 0x7F)
+							color = 0x01;}
+							*/
 	}
 }
-
 //*****************************************************************************
 //
 // Initializes the Command task.
