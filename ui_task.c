@@ -185,26 +185,30 @@ static void UITask(void *pvParameters) {
 
 		uint8_t byte1, byte2;
 		int j;
-		for(j=0;j<32;j++){
-			if(xQueueReceive(xQueue1, &(UIQpointer),0)){
-		//copy over values
+		if(xQueue1 != 0){
+			UARTprintf("queue count: %d\n",uxQueueMessagesWaiting( xQueue1 ));
+			for(j=0;j<2;j++){
+				if(xQueueReceive(xQueue1, &(UIQpointer),0)){
+			//copy over values
 
 
-		//set night bit
-				if(UIQpointer->time > 20000 && UIQpointer->time < 140000) night = 1;
-				else night = 0;
+			//set night bit
+					if(UIQpointer->time > 20000 && UIQpointer->time < 140000) night = 1;
+					else night = 0;
 
-		//construct the bytes
-				byte1 = UIQpointer->dir * 8 +UIQpointer->size;
-				byte2 = UIQpointer->color + night * 128;
-				int i;
-				for(i=0;i<4;i++){
-					uiUARTprintf("$%c%c",byte1,byte2);
-					//UARTprintf("$%c%c",byte1,byte2);
+			//construct the bytes
+					byte1 = UIQpointer->dir * 8 +UIQpointer->size;
+					byte2 = UIQpointer->color + night * 128;
+					int i;
+					for(i=0;i<4;i++){
+						uiUARTprintf("$%c%c",byte1,byte2);
+
+					}
+					UARTprintf("queue: %d\n",UIQpointer->color);
 				}
 
 			}
-
+			UARTprintf("queue count: %d\n",uxQueueMessagesWaiting( xQueue1 ));
 		}
 		/* DEMO STUFF */
 		/*

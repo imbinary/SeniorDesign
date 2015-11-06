@@ -104,148 +104,6 @@ void updateBSM( int16_t x, int16_t y, int16_t z){
 #define THRESHOLD 15
 int16_t xo,yo,zo;
 
-//*****************************************************************************
-//
-// Function converts a floating point value to a string.
-//
-// \param fValue is the value to be converted.
-// \param pcStr is a pointer to a character buffer where the result will be
-// stored.
-// \param ui32Size is the size of the buffer where the result is stored.
-// \param ui32Precision is the number of digits after the decimal point.
-// Result will be truncated after this many digits.
-//
-// This function performs a brute force conversion of a float to a string.
-// First checks for a negative value and adds the '-' char if needed. Then
-// casts the float to an integer and uses existing usnprintf from
-// utils/ustdlib.c to convert the integer part to the string. Then loops
-// through the decimal portion multiplying by 10 and using the same integer
-// conversion for each position of precision. Returns when ui32Size is reached
-// or conversion is complete.
-//
-// \return the number of characters written to the buffer.
-//
-//*****************************************************************************
-uint32_t
-luftostr(char * pcStr, uint32_t ui32Size, uint32_t ui32Precision, float fValue)
-{
-    uint32_t ui32Integer;
-    uint32_t ui32SpaceUsed;
-    uint32_t ui32PrecisionCounter;
-
-    //
-    // Initialize local variable.
-    //
-    ui32SpaceUsed = 0;
-
-    //
-    // decrement size to account for room for a null character.
-    //
-    ui32Size -= 1;
-
-    //
-    // Account for negative values.
-    //
-    if(fValue < 0.0f)
-    {
-        if(ui32Size > 1)
-        {
-            pcStr[0] = '-';
-            ui32SpaceUsed = 1;
-        }
-    }
-
-    //
-    // Initialize the loop conditions.
-    //
-    ui32PrecisionCounter = 0;
-    ui32Integer = 0;
-
-    //
-    // Perform the conversion.
-    //
-    while((ui32PrecisionCounter <= ui32Precision) &&
-          (ui32SpaceUsed < ui32Size))
-    {
-        //
-        // Convert the new integer part.
-        //
-        ui32Integer = (uint32_t) fValue;
-
-        //
-        // Use usnprintf to convert the integer part to a string.
-        //
-        ui32SpaceUsed += usnprintf(&(pcStr[ui32SpaceUsed]),
-                                   ui32Size - ui32SpaceUsed,
-                                   "%d", ui32Integer);
-        //
-        // Subtract off the previous integer part.  Subtracts zero on first
-        // time through loop.
-        //
-        fValue = fValue - ((float) ui32Integer);
-
-        //
-        // Multiply by 10 so next time through the most significant remaining
-        // decimal will be beceome the integer part.
-        //
-        fValue *= 10;
-
-        //
-        // iF this is first time through the loop then add the decimal point
-        // after the integer in the string. Also makes sure that there is room
-        // for the decimal point.
-        //
-        if((ui32PrecisionCounter == 0) && (ui32SpaceUsed < ui32Size))
-        {
-             pcStr[ui32SpaceUsed] = '.';
-             ui32SpaceUsed++;
-        }
-
-        //
-        // Increment the precision counter to so we only convert as much as the
-        // caller asked for.
-        //
-        ui32PrecisionCounter++;
-    }
-
-    //
-    // Check if we quit because we ran out of buffer space.
-    //
-    if(ui32SpaceUsed >= ui32Size)
-    {
-        //
-        // Since we decremented size at the beginning we should still have room
-        // for the null char.
-        //
-        pcStr[ui32Size] = '\0';
-
-        //
-        // Return amount of space used plus the number of precision digits that
-        // were not accommodated.
-        //
-        return (ui32SpaceUsed + (ui32Precision - ui32PrecisionCounter));
-    }
-
-    //
-    // Terminate the string with null character.
-    //
-    pcStr[ui32SpaceUsed] = '\0';
-
-
-    //
-    // Return the amount of buffer space used. Not including null character.
-    //
-    return (ui32SpaceUsed);
-
-}
-
-uint8_t ReadAccel(uint8_t reg)
-{
-    uint8_t accelData =  I2CReceive(ADXL312_I2CADR_ALT, reg);
-
-    return accelData;
-}
-
 
 static void
 ADXLTask(void *pvParameters)
@@ -297,7 +155,7 @@ ADXLTask(void *pvParameters)
 			x=x*2.9/100;
 
 			xSemaphoreTake(g_xUARTSemaphore, portMAX_DELAY);
-			UARTprintf("adxl: X(%d), Y(%d), Z(%x)\n",x,y,z);
+			//UARTprintf("adxl: X(%d), Y(%d), Z(%x)\n",x,y,z);
 			xSemaphoreGive(g_xUARTSemaphore);
 		}
 
@@ -313,19 +171,6 @@ ADXLTask(void *pvParameters)
 
         updateBSM(x,y,z);
 
-        //TODO remove this
-
-        struct AMessage *pxRxedMessage;
-
-		if( xQueue1 != 0 )
-		{
-			// Receive a message on the created queue.  Block for 10 ticks if a
-			// message is not immediately available.
-			if( xQueueReceive( xQueue1, &( pxRxedMessage ),  0 ) )
-			{
-				UARTprintf("queue:%d\n",pxRxedMessage->color);
-			}
-		}
 
 
     }

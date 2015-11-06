@@ -193,7 +193,7 @@ bsmParse(char *cInput){
 		 	xMessage.color = 14;
 			/* Send a pointer to a struct AMessage object.  Don't block if the
 			queue is already full. */
-			xQueueSend( xQueue1, ( void * ) &pxMessage, 0 );
+			//xQueueSend( xQueue1, ( void * ) &pxMessage, 0 );
 	    }
 
 }
