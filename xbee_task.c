@@ -191,8 +191,8 @@ bsmParse(char *cInput){
 			byte2 = 0x34; //color * 128;
 		 //set night bit
 			 if(tmpBSMData.time > 20000 && tmpBSMData.time < 140000)
-				 byte2 += 1;
-			byte2 *= 128;
+				 byte2 |= 0x80;
+			//byte2 *= 128;
 			uint16_t tmp = (byte1 << 8)|byte2;
 	        xQueueSendToBackFromISR( xQueue1,  &tmp, 0 );
 

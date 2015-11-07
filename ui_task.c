@@ -195,7 +195,7 @@ static void UITask(void *pvParameters) {
 					byte2 = Atest;
 					byte1 = (Atest >> 8);
 					int i;
-					for(i=0;i<4;i++){
+					for(i=0;i<5;i++){
 						uiUARTprintf("$%c%c",byte1,byte2);
 
 					}
