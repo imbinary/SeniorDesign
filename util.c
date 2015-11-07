@@ -176,3 +176,14 @@ int16_t direction(double lat1, double lon1, double lat2, double lon2, char unit)
 		direction += 360;
 	return direction;
 }
+
+double deg2dec(double deg){
+	if (deg == 0)
+		return 0;
+	int intp = deg;  //DDMM
+	int min = intp - ((intp/100)*100); // MM
+	double decp = deg - intp; // .m
+	decp = (((double) min + decp))/60;
+	return ( (double) (intp/100) )+(  decp );
+	//return deg;
+}

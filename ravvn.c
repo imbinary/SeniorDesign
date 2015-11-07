@@ -373,7 +373,7 @@ main(void)
     //
      // Create the CompDCM 9 axis sensor task.
 
-   /*  if(ADXLTaskInit() != 0)
+     if(ADXL && ADXLTaskInit() != 0)
      {
          //
          // Init returned an error. Print an alert to the user and
@@ -388,7 +388,7 @@ main(void)
          }
      }
 
-*/
+
     //
     // Verify that the semaphores were created correctly.
     //

@@ -155,14 +155,14 @@ void bsmParse(char *cInput) {
 			tmpBSMData.yawRate = strtol(tokens[10], NULL, 10);
 
 			sprintf(bsm,
-					"$B,%0.4f,%0.4f,%0.2f,%d,%0.1f,%d,%d,%d,%d,%0.5f,%0.2f,%d",
+					"$B,%0.4f,%0.4f,%0.2f,%d,%0.1f,%d,%d,%d,%d,%0.5f,%0.2f,%d,%0.5f",
 					tmpBSMData.latitiude, tmpBSMData.longitude,
 					tmpBSMData.speed, tmpBSMData.heading, tmpBSMData.time,
 					tmpBSMData.date, tmpBSMData.latAccel, tmpBSMData.longAccel,
 					tmpBSMData.vertAccel, tmpBSMData.yawRate,
-					distance(tmpBSMData.latitiude, tmpBSMData.longitude, 28.709709, -81.546833,
-							'K'),direction(tmpBSMData.latitiude, tmpBSMData.longitude, 28.709445, -81.567283,
-									'K'));
+					distance(deg2dec(tmpBSMData.latitiude), deg2dec(tmpBSMData.longitude), 28.709709, -81.546833, 'K'),
+					direction(deg2dec(tmpBSMData.latitiude), deg2dec(tmpBSMData.longitude), 28.709445, -81.567283, 'K'),
+					deg2dec(tmpBSMData.latitiude));
 			UARTprintf("%s\n", bsm);
 		}
 		// free memory
