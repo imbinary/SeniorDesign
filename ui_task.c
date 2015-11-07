@@ -147,7 +147,6 @@ static void UITask(void *pvParameters) {
 	int32_t i32DollarPosition;
 	char cInput[UI_INPUT_BUF_SIZE];
 	uint16_t Atest;
-	uint8_t night = 0;
 	//int8_t test=0;
 
 	//
@@ -199,7 +198,7 @@ static void UITask(void *pvParameters) {
 						uiUARTprintf("$%c%c",byte1,byte2);
 
 					}
-					UARTprintf("queue: %x (%x) (%x)\n",Atest,byte1,byte2);
+					//UARTprintf("queue: %x (%x) (%x)\n",Atest,byte1,byte2);
 				}
 			}
 		}

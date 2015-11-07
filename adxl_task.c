@@ -134,13 +134,9 @@ ADXLTask(void *pvParameters)
 
         uint16_t x1=0,x2=0,x3=0;
 
-
 		x1 = I2CReceiveMulti(ADXL312_I2CADR_ALT, ADXL_DATAX0,2);
-		//x1 = I2CReceive(ADXL312_I2CADR_ALT, ADXL_DATAX0);
 		x2 = I2CReceiveMulti(ADXL312_I2CADR_ALT, ADXL_DATAY0,2);
-		//x2 = I2CReceive(ADXL312_I2CADR_ALT, ADXL_DATAY0);
 		x3 = I2CReceiveMulti(ADXL312_I2CADR_ALT, ADXL_DATAZ0,2);
-		//x3 = I2CReceive(ADXL312_I2CADR_ALT, ADXL_DATAZ0);
 
 		int16_t x,y,z;
 		x = (int16_t)(x1);

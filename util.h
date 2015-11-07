@@ -16,5 +16,6 @@ char *strsep(char* line, const char* delims);
 double deg2rad(double);
 double rad2deg(double);
 double distance(double lat1, double lon1, double lat2, double lon2, char unit);
+int16_t direction(double lat1, double lon1, double lat2, double lon2, char unit);
 
 #endif /* UTIL_H_ */

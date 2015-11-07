@@ -164,3 +164,15 @@ double deg2rad(double deg) {
 double rad2deg(double rad) {
   return (rad * 180 / pi);
 }
+
+int16_t direction(double lat1, double lon1, double lat2, double lon2, char unit){
+	double y,x;
+	double theta = lon2 - lon1;
+	int16_t direction;
+	y = sin(deg2rad(theta)) * cos(deg2rad(lat2));
+	x = cos(deg2rad(lat1)) * sin(deg2rad(lat2)) - sin(deg2rad(lat1)) * cos(deg2rad(lat2)) * cos(deg2rad(theta));
+	direction = rad2deg(atan2(y, x));
+	if(direction <= 0)
+		direction += 360;
+	return direction;
+}
