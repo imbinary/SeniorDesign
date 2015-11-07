@@ -146,7 +146,7 @@ static void UITask(void *pvParameters) {
 	portTickType xLastWakeTime;
 	int32_t i32DollarPosition;
 	char cInput[UI_INPUT_BUF_SIZE];
-	struct AMessage *UIQpointer;
+	uint16_t Atest;
 	uint8_t night = 0;
 	//int8_t test=0;
 
@@ -185,31 +185,26 @@ static void UITask(void *pvParameters) {
 
 		uint8_t byte1, byte2;
 		int j;
+
 		if(xQueue1 != 0){
 			UARTprintf("queue count: %d\n",uxQueueMessagesWaiting( xQueue1 ));
+
 			for(j=0;j<2;j++){
-				if(xQueueReceive(xQueue1, &(UIQpointer),0)){
-			//copy over values
+				if(xQueueReceive(xQueue1, &(Atest),0)){
 
-
-			//set night bit
-					if(UIQpointer->time > 20000 && UIQpointer->time < 140000) night = 1;
-					else night = 0;
-
-			//construct the bytes
-					byte1 = UIQpointer->dir * 8 +UIQpointer->size;
-					byte2 = UIQpointer->color + night * 128;
+					byte2 = Atest;
+					byte1 = (Atest >> 8);
 					int i;
 					for(i=0;i<4;i++){
 						uiUARTprintf("$%c%c",byte1,byte2);
 
 					}
-					UARTprintf("queue: %d\n",UIQpointer->color);
+					UARTprintf("queue: %x (%x) (%x)\n",Atest,byte1,byte2);
 				}
-
 			}
-			UARTprintf("queue count: %d\n",uxQueueMessagesWaiting( xQueue1 ));
 		}
+
+
 		/* DEMO STUFF */
 		/*
 		  		uint8_t color=0x01;

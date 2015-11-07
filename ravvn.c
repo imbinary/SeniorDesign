@@ -258,7 +258,7 @@ main(void)
     g_xBsmDataSemaphore = xSemaphoreCreateMutex();
 
 
-    xQueue1 = xQueueCreate( 20, sizeof( struct AMessage ) );
+    xQueue1 = xQueueCreate( 20, sizeof( uint16_t  ) );
     //
     // Create the virtual com port task.
     // Doing this task first initializes the UART.

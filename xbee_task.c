@@ -58,6 +58,7 @@
 
 #define XBEE_INPUT_BUF_SIZE  80
 #define BSM_SIZE  50
+
 //*****************************************************************************
 //
 // A handle by which this task and others can refer to this task.
@@ -139,7 +140,6 @@ bsmParse(char *cInput){
 	rBSMData_t tmpBSMData;
 	char** tokens;
 	char bsm[BSM_SIZE];
-	struct AMessage *pxMessage;
 
 
 	tokens = str_split(cInput, ',');
@@ -184,16 +184,19 @@ bsmParse(char *cInput){
 
 	 if( xQueue1 != 0 )
 	    {
-		 	xMessage.color = 12;
-	        /* Send a pointer to a struct AMessage object.  Don't block if the
-	        queue is already full. */
-		 	pxMessage = & xMessage;
-	        xQueueSend( xQueue1, ( void * ) &pxMessage, 0 );
+		 	 uint8_t byte1, byte2, night;
 
-		 	xMessage.color = 14;
-			/* Send a pointer to a struct AMessage object.  Don't block if the
-			queue is already full. */
-			//xQueueSend( xQueue1, ( void * ) &pxMessage, 0 );
+		//construct the bytes
+			byte1 = 16 * 8 + 2;
+			byte2 = 0x34; //color * 128;
+		 //set night bit
+			 if(tmpBSMData.time > 20000 && tmpBSMData.time < 140000)
+				 byte2 += 1;
+			byte2 *= 128;
+			uint16_t tmp = (byte1 << 8)|byte2;
+	        xQueueSendToBackFromISR( xQueue1,  &tmp, 0 );
+
+
 	    }
 
 }
