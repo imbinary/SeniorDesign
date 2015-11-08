@@ -63,8 +63,7 @@ extern xSemaphoreHandle g_gpsUARTSemaphore;
 //*****************************************************************************
 extern uint32_t GPSTaskInit(void);
 void GPSparse(char *gpsString);
-int8_t nmea_validateChecksum(char *strPtr);
-const char * nmea_generateChecksum(char *strPtr, char *dstStr);
+
 //*****************************************************************************
 //
 // Forward declarations for command-line operations.

@@ -90,67 +90,6 @@ extern uint32_t g_ui32SysClock;
 //*****************************************************************************
 extern bool g_bOnline;
 
-// this takes a nmea gps string, and validates it againts the checksum
-// at the end if the string. (requires first byte to be $)
-int8_t nmea_validateChecksum(char *strPtr) {
-	int p;
-	char c;
-	uint8_t chksum;
-	uint8_t nmeaChk;
-	int8_t flagValid;
-	char hx[5] = "0x00";
-
-	flagValid = 1; // we start true, and make it false if things are not right
-
-	if (strPtr[0] != '$') {
-		flagValid = 0;
-	}
-
-	// if we are still good, test all bytes
-	if (flagValid == 1) {
-		c = strPtr[1]; // get first chr
-		chksum = c;
-		p = 2;
-		while ((c != '*') && (p < GPS_INPUT_BUF_SIZE)) {
-			c = strPtr[p]; // get next chr
-			if (c != '*') {
-				chksum = chksum ^ c;
-			}
-			p++;
-		}
-		// at this point we are either at * or at end of string
-		hx[2] = strPtr[p];
-		hx[3] = strPtr[p + 1];
-		hx[4] = 0x00;
-		nmeaChk = strtol(hx, NULL, 16);
-		if (chksum != nmeaChk) {
-			flagValid = 0;
-		}
-	}
-
-	return flagValid;
-}
-
-// this returns a single binary byte that is the checksum
-// you must convert it to hex if you are going to print it or send it
-const char * nmea_generateChecksum(char *strPtr, char *dstStr) {
-	int p;
-	char c;
-	uint8_t chksum;
-
-	c = strPtr[0]; // get first chr
-	chksum = c;
-	p = 1;
-	while (c != 0x00) {
-		c = strPtr[p]; // get next chr
-		if (c != 0x00) {
-			chksum = chksum ^ c;
-		}
-		p++;
-	}
-	sprintf(&dstStr[0], "$%s*%02x", strPtr, chksum);
-	return dstStr;
-}
 
 //*****************************************************************************
 //
@@ -162,7 +101,7 @@ void GPSparse(char *gpsString) {
 	//todo maybe add a semephore
 	if (gpsString[0] != '$')
 		return;
-	if (nmea_validateChecksum(gpsString)) {
+	if (nmea_validateChecksum(gpsString, GPS_INPUT_BUF_SIZE )) {
 	    char** tokens;
 
 	    xSemaphoreTake(g_xBsmDataSemaphore, portMAX_DELAY);
