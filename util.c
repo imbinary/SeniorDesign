@@ -39,7 +39,8 @@ char** str_split(char* a_str, const char a_delim) {
 		}
 		tmp++;
 	}
-
+	if(count==0)
+		return NULL;
 	/* Add space for trailing token. */
 	count += last_comma < (a_str + strlen(a_str) - 1);
 
@@ -163,4 +164,90 @@ double deg2rad(double deg) {
 /*:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
 double rad2deg(double rad) {
   return (rad * 180 / pi);
+}
+
+int16_t direction(double lat1, double lon1, double lat2, double lon2, char unit){
+	double y,x;
+	double theta = lon2 - lon1;
+	int16_t direction;
+	y = sin(deg2rad(theta)) * cos(deg2rad(lat2));
+	x = cos(deg2rad(lat1)) * sin(deg2rad(lat2)) - sin(deg2rad(lat1)) * cos(deg2rad(lat2)) * cos(deg2rad(theta));
+	direction = rad2deg(atan2(y, x));
+	if(direction <= 0)
+		direction += 360;
+	return direction;
+}
+
+double deg2dec(double deg){
+	if (deg == 0)
+		return 0;
+	int intp = deg;  //DDMM
+	int min = intp - ((intp/100)*100); // MM
+	double decp = deg - intp; // .m
+	decp = (((double) min + decp))/60;
+	return ( (double) (intp/100) )+(  decp );
+	//return deg;
+}
+
+
+// this takes a nmea gps string, and validates it againts the checksum
+// at the end if the string. (requires first byte to be $)
+int8_t nmea_validateChecksum(char *strPtr, uint16_t bufSize) {
+	int p;
+	char c;
+	uint8_t chksum;
+	uint8_t nmeaChk;
+	int8_t flagValid;
+	char hx[5] = "0x00";
+
+	flagValid = 1; // we start true, and make it false if things are not right
+
+	if (strPtr[0] != '$') {
+		flagValid = 0;
+	}
+
+	// if we are still good, test all bytes
+	if (flagValid == 1) {
+		c = strPtr[1]; // get first chr
+		chksum = c;
+		p = 2;
+		while ((c != '*') && (p < bufSize)) {
+			c = strPtr[p]; // get next chr
+			if (c != '*') {
+				chksum = chksum ^ c;
+			}
+			p++;
+		}
+		// at this point we are either at * or at end of string
+		hx[2] = strPtr[p];
+		hx[3] = strPtr[p + 1];
+		hx[4] = 0x00;
+		nmeaChk = strtol(hx, NULL, 16);
+		if (chksum != nmeaChk) {
+			flagValid = 0;
+		}
+	}
+
+	return flagValid;
+}
+
+// this returns a single binary byte that is the checksum
+// you must convert it to hex if you are going to print it or send it
+const char * nmea_generateChecksum(char *strPtr, char *dstStr) {
+	int p;
+	char c;
+	uint8_t chksum;
+
+	c = strPtr[0]; // get first chr
+	chksum = c;
+	p = 1;
+	while (c != 0x00) {
+		c = strPtr[p]; // get next chr
+		if (c != 0x00) {
+			chksum = chksum ^ c;
+		}
+		p++;
+	}
+	sprintf(&dstStr[0], "$%s*%02x", strPtr, chksum);
+	return dstStr;
 }

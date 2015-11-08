@@ -69,7 +69,7 @@ static bool xbee_gbDisableEcho;
 // xbee_gui32UARTTxWriteIndex.  Buffer is empty if the two indices are the same.
 //
 //*****************************************************************************
-static unsigned char xbee_gpcUARTTxBuffer[UART_TX_BUFFER_SIZE];
+static unsigned char xbee_gpcUARTTxBuffer[xUART_TX_BUFFER_SIZE];
 static volatile uint32_t xbee_gui32UARTTxWriteIndex = 0;
 static volatile uint32_t xbee_gui32UARTTxReadIndex = 0;
 
@@ -79,7 +79,7 @@ static volatile uint32_t xbee_gui32UARTTxReadIndex = 0;
 // xbee_gui32UARTTxWriteIndex.  Buffer is empty if the two indices are the same.
 //
 //*****************************************************************************
-static unsigned char xbee_gpcUARTRxBuffer[UART_RX_BUFFER_SIZE];
+static unsigned char xbee_gpcUARTRxBuffer[xUART_RX_BUFFER_SIZE];
 static volatile uint32_t xbee_gui32UARTRxWriteIndex = 0;
 static volatile uint32_t xbee_gui32UARTRxReadIndex = 0;
 
@@ -90,15 +90,15 @@ static volatile uint32_t xbee_gui32UARTRxReadIndex = 0;
 //*****************************************************************************
 #define xbeeTX_BUFFER_USED          (xbeeGetBufferCount(&xbee_gui32UARTTxReadIndex,  \
                                                 &xbee_gui32UARTTxWriteIndex, \
-                                                UART_TX_BUFFER_SIZE))
-#define xbeeTX_BUFFER_FREE          (UART_TX_BUFFER_SIZE - xbeeTX_BUFFER_USED)
+                                                xUART_TX_BUFFER_SIZE))
+#define xbeeTX_BUFFER_FREE          (xUART_TX_BUFFER_SIZE - xbeeTX_BUFFER_USED)
 #define xbeeTX_BUFFER_EMPTY         (xbeeIsBufferEmpty(&xbee_gui32UARTTxReadIndex,   \
                                                &xbee_gui32UARTTxWriteIndex))
 #define xbeeTX_BUFFER_FULL          (xbeeIsBufferFull(&xbee_gui32UARTTxReadIndex,  \
                                               &xbee_gui32UARTTxWriteIndex, \
-                                              UART_TX_BUFFER_SIZE))
+                                              xUART_TX_BUFFER_SIZE))
 #define xbeeADVANCE_TX_BUFFER_INDEX(Index) \
-                                (Index) = ((Index) + 1) % UART_TX_BUFFER_SIZE
+                                (Index) = ((Index) + 1) % xUART_TX_BUFFER_SIZE
 
 //*****************************************************************************
 //
@@ -107,15 +107,15 @@ static volatile uint32_t xbee_gui32UARTRxReadIndex = 0;
 //*****************************************************************************
 #define xbeeRX_BUFFER_USED          (xbeeGetBufferCount(&xbee_gui32UARTRxReadIndex,  \
                                                 &xbee_gui32UARTRxWriteIndex, \
-                                                UART_RX_BUFFER_SIZE))
-#define xbeeRX_BUFFER_FREE          (UART_RX_BUFFER_SIZE - xbeeRX_BUFFER_USED)
+                                                xUART_RX_BUFFER_SIZE))
+#define xbeeRX_BUFFER_FREE          (xUART_RX_BUFFER_SIZE - xbeeRX_BUFFER_USED)
 #define xbeeRX_BUFFER_EMPTY         (xbeeIsBufferEmpty(&xbee_gui32UARTRxReadIndex,   \
                                                &xbee_gui32UARTRxWriteIndex))
 #define xbeeRX_BUFFER_FULL          (xbeeIsBufferFull(&xbee_gui32UARTRxReadIndex,  \
                                               &xbee_gui32UARTRxWriteIndex, \
-                                              UART_RX_BUFFER_SIZE))
+                                              xUART_RX_BUFFER_SIZE))
 #define xbeeADVANCE_RX_BUFFER_INDEX(Index) \
-                                (Index) = ((Index) + 1) % UART_RX_BUFFER_SIZE
+                                (Index) = ((Index) + 1) % xUART_RX_BUFFER_SIZE
 #endif
 
 //*****************************************************************************
@@ -123,7 +123,7 @@ static volatile uint32_t xbee_gui32UARTRxReadIndex = 0;
 // The base address of the chosen UART.
 //
 //*****************************************************************************
-static uint32_t xbee_gui32Base = 3;
+static uint32_t xbee_gui32Base = 4;
 
 //*****************************************************************************
 //
@@ -1626,7 +1626,7 @@ xbeeUARTxIntHandler(void)
                         //
                         if(xbee_gui32UARTRxWriteIndex == 0)
                         {
-                            xbee_gui32UARTRxWriteIndex = UART_RX_BUFFER_SIZE - 1;
+                            xbee_gui32UARTRxWriteIndex = xUART_RX_BUFFER_SIZE - 1;
                         }
                         else
                         {

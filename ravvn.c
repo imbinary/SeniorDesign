@@ -258,7 +258,7 @@ main(void)
     g_xBsmDataSemaphore = xSemaphoreCreateMutex();
 
 
-    xQueue1 = xQueueCreate( 20, sizeof( struct AMessage * ) );
+    xQueue1 = xQueueCreate( 20, sizeof( uint16_t  ) );
     //
     // Create the virtual com port task.
     // Doing this task first initializes the UART.
@@ -373,7 +373,7 @@ main(void)
     //
      // Create the CompDCM 9 axis sensor task.
 
-     if(ADXLTaskInit() != 0)
+     if(ADXL && ADXLTaskInit() != 0)
      {
          //
          // Init returned an error. Print an alert to the user and

@@ -51,7 +51,7 @@
 #include "command_task.h"
 #include "ui_task.h"
 #include "uiuart.h"
-
+#include "ravvn.h"
 #define UI_INPUT_BUF_SIZE  80
 
 //*****************************************************************************
@@ -60,7 +60,7 @@
 //
 //*****************************************************************************
 xTaskHandle g_xUIHandle;
-
+extern xQueueHandle xQueue1;
 //*****************************************************************************
 //
 // A mutex semaphore to manage the UART buffer in utils
@@ -84,16 +84,7 @@ extern uint32_t g_ui32SysClock;
 //*****************************************************************************
 extern bool g_bOnline;
 
-//*****************************************************************************
-//
-// Configure the UART and its pins.  This must be called before UARTprintf().
-//
-//*****************************************************************************
-void UIreadUART() {
-	//uiUARTgets(cInput, COMMAND_INPUT_BUF_SIZE);
-	UARTprintf("%c", ROM_UARTCharGetNonBlocking(UART3_BASE));
 
-}
 
 //*****************************************************************************
 //
@@ -146,7 +137,7 @@ static void UITask(void *pvParameters) {
 	portTickType xLastWakeTime;
 	int32_t i32DollarPosition;
 	char cInput[UI_INPUT_BUF_SIZE];
-	uint8_t color=0x01, dir=0;
+	uint16_t Atest;
 	//int8_t test=0;
 
 	//
@@ -174,7 +165,6 @@ static void UITask(void *pvParameters) {
 			// Take the ui semaphore.
 			//
 			xSemaphoreTake(g_uiUARTSemaphore, portMAX_DELAY);
-			//uireadUART();
 			uiUARTgets(cInput, UI_INPUT_BUF_SIZE);
 			UARTprintf("%s\n", cInput);
 			xSemaphoreGive(g_uiUARTSemaphore);
@@ -183,24 +173,56 @@ static void UITask(void *pvParameters) {
 		//test = ++test%10;
 
 		uint8_t byte1, byte2;
+		int j;
 
-		byte1 = dir * 8;
-		byte2 = color;
-		int i;
-		for(i=0;i<4;i++){
-			uiUARTprintf("$%c%c",byte1,byte2);
-			//UARTprintf("$%c%c",byte1,byte2);
+		if(xQueue1 != 0){
+			//UARTprintf("queue count: %d\n",uxQueueMessagesWaiting( xQueue1 ));
+
+			for(j=0;j<2;j++){
+				if(xQueueReceive(xQueue1, &(Atest),0)){
+
+					byte2 = Atest;
+					byte1 = (Atest >> 8);
+					int i;
+					xSemaphoreTake(g_uiUARTSemaphore, portMAX_DELAY);
+					for(i=0;i<5;i++){
+						uiUARTprintf("$%c%c",byte1,byte2);
+					}
+					xSemaphoreGive(g_uiUARTSemaphore);
+
+				}
+			}
 		}
-		color += 4;
-		dir += 3;
-		if(color >= 0x6b)
-			color = 0x01;
-		if(dir >= 32)
-			dir = 0;
 
+
+		/* DEMO STUFF */
+		/*
+		  		uint8_t color=0x01;
+				uint8_t dir=0;
+				uint16_t tim = 0;
+
+				uint8_t siz = 0;
+		  		tim = UIQpointer->time;
+				dir = UIQpointer->dir;
+				color = UIQpointer->color;
+				siz = UIQpointer->size;
+				byte1 = dir * 8 + siz;
+				byte2 = color + night * 128;
+				int i;
+				for(i=0;i<4;i++){
+					uiUARTprintf("$%c%c",byte1,byte2);
+					UARTprintf("$%c%c",byte1,byte2);
+				}
+				dir += 3;
+
+				if(dir >= 32){
+					dir = 0;
+					color += 4;
+					if(color >= 0x7F)
+							color = 0x01;}
+							*/
 	}
 }
-
 //*****************************************************************************
 //
 // Initializes the Command task.

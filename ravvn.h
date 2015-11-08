@@ -22,9 +22,9 @@ typedef struct rBSMDataStruct
 	float speed;
 	uint16_t heading;
 	uint16_t steeringAngle;
-	uint16_t longAccel;
-	uint16_t latAccel;
-	uint16_t vertAccel;
+	int16_t longAccel;
+	int16_t latAccel;
+	int16_t vertAccel;
 	float yawRate;
 	bool brake;
 	uint16_t length;
@@ -34,14 +34,7 @@ typedef struct rBSMDataStruct
 
 } rBSMData_t;
 
-struct AMessage
-{
-    char ucMessageID;
-    int8_t dir;
-    int8_t size;
-    int8_t color;
-    uint16_t time;
-} xMessage;
+
 
 
 #define  DTYPE  1    // 1 for vehicle, 0 for infrastructure
@@ -49,4 +42,4 @@ struct AMessage
 #endif /* RAVVN_H_ */
 
 extern rBSMData_t g_rBSMData;
-//extern xMessage pxMessage;
+
