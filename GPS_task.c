@@ -183,14 +183,11 @@ void GPSparse(char *gpsString) {
 	        	g_rBSMData.speed = strtod(tokens[7],NULL);
 	        	g_rBSMData.heading = strtol(tokens[8],NULL,10);
 	        	g_rBSMData.date = strtol(tokens[9],NULL,10);
-	        	//xbeeUARTprintf("%s", tokens[8]);
 	        }
 	        for (i = 0; *(tokens + i); i++)
 	        {
-	           // UARTprintf("parts=[%s]\n", *(tokens + i));
 	            vPortFree(*(tokens + i));
 	        }
-	        //UARTprintf("\n");
 	        vPortFree(tokens);
 	    }
 	    xSemaphoreGive(g_xBsmDataSemaphore);

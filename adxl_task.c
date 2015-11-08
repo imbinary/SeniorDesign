@@ -112,10 +112,7 @@ ADXLTask(void *pvParameters)
 
 
 	I2CSend(ADXL312_I2CADR_ALT, 2, ADXL_POWER_CTL, 0x08 );
-	//I2CSend(ADXL312_I2CADR_ALT, 2, ADXL_FIFO_CTL, 0x64 );
-	//
-	// Get the current time as a reference to start our delays.
-	//
+
 	xLastWakeTime = xTaskGetTickCount();
 
 	while(1)
@@ -138,36 +135,22 @@ ADXLTask(void *pvParameters)
 		x2 = I2CReceiveMulti(ADXL312_I2CADR_ALT, ADXL_DATAY0,2);
 		x3 = I2CReceiveMulti(ADXL312_I2CADR_ALT, ADXL_DATAZ0,2);
 
+        xSemaphoreGive(g_xI2CSemaphore);
+
 		int16_t x,y,z;
 		x = (int16_t)(x1);
 		y = (int16_t)(x2);
 		z = (int16_t)(x3);
 
-
-		if(abs(xo-x) > THRESHOLD|| abs(yo-y) > THRESHOLD ||abs(zo-z) > THRESHOLD)
-		{
-			z=z*2.9/100;
-			y=y*2.9/100;
-			x=x*2.9/100;
-
-			xSemaphoreTake(g_xUARTSemaphore, portMAX_DELAY);
-			//UARTprintf("adxl: X(%d), Y(%d), Z(%x)\n",x,y,z);
-			xSemaphoreGive(g_xUARTSemaphore);
-		}
-
+		z=z*2.9/10;
+		y=y*2.9/10;
+		x=x*2.9/10;
 
 		xo=x;
 		yo=y;
 		zo=z;
 
-        // Give back the I2C Semaphore so other can use the I2C interface.
-        //
-        xSemaphoreGive(g_xI2CSemaphore);
-
-
         updateBSM(x,y,z);
-
-
 
     }
 }

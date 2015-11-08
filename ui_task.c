@@ -84,16 +84,7 @@ extern uint32_t g_ui32SysClock;
 //*****************************************************************************
 extern bool g_bOnline;
 
-//*****************************************************************************
-//
-// Configure the UART and its pins.  This must be called before UARTprintf().
-//
-//*****************************************************************************
-void UIreadUART() {
-	//uiUARTgets(cInput, COMMAND_INPUT_BUF_SIZE);
-	UARTprintf("%c", ROM_UARTCharGetNonBlocking(UART3_BASE));
 
-}
 
 //*****************************************************************************
 //
@@ -174,7 +165,6 @@ static void UITask(void *pvParameters) {
 			// Take the ui semaphore.
 			//
 			xSemaphoreTake(g_uiUARTSemaphore, portMAX_DELAY);
-			//uireadUART();
 			uiUARTgets(cInput, UI_INPUT_BUF_SIZE);
 			UARTprintf("%s\n", cInput);
 			xSemaphoreGive(g_uiUARTSemaphore);
@@ -186,7 +176,7 @@ static void UITask(void *pvParameters) {
 		int j;
 
 		if(xQueue1 != 0){
-			UARTprintf("queue count: %d\n",uxQueueMessagesWaiting( xQueue1 ));
+			//UARTprintf("queue count: %d\n",uxQueueMessagesWaiting( xQueue1 ));
 
 			for(j=0;j<2;j++){
 				if(xQueueReceive(xQueue1, &(Atest),0)){
@@ -194,11 +184,12 @@ static void UITask(void *pvParameters) {
 					byte2 = Atest;
 					byte1 = (Atest >> 8);
 					int i;
+					xSemaphoreTake(g_uiUARTSemaphore, portMAX_DELAY);
 					for(i=0;i<5;i++){
 						uiUARTprintf("$%c%c",byte1,byte2);
-
 					}
-					//UARTprintf("queue: %x (%x) (%x)\n",Atest,byte1,byte2);
+					xSemaphoreGive(g_uiUARTSemaphore);
+
 				}
 			}
 		}
