@@ -46,7 +46,7 @@ extern "C"
 //*****************************************************************************
 #ifdef UART_BUFFERED
 #ifndef xUART_RX_BUFFER_SIZE
-#define xUART_RX_BUFFER_SIZE     1024
+#define xUART_RX_BUFFER_SIZE     4096
 #endif
 #ifndef xUART_TX_BUFFER_SIZE
 #define xUART_TX_BUFFER_SIZE     1024
@@ -61,6 +61,7 @@ extern "C"
 extern void xbeeUARTxConfig(uint32_t ui32Port, uint32_t ui32Baud,
                             uint32_t ui32SrcClock);
 extern int xbeeUARTgets(char *pcBuf, uint32_t ui32Len);
+extern int xbeeUARTgetr(char *pcBuf, uint32_t ui32Len);
 extern unsigned char xbeeUARTgetc(void);
 extern void xbeeUARTprintf(const char *pcString, ...);
 extern void xbeeUARTvprintf(const char *pcString, va_list vaArgP);

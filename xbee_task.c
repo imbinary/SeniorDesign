@@ -236,7 +236,7 @@ static void XBEETask(void *pvParameters) {
 	portTickType xLastWakeTime;
 	int32_t i32DollarPosition;
 	char cInput[XBEE_INPUT_BUF_SIZE];
-
+	int8_t i;
 	//
 	// Get the current time as a reference to start our delays.
 	//
@@ -249,21 +249,23 @@ static void XBEETask(void *pvParameters) {
 		//
 		vTaskDelayUntil(&xLastWakeTime, XBEE_TASK_PERIOD_MS /
 		portTICK_RATE_MS);
+		//get up to 5 messages
+		for (i=0;i<4;i++){
+			i32DollarPosition = xbeeUARTPeek('*');
 
-		i32DollarPosition = xbeeUARTPeek('*');
+			if (i32DollarPosition != (-1)) {
+				//
+				// Take the xbee semaphore.
+				//
+				xSemaphoreTake(g_xbeeUARTSemaphore, portMAX_DELAY);
+				int t = xbeeUARTgetr(cInput, XBEE_INPUT_BUF_SIZE);
+				xSemaphoreGive(g_xbeeUARTSemaphore);
 
-		if (i32DollarPosition != (-1)) {
-			//
-			// Take the xbee semaphore.
-			//
-			xSemaphoreTake(g_xbeeUARTSemaphore, portMAX_DELAY);
-			int t = xbeeUARTgets(cInput, XBEE_INPUT_BUF_SIZE);
-			xSemaphoreGive(g_xbeeUARTSemaphore);
-
-			//xSemaphoreTake(g_xUARTSemaphore, portMAX_DELAY);
-			//UARTprintf(">%d\n", t);
-			//xSemaphoreGive(g_xUARTSemaphore);
-			bsmParse(cInput);
+				//xSemaphoreTake(g_xUARTSemaphore, portMAX_DELAY);
+				//UARTprintf(">%d\n", t);
+				//xSemaphoreGive(g_xUARTSemaphore);
+				bsmParse(cInput);
+			}
 		}
 		bsmSend();
 	}
