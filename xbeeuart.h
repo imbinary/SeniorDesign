@@ -46,7 +46,7 @@ extern "C"
 //*****************************************************************************
 #ifdef UART_BUFFERED
 #ifndef xUART_RX_BUFFER_SIZE
-#define xUART_RX_BUFFER_SIZE     512
+#define xUART_RX_BUFFER_SIZE     1024
 #endif
 #ifndef xUART_TX_BUFFER_SIZE
 #define xUART_TX_BUFFER_SIZE     1024

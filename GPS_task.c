@@ -112,7 +112,7 @@ void GPSparse(char *gpsString) {
 	    {
 	        int i;
 	        if((!strcmp(tokens[2],"A")) && (!strcmp(tokens[0],"$GPRMC"))){
-	        	g_rBSMData.time = strtod(tokens[1],NULL);
+	        	g_rBSMData.btime = strtod(tokens[1],NULL);
 	        	g_rBSMData.latitiude = strtod(tokens[3],NULL);
 	        	if(!strcmp(tokens[4],"S"))
 	        		g_rBSMData.latitiude *= -1;

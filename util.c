@@ -39,8 +39,8 @@ char** str_split(char* a_str, const char a_delim) {
 		}
 		tmp++;
 	}
-	if(count==0)
-		return NULL;
+	//if(count==0)
+	//	return NULL;
 	/* Add space for trailing token. */
 	count += last_comma < (a_str + strlen(a_str) - 1);
 
