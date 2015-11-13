@@ -172,6 +172,8 @@ static const uint32_t xbee_gui32UARTPeriph[6] =
     SYSCTL_PERIPH_UART0, SYSCTL_PERIPH_UART1, SYSCTL_PERIPH_UART2, SYSCTL_PERIPH_UART3, SYSCTL_PERIPH_UART4, SYSCTL_PERIPH_UART5
 };
 
+
+
 //*****************************************************************************
 //
 //! Determines whether the ring buffer whose pointers and size are provided
@@ -536,6 +538,93 @@ xbeeUARTwrite(const char *pcBuf, uint32_t ui32Len)
     return(uIdx);
 #endif
 }
+
+
+int
+xbeeUARTgetr(char *pcBuf, uint32_t ui32Len)
+{
+
+    uint32_t ui32Count = 0;
+    int8_t cChar;
+    int8_t start=0;
+
+    //
+    // Check the arguments.
+    //
+    ASSERT(pcBuf != 0);
+    ASSERT(ui32Len != 0);
+    ASSERT(xbee_gui32Base != 0);
+
+    //
+    // Adjust the length back by 1 to leave space for the trailing
+    // null terminator.
+    //
+    ui32Len--;
+
+    //
+    // Process characters until a newline is received.
+    //
+    while(1)
+    {
+        //
+        // Read the next character from the receive buffer.
+        //
+        if(!xbeeRX_BUFFER_EMPTY)
+        {
+            cChar = xbee_gpcUARTRxBuffer[xbee_gui32UARTRxReadIndex];
+            xbeeADVANCE_RX_BUFFER_INDEX(xbee_gui32UARTRxReadIndex);
+
+            // look for message start
+            if(start == 0){
+            	if(cChar == '$')
+            		start = 1;
+            	else
+            		continue;
+            }
+            //
+            // See if a newline or escape character was received.
+            //
+            if((cChar == '\r') || (cChar == '\n') || (cChar == 0x1b))
+            {
+                //
+                // Stop processing the input and end the line.
+                //
+                break;
+            }
+
+            //
+            // Process the received character as long as we are not at the end
+            // of the buffer.  If the end of the buffer has been reached then
+            // all additional characters are ignored until a newline is
+            // received.
+            //
+            if(ui32Count < ui32Len)
+            {
+                //
+                // Store the character in the caller supplied buffer.
+                //
+                pcBuf[ui32Count] = cChar;
+
+                //
+                // Increment the count of characters received.
+                //
+                ui32Count++;
+            }
+        }
+    }
+
+    //
+    // Add a null termination to the string.
+    //
+    pcBuf[ui32Count] = 0;
+
+    //
+    // Return the count of int8_ts in the buffer, not counting the trailing 0.
+    //
+    return(ui32Count);
+
+}
+
 
 //*****************************************************************************
 //
