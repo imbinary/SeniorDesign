@@ -338,7 +338,8 @@ uiUARTxConfig(uint32_t ui32PortNum, uint32_t ui32Baud, uint32_t ui32SrcClock)
     //
     ASSERT((ui32PortNum == 0) || (ui32PortNum == 1) ||
            (ui32PortNum == 2) || (ui32PortNum == 3) ||
-           (ui32PortNum == 4) || (ui32PortNum == 5) );
+           (ui32PortNum == 4) || (ui32PortNum == 5) ||
+           (ui32PortNum == 6) || (ui32PortNum == 7) );
 
 #ifdef UART_BUFFERED
     //
@@ -1551,9 +1552,9 @@ void
 uiUARTxIntHandler(void)
 {
     uint32_t ui32Ints;
-    int8_t cChar;
+
     int32_t i32Char;
-    static bool bLastWasCR = false;
+
     uiUARTEchoSet(false);
     //
     // Get and clear the current interrupt source(s)
@@ -1594,90 +1595,9 @@ uiUARTxIntHandler(void)
             // Read a character
             //
             i32Char = MAP_UARTCharGetNonBlocking(ui_gui32Base);
-            cChar = (unsigned char)(i32Char & 0xFF);
 
-            //
-            // If echo is disabled, we skip the various text filtering
-            // operations that would typically be required when supporting a
-            // command line.
-            //
-            if(!ui_gbDisableEcho)
-            {
-                //
-                // Handle backspace by erasing the last character in the
-                // buffer.
-                //
-                if(cChar == '\b')
-                {
-                    //
-                    // If there are any characters already in the buffer, then
-                    // delete the last.
-                    //
-                    if(!uiRX_BUFFER_EMPTY)
-                    {
-                        //
-                        // Rub out the previous character on the users
-                        // terminal.
-                        //
-                        uiUARTwrite("\b \b", 3);
 
-                        //
-                        // Decrement the number of characters in the buffer.
-                        //
-                        if(ui_gui32UARTRxWriteIndex == 0)
-                        {
-                            ui_gui32UARTRxWriteIndex = UART_RX_BUFFER_SIZE - 1;
-                        }
-                        else
-                        {
-                            ui_gui32UARTRxWriteIndex--;
-                        }
-                    }
 
-                    //
-                    // Skip ahead to read the next character.
-                    //
-                    continue;
-                }
-
-                //
-                // If this character is LF and last was CR, then just gobble up
-                // the character since we already echoed the previous CR and we
-                // don't want to store 2 characters in the buffer if we don't
-                // need to.
-                //
-                if((cChar == '\n') && bLastWasCR)
-                {
-                    bLastWasCR = false;
-                    continue;
-                }
-
-                //
-                // See if a newline or escape character was received.
-                //
-                if((cChar == '\r') || (cChar == '\n') || (cChar == 0x1b))
-                {
-                    //
-                    // If the character is a CR, then it may be followed by an
-                    // LF which should be paired with the CR.  So remember that
-                    // a CR was received.
-                    //
-                    if(cChar == '\r')
-                    {
-                        bLastWasCR = 1;
-                    }
-
-                    //
-                    // Regardless of the line termination character received,
-                    // put a CR in the receive buffer as a marker telling
-                    // UARTgets() where the line ends.  We also send an
-                    // additional LF to ensure that the local terminal echo
-                    // receives both CR and LF.
-                    //
-                    cChar = '\r';
-                    uiUARTwrite("\n", 1);
-                }
-            }
 
             //
             // If there is space in the receive buffer, put the character
@@ -1692,14 +1612,7 @@ uiUARTxIntHandler(void)
                     (unsigned char)(i32Char & 0xFF);
                 uiADVANCE_RX_BUFFER_INDEX(ui_gui32UARTRxWriteIndex);
 
-                //
-                // If echo is enabled, write the character to the transmit
-                // buffer so that the user gets some immediate feedback.
-                //
-                if(!ui_gbDisableEcho)
-                {
-                    uiUARTwrite((const char *)&cChar, 1);
-                }
+
             }
         }
 

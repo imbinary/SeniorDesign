@@ -30,7 +30,6 @@ char** str_split(char* a_str, const char a_delim) {
 	delim[1] = 0;
 	//char *mystring;
 
-
 	/* Count how many elements will be extracted. */
 	while (*tmp) {
 		if (a_delim == *tmp) {
@@ -57,8 +56,8 @@ char** str_split(char* a_str, const char a_delim) {
 
 		while (token) {
 			assert(idx < count);
-			result[idx] = pvPortMalloc(strlen(token)+1);
-			memcpy(result[idx],token,strlen(token)+1);
+			result[idx] = pvPortMalloc(strlen(token) + 1);
+			memcpy(result[idx], token, strlen(token) + 1);
 			idx++;
 			token = strsep(0, delim);
 		}
@@ -71,8 +70,7 @@ char** str_split(char* a_str, const char a_delim) {
 /*
  * strtok version that handles null fields
  */
-char *strsep(char* line, const char* delims)
-{
+char *strsep(char* line, const char* delims) {
 	static char *saveline = NULL;
 	char *p;
 	int n;
@@ -126,69 +124,69 @@ char *strsep(char* line, const char* delims)
 /*::                                                                         :*/
 /*::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
 
-
-
 #define pi 3.14159265358979323846
 
-
-
 double distance(double lat1, double lon1, double lat2, double lon2, char unit) {
-  double theta, dist;
-  theta = lon1 - lon2;
-  dist = sin(deg2rad(lat1)) * sin(deg2rad(lat2)) + cos(deg2rad(lat1)) * cos(deg2rad(lat2)) * cos(deg2rad(theta));
-  dist = acos(dist);
-  dist = rad2deg(dist);
-  dist = dist * 60 * 1.1515;
-  switch(unit) {
-    case 'M':
-      break;
-    case 'K':
-      dist = dist * 1.609344;
-      break;
-    case 'N':
-      dist = dist * 0.8684;
-      break;
-  }
-  return (dist);
+	double theta, dist;
+	theta = lon1 - lon2;
+	dist = sin(deg2rad(lat1)) * sin(deg2rad(lat2))
+			+ cos(deg2rad(lat1)) * cos(deg2rad(lat2)) * cos(deg2rad(theta));
+	dist = acos(dist);
+	dist = rad2deg(dist);
+	dist = dist * 60 * 1.1515;
+	switch (unit) {
+	case 'M':
+		break;
+	case 'K':
+		dist = dist * 1.609344;
+		break;
+	case 'N':
+		dist = dist * 0.8684;
+		break;
+	case 'm':
+		dist = dist * 1609.344;
+		break;
+	}
+	return (dist);
 }
 
 /*:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
 /*::  This function converts decimal degrees to radians             :*/
 /*:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
 double deg2rad(double deg) {
-  return (deg * pi / 180);
+	return (deg * pi / 180);
 }
 
 /*:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
 /*::  This function converts radians to decimal degrees             :*/
 /*:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
 double rad2deg(double rad) {
-  return (rad * 180 / pi);
+	return (rad * 180 / pi);
 }
 
-int16_t direction(double lat1, double lon1, double lat2, double lon2, char unit){
-	double y,x;
+int16_t direction(double lat1, double lon1, double lat2, double lon2, char unit) {
+	double y, x;
 	double theta = lon2 - lon1;
 	int16_t direction;
 	y = sin(deg2rad(theta)) * cos(deg2rad(lat2));
-	x = cos(deg2rad(lat1)) * sin(deg2rad(lat2)) - sin(deg2rad(lat1)) * cos(deg2rad(lat2)) * cos(deg2rad(theta));
+	x = cos(deg2rad(lat1)) * sin(deg2rad(lat2))
+			- sin(deg2rad(lat1)) * cos(deg2rad(lat2)) * cos(deg2rad(theta));
 	direction = rad2deg(atan2(y, x));
-	if(direction <= 0)
+	if (direction <= 0)
 		direction += 360;
 	return direction;
 }
 
-double deg2dec(double deg){
+double deg2dec(double deg) {
 	if (deg == 0)
 		return 0;
 	int intp = deg;  //DDMM
-	int min = intp - ((intp/100)*100); // MM
+	int min = intp - ((intp / 100) * 100); // MM
 	double decp = deg - intp; // .m
-	decp = (((double) min + decp))/60;
-	return ( (double) (intp/100) )+(  decp );
+	decp = (((double) min + decp)) / 60;
+	return ((double) (intp / 100)) + (decp);
 	//return deg;
 }
-
 
 // this takes a nmea gps string, and validates it againts the checksum
 // at the end if the string. (requires first byte to be $)
@@ -250,4 +248,82 @@ const char * nmea_generateChecksum(char *strPtr, char *dstStr) {
 	}
 	sprintf(&dstStr[0], "$%s*%02x", strPtr, chksum);
 	return dstStr;
+}
+
+float dotproduct(Vector vec1, Vector vec2){
+	return (vec1.x * vec2.x) + (vec1.y * vec2.y);
+}
+
+
+Vector rotate90CW (Vector vec){
+	Vector tmp;
+	tmp.x = vec.y;
+	tmp.y = vec.x * -1;
+   return tmp;
+}
+
+Vector rotate90CCW (Vector vec){
+	Vector tmp;
+	tmp.x = vec.y * -1;
+	tmp.y = vec.x;
+   return tmp;
+}
+
+Vector vectoradd (Vector vec1, Vector vec2){
+	Vector tmp;
+	tmp.x = vec1.x + vec2.x;
+	tmp.y = vec1.y + vec2.y;
+	return tmp;
+}
+
+Vector vectorsub (Vector vec1, Vector vec2){
+	Vector tmp;
+	tmp.x = vec1.x - vec2.x;
+	tmp.y = vec1.y - vec2.y;
+	return tmp;
+}
+
+Vector vectormult (Vector vec1, float scalar){
+	Vector tmp;
+	tmp.x = vec1.x * scalar;
+	tmp.y = vec1.y * scalar;
+	return tmp;
+}
+
+Intersection intersectVectors(Vector line1Start, Vector line1Dir,
+		Vector line2Start, Vector line2Dir) {
+
+	Intersection returnValue;
+	Vector line2DirPerp = rotate90CW(line2Dir);
+	float line1DirDotLine2DirPerp = dotproduct(line1Dir, line2DirPerp);
+
+	if (line1DirDotLine2DirPerp != 0) {
+		returnValue.linesAreParallel = false;
+		float line2StartToLine1StartDotLine2DirPerp = dotproduct( vectorsub(line1Start, line2Start), line2DirPerp);
+
+		returnValue.parameter1 = line2StartToLine1StartDotLine2DirPerp / -line1DirDotLine2DirPerp;
+
+		// now the same for line 2!
+		Vector line1DirPerp = rotate90CW(line1Dir);
+		float line2DirDotLine1DirPerp = dotproduct(line2Dir, line1DirPerp);
+
+		// no need to check for parallel vectors, we already checked...
+		float line1StartToLine2StartDotLine1DirPerp = dotproduct( vectorsub(line2Start, line1Start), line1DirPerp);
+
+		returnValue.parameter2 = line1StartToLine2StartDotLine1DirPerp / -line2DirDotLine1DirPerp;
+
+		// we can calculate the intersectionpoint with either line 1 or line 2
+
+		returnValue.intersectPoint = vectormult(vectoradd(line1Start, line1Dir), returnValue.parameter1);
+
+		// you can also check if parameter1 and parameter2 are
+		// between 0 and 1 and input that information in the
+		// intersection struct here...
+
+		return returnValue;
+	}
+	else
+		returnValue.linesAreParallel = true;
+// when the lines are parallel, there is no intersection point and also no parameter1 and parameter2!
+	return returnValue;
 }

@@ -84,6 +84,7 @@ extern uint32_t g_ui32SysClock;
 
 //extern rBSMData_t g_rBSMData;
 
+void calcAlert(rBSMData_t tmpBSMData);
 //*****************************************************************************
 //
 //
@@ -95,14 +96,14 @@ void bsmSend() {
 	xSemaphoreTake(g_xBsmDataSemaphore, portMAX_DELAY);
 
 	if (DTYPE) {
-		sprintf(tmp, "B,%0.4f,%0.4f,%0.2f,%d,%0.1f,%d,%d,%d,%d,%0.5f",
+		sprintf(tmp, "B,%0.6f,%0.6f,%0.2f,%d,%0.1f,%d,%d,%d,%d,%0.5f",
 				g_rBSMData.latitiude, g_rBSMData.longitude, g_rBSMData.speed,
 				g_rBSMData.heading, g_rBSMData.btime, g_rBSMData.date,
 				g_rBSMData.latAccel, g_rBSMData.longAccel, g_rBSMData.vertAccel,
 				g_rBSMData.yawRate);
 	} else {
 		//todo change time to status
-		sprintf(tmp, "I,%0.4f,%0.4f,%d,%0.1f", g_rBSMData.latitiude,
+		sprintf(tmp, "I,%0.6f,%0.6f,%d,%0.1f", g_rBSMData.latitiude,
 				g_rBSMData.longitude, g_rBSMData.heading, g_rBSMData.btime);
 	}
 	nmea_generateChecksum(tmp, bsm);
@@ -121,11 +122,10 @@ void bsmParse(char *cInput) {
 	rBSMData_t tmpBSMData;
 	char bsm[BSM_SIZE];
 	int i;
-	UARTprintf("<< %d\n", xbeeUARTRxBytesAvail());
+
 	if (nmea_validateChecksum(cInput, XBEE_INPUT_BUF_SIZE)) {
 		char** tokens;
 		tokens = str_split(cInput, ',');
-		UARTprintf(">> %d\n", xbeeUARTRxBytesAvail());
 		if (tokens) {
 
 			if (!strcmp(tokens[0], "$B")) {
@@ -141,7 +141,7 @@ void bsmParse(char *cInput) {
 				tmpBSMData.yawRate = strtod(tokens[10], NULL);
 
 				sprintf(bsm,
-						"$B,%0.4f,%0.4f,%0.2f,%d,%0.1f,%d,%d,%d,%d,%0.5f,%0.2f,%d",
+						"$B,%0.6f,%0.6f,%0.2f,%d,%0.1f,%d,%d,%d,%d,%0.5f,%0.4f,%d",
 						tmpBSMData.latitiude, tmpBSMData.longitude,
 						tmpBSMData.speed, tmpBSMData.heading, tmpBSMData.btime,
 						tmpBSMData.date, tmpBSMData.latAccel,
@@ -150,7 +150,7 @@ void bsmParse(char *cInput) {
 						distance(deg2dec(g_rBSMData.latitiude),
 								deg2dec(g_rBSMData.longitude),
 								deg2dec(tmpBSMData.latitiude),
-								deg2dec(tmpBSMData.longitude), 'K'),
+								deg2dec(tmpBSMData.longitude), 'm'),
 						direction(deg2dec(g_rBSMData.latitiude),
 								deg2dec(g_rBSMData.longitude),
 								deg2dec(tmpBSMData.latitiude),
@@ -160,24 +160,7 @@ void bsmParse(char *cInput) {
 				UARTprintf("%s\n", bsm);
 				xSemaphoreGive(g_xUARTSemaphore);
 
-				//TODO calculate stuff
-
-				// send alert to queue
-				if (xQueue1 != 0) {
-					uint8_t byte1, byte2;
-					//construct the bytes
-					byte1 = direction(deg2dec(g_rBSMData.latitiude),
-							deg2dec(g_rBSMData.longitude),
-							deg2dec(tmpBSMData.latitiude),
-							deg2dec(tmpBSMData.longitude), 'K') / 11 * 8 + 2;
-					byte2 = 0x34;
-					//set night bit
-					if (tmpBSMData.btime > 20000 && tmpBSMData.btime < 140000)
-						byte2 |= 0x80;
-					uint16_t tmp = (byte1 << 8) | byte2;
-					xQueueSendToBackFromISR(xQueue1, &tmp, 0);
-
-				}
+				calcAlert(tmpBSMData);
 
 			}
 
@@ -191,6 +174,62 @@ void bsmParse(char *cInput) {
 
 }
 
+
+void calcAlert(rBSMData_t tmpBSMData){
+	//TODO calculate stuff
+	Vector v1p, v1d, v2p, v2d;
+	char msg[40];
+
+	// send alert to queue
+	if (xQueue1 != 0) {
+		uint8_t byte1, byte2;
+		//construct the bytes
+		byte1 = direction(deg2dec(g_rBSMData.latitiude),
+				deg2dec(g_rBSMData.longitude),
+				deg2dec(tmpBSMData.latitiude),
+				deg2dec(tmpBSMData.longitude), 'K') / 11;
+
+		xSemaphoreTake(g_xUARTSemaphore, portMAX_DELAY);
+		int speed;
+
+		//if(tmpBSMData.speed == 0)
+		//	 speed = 1;
+		//else
+			speed = 7-(((int) (distance(deg2dec(g_rBSMData.latitiude),
+					deg2dec(g_rBSMData.longitude),
+					deg2dec(tmpBSMData.latitiude),
+					deg2dec(tmpBSMData.longitude), 'm')) * (int)tmpBSMData.speed) / 4);
+
+		v1p.x=1.25;
+		v1p.y=1.93;
+		v2p.x=2.50;
+		v2p.y=4.00;
+
+		v1d.x=1.62;
+		v1d.y=-0.24;
+		v2d.x=1.37;
+		v2d.y=-1.71;
+
+		Intersection t = intersectVectors(v1p, v1d, v2p, v2d);
+		sprintf(msg, " %0.6f %0.6f", t.parameter1, t.parameter2);
+		UARTprintf("direction: %d size: %d -- %s\n", byte1,speed,msg);
+
+		xSemaphoreGive(g_xUARTSemaphore);
+		// set dir and size
+		byte1 = (byte1 * 8) + speed;
+		// set color
+		byte2 = 0x34;
+		//set night bit
+		if (tmpBSMData.btime > 20000 && tmpBSMData.btime < 140000)
+			byte2 |= 0x80;
+
+		uint16_t tmp = (byte1 << 8) | byte2;
+		xQueueSendToBackFromISR(xQueue1, & tmp , 0);
+
+	}
+
+
+}
 //*****************************************************************************
 //
 // Configure the UART and its pins.  This must be called before UARTprintf().
@@ -254,16 +293,11 @@ static void XBEETask(void *pvParameters) {
 			i32DollarPosition = xbeeUARTPeek('*');
 
 			if (i32DollarPosition != (-1)) {
-				//
-				// Take the xbee semaphore.
-				//
+
 				xSemaphoreTake(g_xbeeUARTSemaphore, portMAX_DELAY);
 				int t = xbeeUARTgetr(cInput, XBEE_INPUT_BUF_SIZE);
 				xSemaphoreGive(g_xbeeUARTSemaphore);
 
-				//xSemaphoreTake(g_xUARTSemaphore, portMAX_DELAY);
-				//UARTprintf(">%d\n", t);
-				//xSemaphoreGive(g_xUARTSemaphore);
 				bsmParse(cInput);
 			}
 		}

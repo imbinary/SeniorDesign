@@ -120,6 +120,7 @@ void GPSparse(char *gpsString) {
 	        	if(!strcmp(tokens[6],"W"))
 	        		g_rBSMData.longitude *= -1;
 	        	g_rBSMData.speed = strtod(tokens[7],NULL);
+	        	g_rBSMData.speed *=0.51444444444;
 	        	g_rBSMData.heading = strtol(tokens[8],NULL,10);
 	        	g_rBSMData.date = strtol(tokens[9],NULL,10);
 	        }

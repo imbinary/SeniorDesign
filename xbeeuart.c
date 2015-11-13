@@ -575,11 +575,12 @@ xbeeUARTgetr(char *pcBuf, uint32_t ui32Len)
             xbeeADVANCE_RX_BUFFER_INDEX(xbee_gui32UARTRxReadIndex);
 
             // look for message start
-            if((start == 0) && (cChar == '$'))
-            	start = 1;
-            else
-            	continue;
-
+            if(start == 0){
+            	if(cChar == '$')
+            		start = 1;
+            	else
+            		continue;
+            }
             //
             // See if a newline or escape character was received.
             //
