@@ -124,7 +124,7 @@ void ConfigureUIUART(uint32_t ui32SysClock) {
 	//
 	// Initialize the UART for console I/O.
 	//
-	uiUARTxConfig(7, 9600, ui32SysClock);
+	uiUARTxConfig(7, 19200, ui32SysClock);
 
 }
 
@@ -178,16 +178,14 @@ static void UITask(void *pvParameters) {
 		if(xQueue1 != 0){
 			//UARTprintf("queue count: %d\n",uxQueueMessagesWaiting( xQueue1 ));
 
-			for(j=0;j<2;j++){
+			for(j=0;j < UIQSIZE;j++){
 				if(xQueueReceive(xQueue1, &(Atest),0)){
 
 					byte2 = Atest;
 					byte1 = (Atest >> 8);
-					int i;
+
 					xSemaphoreTake(g_uiUARTSemaphore, portMAX_DELAY);
-					for(i=0;i<5;i++){
-						uiUARTprintf("$%c%c",byte1,byte2);
-					}
+					uiUARTprintf("$%c%c",byte1,byte2);
 					xSemaphoreGive(g_uiUARTSemaphore);
 
 				}

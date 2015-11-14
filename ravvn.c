@@ -258,7 +258,7 @@ main(void)
     g_xBsmDataSemaphore = xSemaphoreCreateMutex();
 
 
-    xQueue1 = xQueueCreate( 20, sizeof( uint16_t  ) );
+    xQueue1 = xQueueCreate( UIQSIZE, sizeof( uint16_t  ) );
     //
     // Create the virtual com port task.
     // Doing this task first initializes the UART.
@@ -352,24 +352,6 @@ main(void)
     }
 
 
-    //
-    // Create the CompDCM 9 axis sensor task.
-    /*
-    if(MPUTaskInit() != 0)
-    {
-        //
-        // Init returned an error. Print an alert to the user and
-        // spin forever.  Wait for reset or user to debug.
-        //
-        UARTprintf("MPU: Task Init Failed!\n");
-        while(1)
-        {
-            //
-            // Do Nothing.
-            //
-        }
-    }
-*/
     //
      // Create the CompDCM 9 axis sensor task.
 

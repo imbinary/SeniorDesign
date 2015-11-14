@@ -71,7 +71,6 @@ extern void uiUARTFlushTx(bool bDiscard);
 extern void uiUARTFlushRx(void);
 extern int uiUARTRxBytesAvail(void);
 extern int uiUARTTxBytesFree(void);
-extern void uiUARTEchoSet(bool bEnable);
 #endif
 
 //*****************************************************************************

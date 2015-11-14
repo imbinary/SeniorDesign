@@ -41,6 +41,7 @@
 //*****************************************************************************
 #define UI_TASK_PERIOD_MS         100        // periodic rate of the task
 
+#define UIQSIZE 20
 //*****************************************************************************
 //
 // A handle by which this task and others can refer to this task.

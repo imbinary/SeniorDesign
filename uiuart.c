@@ -52,16 +52,7 @@
 //*****************************************************************************
 #ifdef UART_BUFFERED
 
-//*****************************************************************************
-//
-// This global controls whether or not we are echoing characters back to the
-// transmitter.  By default, echo is enabled but if using this module as a
-// convenient method of implementing a buffered serial interface over which
-// you will be running an application protocol, you are likely to want to
-// disable echo by calling UARTEchoSet(false).
-//
-//*****************************************************************************
-static bool ui_gbDisableEcho;
+
 
 //*****************************************************************************
 //
@@ -1507,33 +1498,7 @@ uiUARTFlushTx(bool bDiscard)
 }
 #endif
 
-//*****************************************************************************
-//
-//! Enables or disables echoing of received characters to the transmitter.
-//!
-//! \param bEnable must be set to \b true to enable echo or \b false to
-//! disable it.
-//!
-//! This function, available only when the module is built to operate in
-//! buffered mode using \b UART_BUFFERED, may be used to control whether or not
-//! received characters are automatically echoed back to the transmitter.  By
-//! default, echo is enabled and this is typically the desired behavior if
-//! the module is being used to support a serial command line.  In applications
-//! where this module is being used to provide a convenient, buffered serial
-//! interface over which application-specific binary protocols are being run,
-//! however, echo may be undesirable and this function can be used to disable
-//! it.
-//!
-//! \return None.
-//
-//*****************************************************************************
-#if defined(UART_BUFFERED) || defined(DOXYGEN)
-void
-uiUARTEchoSet(bool bEnable)
-{
-    ui_gbDisableEcho = !bEnable;
-}
-#endif
+
 
 //*****************************************************************************
 //
@@ -1555,7 +1520,7 @@ uiUARTxIntHandler(void)
 
     int32_t i32Char;
 
-    uiUARTEchoSet(false);
+
     //
     // Get and clear the current interrupt source(s)
     //
