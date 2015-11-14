@@ -27,6 +27,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <string.h>
+#include <math.h>
 #include "inc/hw_memmap.h"
 #include "inc/hw_types.h"
 #include "inc/hw_ints.h"
@@ -174,60 +175,97 @@ void bsmParse(char *cInput) {
 
 }
 
-
-void calcAlert(rBSMData_t tmpBSMData){
+void calcAlert(rBSMData_t tmpBSMData) {
 	//TODO calculate stuff
 	Vector v1p, v1d, v2p, v2d;
-	char msg[40];
 
 	// send alert to queue
 	if (xQueue1 != 0) {
-		uint8_t byte1, byte2;
+		uint8_t byte1, byte2, dir;
 		//construct the bytes
-		byte1 = direction(deg2dec(g_rBSMData.latitiude),
-				deg2dec(g_rBSMData.longitude),
-				deg2dec(tmpBSMData.latitiude),
-				deg2dec(tmpBSMData.longitude), 'K') / 11;
+		dir = direction(deg2dec(g_rBSMData.latitiude),
+				deg2dec(g_rBSMData.longitude), deg2dec(tmpBSMData.latitiude),
+				deg2dec(tmpBSMData.longitude), 'K');
+
+		byte1 = dir / 11;
+
+		int size;
+
+		size = 7
+				- (((int) (distance(deg2dec(g_rBSMData.latitiude),
+						deg2dec(g_rBSMData.longitude),
+						deg2dec(tmpBSMData.latitiude),
+						deg2dec(tmpBSMData.longitude), 'm'))
+						* (int) tmpBSMData.speed) / 4);
+
+		//v1 us v2 them p start position d speed
+		v1p.x = g_rBSMData.longitude;
+		v1p.y = g_rBSMData.latitiude;
+		v2p.x = tmpBSMData.longitude;
+		v2p.y = tmpBSMData.latitiude;
+
+		//calc speed in x(longitude) y(latitude) components using heading
+
+		v1d.x = g_rBSMData.speed * cos(deg2rad(g_rBSMData.heading));
+		v1d.y = g_rBSMData.speed * sin(deg2rad(g_rBSMData.heading));
+		v2d.x = tmpBSMData.speed * cos(deg2rad(tmpBSMData.heading));
+		v2d.y = tmpBSMData.speed * sin(deg2rad(tmpBSMData.heading));
+
+		// t contains intersection parameters
+		Intersection t = intersectVectors(v1p, v1d, v2p, v2d);
+		uint8_t color = 0x0f;
 
 		xSemaphoreTake(g_xUARTSemaphore, portMAX_DELAY);
-		int speed;
-
-		//if(tmpBSMData.speed == 0)
-		//	 speed = 1;
-		//else
-			speed = 7-(((int) (distance(deg2dec(g_rBSMData.latitiude),
-					deg2dec(g_rBSMData.longitude),
-					deg2dec(tmpBSMData.latitiude),
-					deg2dec(tmpBSMData.longitude), 'm')) * (int)tmpBSMData.speed) / 4);
-
-		v1p.x=1.25;
-		v1p.y=1.93;
-		v2p.x=2.50;
-		v2p.y=4.00;
-
-		v1d.x=1.62;
-		v1d.y=-0.24;
-		v2d.x=1.37;
-		v2d.y=-1.71;
-
-		Intersection t = intersectVectors(v1p, v1d, v2p, v2d);
-		sprintf(msg, " %0.6f %0.6f", t.parameter1, t.parameter2);
-		UARTprintf("direction: %d size: %d -- %s\n", byte1,speed,msg);
-
+		if (size <= 5) {
+			// far away use intersection with constant speed
+			//sprintf(msg, " %0.6f %0.6f", t.parameter1, t.parameter2);
+			if (abs(t.parameter1 - t.parameter2) < 2)
+				color += 0x0f;
+			if (abs(t.parameter1 - t.parameter2) < 4)
+				color += 0x0f;
+			if (abs(t.parameter1 - t.parameter2) < 8)
+				color += 0x0f;
+			if (abs(t.parameter1 - t.parameter2) < 16)
+				color += 0x0f;
+			UARTprintf("far direction: %d size: %d color: %x color\n", byte1, size,
+					color);
+		} else {
+			uint8_t th = 5;
+			//close use accel data to calculate danger
+			// -y left +y right +x forward -x back
+			if (dir >= 45 && dir < 135) { //east +y
+				if((g_rBSMData.longAccel - tmpBSMData.longAccel) >= th)
+					color += 0x3f;
+			}
+			if (dir >= 135 && dir < 225) { //south -x
+				if((tmpBSMData.latAccel - g_rBSMData.latAccel)>=th)
+					color += 0x3f;
+			}
+			if (dir >= 225 && dir < 315) { //west -y
+				if((tmpBSMData.longAccel - g_rBSMData.longAccel) >= th)
+									color += 0x3f;
+			}
+			if (dir >= 315 || dir < 45) { //north +x
+				if((g_rBSMData.latAccel - tmpBSMData.latAccel)>=th)
+									color += 0x3f;
+			}
+			uint8_t color = abs(t.parameter1 - t.parameter2);
+			UARTprintf("close direction: %d size: %d color: %x\n", byte1, size,
+					color);
+		}
 		xSemaphoreGive(g_xUARTSemaphore);
 		// set dir and size
-		byte1 = (byte1 * 8) + speed;
+		byte1 = (byte1 * 8) + size;
 		// set color
-		byte2 = 0x34;
+		byte2 = color;
 		//set night bit
 		if (tmpBSMData.btime > 20000 && tmpBSMData.btime < 140000)
 			byte2 |= 0x80;
 
 		uint16_t tmp = (byte1 << 8) | byte2;
-		xQueueSendToBackFromISR(xQueue1, & tmp , 0);
+		xQueueSendToBackFromISR(xQueue1, &tmp, 0);
 
 	}
-
 
 }
 //*****************************************************************************
@@ -289,7 +327,7 @@ static void XBEETask(void *pvParameters) {
 		vTaskDelayUntil(&xLastWakeTime, XBEE_TASK_PERIOD_MS /
 		portTICK_RATE_MS);
 		//get up to 5 messages
-		for (i=0;i<4;i++){
+		for (i = 0; i < 4; i++) {
 			i32DollarPosition = xbeeUARTPeek('*');
 
 			if (i32DollarPosition != (-1)) {
