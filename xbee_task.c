@@ -227,25 +227,30 @@ void calcAlert(rBSMData_t tmpBSMData) {
 				color += 0x0f;
 			if (abs(t.parameter1 - t.parameter2) < 16)
 				color += 0x0f;
-			UARTprintf("far direction: %d size: %d -- %d color\n", byte1, size,
+			UARTprintf("far direction: %d size: %d color: %x color\n", byte1, size,
 					color);
 		} else {
+			uint8_t th = 5;
 			//close use accel data to calculate danger
 			// -y left +y right +x forward -x back
 			if (dir >= 45 && dir < 135) { //east +y
-
+				if((g_rBSMData.longAccel - tmpBSMData.longAccel) >= th)
+					color += 0x3f;
 			}
 			if (dir >= 135 && dir < 225) { //south -x
-
+				if((tmpBSMData.latAccel - g_rBSMData.latAccel)>=th)
+					color += 0x3f;
 			}
 			if (dir >= 225 && dir < 315) { //west -y
-
+				if((tmpBSMData.longAccel - g_rBSMData.longAccel) >= th)
+									color += 0x3f;
 			}
 			if (dir >= 315 || dir < 45) { //north +x
-
+				if((g_rBSMData.latAccel - tmpBSMData.latAccel)>=th)
+									color += 0x3f;
 			}
 			uint8_t color = abs(t.parameter1 - t.parameter2);
-			UARTprintf("close direction: %d size: %d -- %d\n", byte1, size,
+			UARTprintf("close direction: %d size: %d color: %x\n", byte1, size,
 					color);
 		}
 		xSemaphoreGive(g_xUARTSemaphore);
