@@ -287,16 +287,11 @@ uint8_t calcColor(rBSMData_t tmpBSMData, int size, int dist) {
 	if (size <= 7) {
 		// far away use intersection with constant speed
 
-		if (coll>=0) {
-			if (coll < 1)
-				color += 0x1c;
-			if (coll < 2)
-				color += 0x1c;
-			if (coll < 4)
-				color += 0x1c;
-			if (coll < 8)
-				color += 0x1c;
-		}
+		if (coll < 0 || coll > 12)
+			color = 1;
+		else
+			color = ((coll * -10.5) +127);
+
 		UARTprintf("far size: %d color: %x color %d\n", size, color, coll);
 	}
 	xSemaphoreGive(g_xUARTSemaphore);
