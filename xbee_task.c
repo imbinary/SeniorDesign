@@ -145,8 +145,8 @@ void bsmParse(char *cInput) {
 						"$B,%0.6f,%0.6f,%0.2f,%d,%0.1f,%d,%d,%d,%d,%0.5f,%0.4f,%d",
 						tmpBSMData.latitiude, tmpBSMData.longitude,
 						tmpBSMData.speed, tmpBSMData.heading, tmpBSMData.btime,
-						tmpBSMData.date, tmpBSMData.latAccel,
-						tmpBSMData.longAccel, tmpBSMData.vertAccel,
+						tmpBSMData.date, tmpBSMData.latAccel*29,
+						tmpBSMData.longAccel*29, tmpBSMData.vertAccel*29,
 						tmpBSMData.yawRate,
 						distance(deg2dec(g_rBSMData.latitiude),
 								deg2dec(g_rBSMData.longitude),
@@ -176,27 +176,39 @@ void bsmParse(char *cInput) {
 }
 
 void calcAlert(rBSMData_t tmpBSMData) {
-	//TODO calculate stuff
+	//TODO move dist calc
 	Vector v1p, v1d, v2p, v2d;
-
+	char msg[80];
 	// send alert to queue
 	if (xQueue1 != 0) {
-		uint8_t byte1, byte2, dir;
+		uint8_t byte1, byte2;
+		int16_t dir;
 		//construct the bytes
 		dir = direction(deg2dec(g_rBSMData.latitiude),
 				deg2dec(g_rBSMData.longitude), deg2dec(tmpBSMData.latitiude),
 				deg2dec(tmpBSMData.longitude), 'K');
+		dir = g_rBSMData.heading - dir;
+		if(dir<=0)
+			dir +=360;
+		uint16_t tmp2 = dir * 4 / 45;
 
-		byte1 = dir / 11;
+		byte1 = tmp2;
 
 		int size;
-
-		size = 7
-				- (((int) (distance(deg2dec(g_rBSMData.latitiude),
-						deg2dec(g_rBSMData.longitude),
-						deg2dec(tmpBSMData.latitiude),
-						deg2dec(tmpBSMData.longitude), 'm'))
-						* (int) tmpBSMData.speed) / 4);
+		int dist = (int) (distance(deg2dec(g_rBSMData.latitiude),
+				deg2dec(g_rBSMData.longitude),
+				deg2dec(tmpBSMData.latitiude),
+				deg2dec(tmpBSMData.longitude), 'm'));
+		if(dist > 60 )
+			return;
+		if(dist > 15)
+			size=0;
+		else if (dist<3)
+			size=7;
+		else{
+			float tmp3 = dist * (-7 /12.0) +(35 / 4.0);
+			size = tmp3;
+		}
 
 		//v1 us v2 them p start position d speed
 		v1p.x = g_rBSMData.longitude;
@@ -214,23 +226,23 @@ void calcAlert(rBSMData_t tmpBSMData) {
 		// t contains intersection parameters
 		Intersection t = intersectVectors(v1p, v1d, v2p, v2d);
 		uint8_t color = 0x0f;
-
+		//TODO find out t params add if for -
 		xSemaphoreTake(g_xUARTSemaphore, portMAX_DELAY);
-		if (size <= 5) {
+		if (size <= 7) {
 			// far away use intersection with constant speed
-			//sprintf(msg, " %0.6f %0.6f", t.parameter1, t.parameter2);
+			sprintf(msg, " %0.6f %0.6f", t.parameter1, t.parameter2);
 			if (abs(t.parameter1 - t.parameter2) < 2)
-				color += 0x0f;
+				color += 0x1c;
 			if (abs(t.parameter1 - t.parameter2) < 4)
-				color += 0x0f;
+				color += 0x1c;
 			if (abs(t.parameter1 - t.parameter2) < 8)
-				color += 0x0f;
+				color += 0x1c;
 			if (abs(t.parameter1 - t.parameter2) < 16)
-				color += 0x0f;
-			UARTprintf("far direction: %d size: %d color: %x color\n", byte1, size,
-					color);
+				color += 0x1c;
+			UARTprintf("far direction: %d size: %d color: %x color %s\n", byte1, size,
+					color, msg);
 		} else {
-			uint8_t th = 5;
+			uint8_t th = 3;
 			//close use accel data to calculate danger
 			// -y left +y right +x forward -x back
 			if (dir >= 45 && dir < 135) { //east +y
@@ -250,8 +262,8 @@ void calcAlert(rBSMData_t tmpBSMData) {
 									color += 0x3f;
 			}
 			uint8_t color = abs(t.parameter1 - t.parameter2);
-			UARTprintf("close direction: %d size: %d color: %x\n", byte1, size,
-					color);
+			//UARTprintf("close direction: %d size: %d color: %x\n", byte1, size,
+			//		color);
 		}
 		xSemaphoreGive(g_xUARTSemaphore);
 		// set dir and size

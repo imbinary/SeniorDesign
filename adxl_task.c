@@ -142,9 +142,9 @@ ADXLTask(void *pvParameters)
 		y = (int16_t)(x2);
 		z = (int16_t)(x3);
 
-		z=z*2.9/10;
-		y=y*2.9/10;
-		x=x*2.9/10;
+		//z=z*2.9/100;
+		//y=y*2.9/100;
+		//x=x*2.9/100;
 
 		xo=x;
 		yo=y;
