@@ -59,7 +59,7 @@
 
 
 extern xSemaphoreHandle g_xBsmDataSemaphore;
-
+uint16_t oldHeading;
 
 //*****************************************************************************
 //
@@ -135,6 +135,10 @@ void GPSparse(char *gpsString) {
 	{
 		//UARTprintf("> %s\n", gpsString);
 	}
+	if(g_rBSMData.speed < .03)
+		g_rBSMData.heading = oldHeading;
+	else
+		oldHeading = g_rBSMData.heading;
 
 
 }
@@ -245,7 +249,7 @@ uint32_t GPSTaskInit(void) {
 	// Configure the UART and the UARTStdio library.
 	//
 	ConfigureGPSUART(g_ui32SysClock);
-
+	oldHeading = 0;
 	//
 	// Make sure the UARTStdioIntHandler priority is low to not interfere
 	// with the RTOS. This may not be needed since the int handler does not

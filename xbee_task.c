@@ -94,6 +94,7 @@ float min(float v1, float v2);
 
 
 float oldTime;
+
 //*****************************************************************************
 //
 //
@@ -195,7 +196,7 @@ float tCollide(int dist, int bear, float myVeloc, int myHead, float otherVeloc,
 			- myVeloc * sin(deg2rad(myHead)); //x component of relative velocity
 
 	float V_r = pow(V_ry,2) + pow(V_rx,2); //relative velocity
-	if (V_r == 0)
+	if (abs(V_r) <= .001)
 		return -1; //travelling parallel at same velocity, same direction. No collision
 
 	float exp1 = -pow(d_x,2) * pow(V_ry,2) + 2 * d_x * d_y * V_rx * V_ry
@@ -245,12 +246,12 @@ void calcAlert(rBSMData_t tmpBSMData) {
 		byte1 = calcDir(tmpBSMData);
 
 		//size relative to distance
-		if (dist > 15)
+		if (dist > 20)
 			size = 0;
 		else if (dist < 3)
 			size = 7;
 		else {
-			float tmp3 = dist * (-7 / 12.0) + (35 / 4.0);
+			float tmp3 = ((dist * -7) + 140) / 17;
 			size = tmp3;
 		}
 
@@ -292,7 +293,7 @@ uint8_t calcColor(rBSMData_t tmpBSMData, int size, int dist) {
 		else
 			color = ((coll * -10.5) +127);
 
-		UARTprintf("far size: %d color: %x color %d\n", size, color, coll);
+		UARTprintf("far size: %d color: %d coll %d\n", size, color, coll);
 	}
 	xSemaphoreGive(g_xUARTSemaphore);
 	return color;
