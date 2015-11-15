@@ -86,6 +86,14 @@ extern uint32_t g_ui32SysClock;
 //extern rBSMData_t g_rBSMData;
 
 void calcAlert(rBSMData_t tmpBSMData);
+uint8_t calcDir(rBSMData_t tmpBSMData);
+uint8_t calcColor(rBSMData_t tmpBSMData, int size, int dist);
+float tCollide(int dist, int bear, float myVeloc, int myHead, float otherVeloc,
+		int otherHead);
+float min(float v1, float v2);
+
+
+float oldTime;
 //*****************************************************************************
 //
 //
@@ -107,11 +115,13 @@ void bsmSend() {
 		sprintf(tmp, "I,%0.6f,%0.6f,%d,%0.1f", g_rBSMData.latitiude,
 				g_rBSMData.longitude, g_rBSMData.heading, g_rBSMData.btime);
 	}
+	xSemaphoreGive(g_xBsmDataSemaphore);
+	if (g_rBSMData.btime == oldTime || g_rBSMData.date == 0)
+		return;
+	oldTime = g_rBSMData.btime;
 	nmea_generateChecksum(tmp, bsm);
 	xbeeUARTprintf("%s\n", bsm);
-	xSemaphoreGive(g_xBsmDataSemaphore);
-	//TODO remove this it is for testing
-	//bsmParse(bsm);
+
 }
 
 //*****************************************************************************
@@ -145,8 +155,8 @@ void bsmParse(char *cInput) {
 						"$B,%0.6f,%0.6f,%0.2f,%d,%0.1f,%d,%d,%d,%d,%0.5f,%0.4f,%d",
 						tmpBSMData.latitiude, tmpBSMData.longitude,
 						tmpBSMData.speed, tmpBSMData.heading, tmpBSMData.btime,
-						tmpBSMData.date, tmpBSMData.latAccel*29,
-						tmpBSMData.longAccel*29, tmpBSMData.vertAccel*29,
+						tmpBSMData.date, tmpBSMData.latAccel * 29,
+						tmpBSMData.longAccel * 29, tmpBSMData.vertAccel * 29,
 						tmpBSMData.yawRate,
 						distance(deg2dec(g_rBSMData.latitiude),
 								deg2dec(g_rBSMData.longitude),
@@ -175,101 +185,79 @@ void bsmParse(char *cInput) {
 
 }
 
+float tCollide(int dist, int bear, float myVeloc, int myHead, float otherVeloc,
+		int otherHead) {
+	float d_y = dist * cos(deg2rad(bear)); //y component of distance in meters
+	float d_x = dist * sin(deg2rad(bear)); //x component of distance in meters
+	float V_ry = otherVeloc * cos(deg2rad(otherHead))
+			- myVeloc * cos(deg2rad(myHead)); //y component of relative velocity
+	float V_rx = otherVeloc * sin(deg2rad(otherHead))
+			- myVeloc * sin(deg2rad(myHead)); //x component of relative velocity
+
+	float V_r = pow(V_ry,2) + pow(V_rx,2); //relative velocity
+	if (V_r == 0)
+		return -1; //travelling parallel at same velocity, same direction. No collision
+
+	float exp1 = -pow(d_x,2) * pow(V_ry,2) + 2 * d_x * d_y * V_rx * V_ry
+			- pow(d_y,2) * pow(V_rx,2) + 4 * (V_r); //expression 1 of solution
+	if (exp1 < 0)
+		return -1; //solution is not real-paths are parallel, circles do not collide
+
+	exp1 = sqrt(exp1); //previous statement avoides taking square root of negative
+
+	float exp2 = d_x * V_rx - d_y * V_ry; //expression 2 of solution
+	float sol1 = (exp1 - exp2) / V_r; //solution 1
+	float sol2 = (-exp1 - exp2) / V_r; //solution 2
+
+	if (sol1 < 0 && sol2 < 0)
+		return -1; //vehicles are moving away from eachother
+	else if (sol1 >= 0 && sol2 < 0)
+		return sol1; //sol1 is time to collision
+	else if (sol1 < 0 && sol2 >= 0)
+		return sol2; //sol2 is time to collision
+	else
+		return min(sol1, sol2); //the minimum of sol1 and sol2 is time to collision
+
+}
+
+float min(float v1, float v2){
+	if(v1<v2)
+		return v1;
+	return v2;
+}
+
+
 void calcAlert(rBSMData_t tmpBSMData) {
-	//TODO move dist calc
-	Vector v1p, v1d, v2p, v2d;
-	char msg[80];
+
 	// send alert to queue
 	if (xQueue1 != 0) {
 		uint8_t byte1, byte2;
-		int16_t dir;
+		int size, dist;
 		//construct the bytes
-		dir = direction(deg2dec(g_rBSMData.latitiude),
+
+		//calc distance
+		dist = (int) (distance(deg2dec(g_rBSMData.latitiude),
 				deg2dec(g_rBSMData.longitude), deg2dec(tmpBSMData.latitiude),
-				deg2dec(tmpBSMData.longitude), 'K');
-		dir = g_rBSMData.heading - dir;
-		if(dir<=0)
-			dir +=360;
-		uint16_t tmp2 = dir * 4 / 45;
-
-		byte1 = tmp2;
-
-		int size;
-		int dist = (int) (distance(deg2dec(g_rBSMData.latitiude),
-				deg2dec(g_rBSMData.longitude),
-				deg2dec(tmpBSMData.latitiude),
 				deg2dec(tmpBSMData.longitude), 'm'));
-		if(dist > 60 )
+		if (dist > 60)
 			return;
-		if(dist > 15)
-			size=0;
-		else if (dist<3)
-			size=7;
-		else{
-			float tmp3 = dist * (-7 /12.0) +(35 / 4.0);
+
+		byte1 = calcDir(tmpBSMData);
+
+		//size relative to distance
+		if (dist > 15)
+			size = 0;
+		else if (dist < 3)
+			size = 7;
+		else {
+			float tmp3 = dist * (-7 / 12.0) + (35 / 4.0);
 			size = tmp3;
 		}
 
-		//v1 us v2 them p start position d speed
-		v1p.x = g_rBSMData.longitude;
-		v1p.y = g_rBSMData.latitiude;
-		v2p.x = tmpBSMData.longitude;
-		v2p.y = tmpBSMData.latitiude;
-
-		//calc speed in x(longitude) y(latitude) components using heading
-
-		v1d.x = g_rBSMData.speed * cos(deg2rad(g_rBSMData.heading));
-		v1d.y = g_rBSMData.speed * sin(deg2rad(g_rBSMData.heading));
-		v2d.x = tmpBSMData.speed * cos(deg2rad(tmpBSMData.heading));
-		v2d.y = tmpBSMData.speed * sin(deg2rad(tmpBSMData.heading));
-
-		// t contains intersection parameters
-		Intersection t = intersectVectors(v1p, v1d, v2p, v2d);
-		uint8_t color = 0x0f;
-		//TODO find out t params add if for -
-		xSemaphoreTake(g_xUARTSemaphore, portMAX_DELAY);
-		if (size <= 7) {
-			// far away use intersection with constant speed
-			sprintf(msg, " %0.6f %0.6f", t.parameter1, t.parameter2);
-			if (abs(t.parameter1 - t.parameter2) < 2)
-				color += 0x1c;
-			if (abs(t.parameter1 - t.parameter2) < 4)
-				color += 0x1c;
-			if (abs(t.parameter1 - t.parameter2) < 8)
-				color += 0x1c;
-			if (abs(t.parameter1 - t.parameter2) < 16)
-				color += 0x1c;
-			UARTprintf("far direction: %d size: %d color: %x color %s\n", byte1, size,
-					color, msg);
-		} else {
-			uint8_t th = 3;
-			//close use accel data to calculate danger
-			// -y left +y right +x forward -x back
-			if (dir >= 45 && dir < 135) { //east +y
-				if((g_rBSMData.longAccel - tmpBSMData.longAccel) >= th)
-					color += 0x3f;
-			}
-			if (dir >= 135 && dir < 225) { //south -x
-				if((tmpBSMData.latAccel - g_rBSMData.latAccel)>=th)
-					color += 0x3f;
-			}
-			if (dir >= 225 && dir < 315) { //west -y
-				if((tmpBSMData.longAccel - g_rBSMData.longAccel) >= th)
-									color += 0x3f;
-			}
-			if (dir >= 315 || dir < 45) { //north +x
-				if((g_rBSMData.latAccel - tmpBSMData.latAccel)>=th)
-									color += 0x3f;
-			}
-			uint8_t color = abs(t.parameter1 - t.parameter2);
-			//UARTprintf("close direction: %d size: %d color: %x\n", byte1, size,
-			//		color);
-		}
-		xSemaphoreGive(g_xUARTSemaphore);
 		// set dir and size
 		byte1 = (byte1 * 8) + size;
 		// set color
-		byte2 = color;
+		byte2 = calcColor(tmpBSMData, size, dist);
 		//set night bit
 		if (tmpBSMData.btime > 20000 && tmpBSMData.btime < 140000)
 			byte2 |= 0x80;
@@ -280,6 +268,54 @@ void calcAlert(rBSMData_t tmpBSMData) {
 	}
 
 }
+
+uint8_t calcColor(rBSMData_t tmpBSMData, int size, int dist) {
+	uint8_t color = 0x0f;
+	int16_t dir;
+
+	dir = direction(deg2dec(g_rBSMData.latitiude),
+			deg2dec(g_rBSMData.longitude), deg2dec(tmpBSMData.latitiude),
+			deg2dec(tmpBSMData.longitude), 'K');
+	dir = g_rBSMData.heading - dir;
+	if (dir <= 0)
+		dir += 360;
+
+	float coll = tCollide(dist, dir, g_rBSMData.speed, g_rBSMData.heading , tmpBSMData.speed,
+			tmpBSMData.heading);
+
+	xSemaphoreTake(g_xUARTSemaphore, portMAX_DELAY);
+	if (size <= 7) {
+		// far away use intersection with constant speed
+
+		if (coll>=0) {
+			if (coll < 1)
+				color += 0x1c;
+			if (coll < 2)
+				color += 0x1c;
+			if (coll < 4)
+				color += 0x1c;
+			if (coll < 8)
+				color += 0x1c;
+		}
+		UARTprintf("far size: %d color: %x color %d\n", size, color, coll);
+	}
+	xSemaphoreGive(g_xUARTSemaphore);
+	return color;
+}
+
+uint8_t calcDir(rBSMData_t tmpBSMData) {
+	int16_t dir;
+
+	dir = direction(deg2dec(g_rBSMData.latitiude),
+			deg2dec(g_rBSMData.longitude), deg2dec(tmpBSMData.latitiude),
+			deg2dec(tmpBSMData.longitude), 'K');
+	dir = g_rBSMData.heading - dir;
+	if (dir <= 0)
+		dir += 360;
+	dir = dir * 4 / 45;
+	return (uint8_t) dir;
+}
+
 //*****************************************************************************
 //
 // Configure the UART and its pins.  This must be called before UARTprintf().
@@ -366,6 +402,7 @@ uint32_t XBEETaskInit(void) {
 	//
 	ConfigureXBEEUART(g_ui32SysClock);
 
+	oldTime = -1.0;
 	//
 	// Make sure the UARTStdioIntHandler priority is low to not interfere
 	// with the RTOS. This may not be needed since the int handler does not
