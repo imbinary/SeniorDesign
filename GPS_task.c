@@ -61,6 +61,7 @@
 extern xSemaphoreHandle g_xBsmDataSemaphore;
 uint16_t oldHeading;
 bool revFlag;
+bool start;
 int init_accel;
 
 
