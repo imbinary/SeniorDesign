@@ -90,8 +90,9 @@ uint8_t calcDir(rBSMData_t tmpBSMData);
 uint8_t calcColor(rBSMData_t tmpBSMData, int size, int dist);
 float tCollide(int dist, int bear, float myVeloc, int myHead, float otherVeloc,
 		int otherHead);
+float tCollideAcc(int dist, int bear, float myV, int myA_y, int myA_x,
+		int myHead, float oV, int oA_y, int oA_x, int oHead);
 float min(float v1, float v2);
-
 
 float oldTime;
 
@@ -109,7 +110,8 @@ void bsmSend() {
 		sprintf(tmp, "B,%0.6f,%0.6f,%0.2f,%d,%0.1f,%d,%d,%d,%d",
 				g_rBSMData.latitiude, g_rBSMData.longitude, g_rBSMData.speed,
 				g_rBSMData.heading, g_rBSMData.btime, g_rBSMData.date,
-				g_rBSMData.latAccel, g_rBSMData.longAccel, g_rBSMData.vertAccel);
+				g_rBSMData.latAccel, g_rBSMData.longAccel,
+				g_rBSMData.vertAccel);
 	} else {
 		//todo change time to status
 		sprintf(tmp, "I,%0.6f,%0.6f,%d,%0.1f", g_rBSMData.latitiude,
@@ -152,8 +154,7 @@ void bsmParse(char *cInput) {
 				tmpBSMData.longAccel = strtol(tokens[8], NULL, 10);
 				tmpBSMData.vertAccel = strtol(tokens[9], NULL, 10);
 
-				sprintf(bsm,
-						"%03.2f, %d, %07.1f, %5d, %5d, %5d, %05.1f, %d",
+				sprintf(bsm, "%03.2f, %d, %07.1f, %5d, %5d, %5d, %05.1f, %d",
 						tmpBSMData.speed, tmpBSMData.heading, tmpBSMData.btime,
 						tmpBSMData.latAccel * 29, tmpBSMData.longAccel * 29,
 						tmpBSMData.vertAccel * 29,
@@ -193,12 +194,12 @@ float tCollide(int dist, int bear, float myVeloc, int myHead, float otherVeloc,
 	float V_rx = otherVeloc * sin(deg2rad(otherHead))
 			- myVeloc * sin(deg2rad(myHead)); //x component of relative velocity
 
-	float V_r = pow(V_ry,2) + pow(V_rx,2); //relative velocity
+	float V_r = pow(V_ry, 2) + pow(V_rx, 2); //relative velocity
 	if (abs(V_r) <= .001)
 		return -1; //travelling parallel at same velocity, same direction. No collision
 
-	float exp1 = -pow(d_x,2) * pow(V_ry,2) + 2 * d_x * d_y * V_rx * V_ry
-			- pow(d_y,2) * pow(V_rx,2) + 4 * (V_r); //expression 1 of solution
+	float exp1 = -pow(d_x, 2) * pow(V_ry, 2) + 2 * d_x * d_y * V_rx * V_ry
+			- pow(d_y, 2) * pow(V_rx, 2) + 4 * (V_r); //expression 1 of solution
 	if (exp1 < 0)
 		return -1; //solution is not real-paths are parallel, circles do not collide
 
@@ -219,12 +220,62 @@ float tCollide(int dist, int bear, float myVeloc, int myHead, float otherVeloc,
 
 }
 
-float min(float v1, float v2){
-	if(v1<v2)
+float tCollideAcc(int dist, int bear, float myV, int myA_y, int myA_x,
+		int myHead, float oV, int oA_y, int oA_x, int oHead) {
+	oHead = deg2rad(oHead);
+	myHead = deg2rad(myHead);
+	bear = deg2rad(bear);
+	float D_y = dist * cos(bear);
+	float D_x = dist * sin(bear);
+	float V_ry = oV * cos(oHead) - myV * cos(myHead); //y component of relative velocity
+	float V_rx = oV * sin(oHead) - myV * sin(myHead); //x component of relative velocity
+	float A_ry = (oA_y * cos(oHead) - oA_x * sin(oHead) - myA_y * cos(myHead)
+			+ myA_x * sin(myHead)) * 9.88 / 10000; //convert to m/s^2 from g*10^-4
+	float A_rx = (oA_y * sin(oHead) + oA_x * sin(oHead) - myA_y * sin(myHead)
+			- myA_x * cos(myHead)) * 9.88 / 10000; //convert to m/s^2 from g*10^-4
+	float A_r2 = A_rx * A_rx + A_ry * A_ry;
+//if there is no relative acceleration, check for collision by velocity
+	if (A_r2 == 0)
+		return tCollide(dist, rad2deg(bear), myV, rad2deg(myHead), oV,
+				rad2deg(oHead));
+//expression 1 of solution
+	float ex1 = dist * dist * A_r2 - 4 * dist * A_r2
+			- A_rx * A_rx * (V_ry * V_ry - 4) + 2 * A_rx * A_ry * V_rx * V_ry
+			- A_ry * A_ry * (V_rx * V_rx - 4);
+	if (ex1 < 0)
+		return -1; //solution is not real-paths are parallel
+	ex1 = sqrt(ex1); //previous statement avoids taking square root of negative
+	float ex2 = A_rx * V_rx + A_ry * V_ry; //expression 2 of solution
+	float t1 = (ex1 - ex2) / A_r2; //solution 1
+	float t2 = (-ex1 - ex2) / A_r2; //solution 2
+	float D_t1, D_t2;
+	if (t1 >= 0 && t1 <= 12) { //assumes we don't care to predict collisions more than 12 seconds out
+		D_t1 = pow(D_x + V_rx * t1 + A_rx * t1 * t1 / 2, 2)
+				+ pow(D_y + V_ry * t1 + A_ry * t1 * t1 / 2, 2);
+		D_t1 = sqrt(D_t1); //distance at time 1
+	} else
+		D_t1 = -1; //not valid solution
+	if (t2 >= 0 && t2 <= 12) { //assumes we don't care to predict collisions more than 12 seconds out
+		D_t2 = pow(D_x + V_rx * t2 + A_rx * t2 * t2 / 2, 2)
+				+ pow(D_y + V_ry * t2 + A_ry * t2 * t2 / 2, 2);
+		D_t2 = sqrt(D_t2); //distance at time 2
+	} else
+		D_t2 = -1; //not valid solution
+	if ((D_t1 < 0 && D_t2 < 0) || (D_t1 > dist && D_t2 > dist))
+		return -1; //vehicles are moving away from eachother
+	else if (D_t1 >= 0 && D_t1 < dist && D_t2 < 0)
+		return t1; //t1 is time to collision
+	else if (D_t1 < 0 && D_t2 >= 0 && D_t2 < dist)
+		return t2; //t2 is time to collision
+	else
+		return min(t1, t2); //the minimum of t1 and t2 is time to collision
+}
+
+float min(float v1, float v2) {
+	if (v1 < v2)
 		return v1;
 	return v2;
 }
-
 
 void calcAlert(rBSMData_t tmpBSMData) {
 
@@ -276,9 +327,10 @@ uint8_t calcColor(rBSMData_t tmpBSMData, int size, int dist) {
 			deg2dec(g_rBSMData.longitude), deg2dec(tmpBSMData.latitiude),
 			deg2dec(tmpBSMData.longitude), 'K');
 
-
-	float coll = tCollide(dist, dir, g_rBSMData.speed, g_rBSMData.heading , tmpBSMData.speed,
-			tmpBSMData.heading);
+	//float coll = tCollide(dist, dir, g_rBSMData.speed, g_rBSMData.heading,
+	//		tmpBSMData.speed, tmpBSMData.heading);
+	float coll = tCollideAcc(dist, dir, g_rBSMData.speed, g_rBSMData.latAccel, g_rBSMData.longAccel,
+			g_rBSMData.heading, tmpBSMData.speed, tmpBSMData.latAccel, tmpBSMData.longAccel, tmpBSMData.heading);
 
 	xSemaphoreTake(g_xUARTSemaphore, portMAX_DELAY);
 	if (size <= 7) {
@@ -287,7 +339,7 @@ uint8_t calcColor(rBSMData_t tmpBSMData, int size, int dist) {
 		if (coll < 0 || coll > 12)
 			color = 1;
 		else
-			color = ((coll * -10.5) +127);
+			color = ((coll * -10.5) + 127);
 
 		UARTprintf("far size: %d color: %d coll %d\n", size, color, coll);
 	}
