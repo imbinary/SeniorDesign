@@ -94,6 +94,8 @@ float tCollideAcc(int dist, int bear, float myV, int myA_y, int myA_x,
 		int myHead, float oV, int oA_y, int oA_x, int oHead);
 float min(float v1, float v2);
 
+// globals
+extern bool revFlag;
 float oldTime;
 
 //*****************************************************************************
@@ -185,6 +187,11 @@ void bsmParse(char *cInput) {
 
 }
 
+//*****************************************************************************
+//
+//
+//
+//*****************************************************************************
 float tCollide(int dist, int bear, float myVeloc, int myHead, float otherVeloc,
 		int otherHead) {
 	float d_y = dist * cos(deg2rad(bear)); //y component of distance in meters
@@ -220,6 +227,11 @@ float tCollide(int dist, int bear, float myVeloc, int myHead, float otherVeloc,
 
 }
 
+//*****************************************************************************
+//
+//
+//
+//*****************************************************************************
 float tCollideAcc(int dist, int bear, float myV, int myA_y, int myA_x,
 		int myHead, float oV, int oA_y, int oA_x, int oHead) {
 	oHead = deg2rad(oHead);
@@ -271,12 +283,22 @@ float tCollideAcc(int dist, int bear, float myV, int myA_y, int myA_x,
 		return min(t1, t2); //the minimum of t1 and t2 is time to collision
 }
 
+//*****************************************************************************
+//
+//
+//
+//*****************************************************************************
 float min(float v1, float v2) {
 	if (v1 < v2)
 		return v1;
 	return v2;
 }
 
+//*****************************************************************************
+//
+//
+//
+//*****************************************************************************
 void calcAlert(rBSMData_t tmpBSMData) {
 
 	// send alert to queue
@@ -319,6 +341,11 @@ void calcAlert(rBSMData_t tmpBSMData) {
 
 }
 
+//*****************************************************************************
+//
+//
+//
+//*****************************************************************************
 uint8_t calcColor(rBSMData_t tmpBSMData, int size, int dist) {
 	uint8_t color = 0x0f;
 	int16_t dir;
@@ -329,8 +356,8 @@ uint8_t calcColor(rBSMData_t tmpBSMData, int size, int dist) {
 
 	//float coll = tCollide(dist, dir, g_rBSMData.speed, g_rBSMData.heading,
 	//		tmpBSMData.speed, tmpBSMData.heading);
-	float coll = tCollideAcc(dist, dir, g_rBSMData.speed, g_rBSMData.latAccel, g_rBSMData.longAccel,
-			g_rBSMData.heading, tmpBSMData.speed, tmpBSMData.latAccel, tmpBSMData.longAccel, tmpBSMData.heading);
+	float coll = tCollideAcc(dist, dir, g_rBSMData.speed, g_rBSMData.latAccel*29, g_rBSMData.longAccel*29,
+			g_rBSMData.heading, tmpBSMData.speed, tmpBSMData.latAccel*29, tmpBSMData.longAccel*29, tmpBSMData.heading);
 
 	xSemaphoreTake(g_xUARTSemaphore, portMAX_DELAY);
 	if (size <= 7) {
@@ -447,6 +474,7 @@ uint32_t XBEETaskInit(void) {
 	ConfigureXBEEUART(g_ui32SysClock);
 
 	oldTime = -1.0;
+
 	//
 	// Make sure the UARTStdioIntHandler priority is low to not interfere
 	// with the RTOS. This may not be needed since the int handler does not
