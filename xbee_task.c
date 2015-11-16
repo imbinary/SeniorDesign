@@ -215,7 +215,7 @@ float tCollideAcc(int dist, float myV, int myA_y, int myA_x, int myHead,
 		return -1; //relative velocity and acceleration are zero
 
 	//Scenario 2: vehicles are traveling at a constant relative speed
-	else if (abs(A_r) = 0.01 && abs(V_r) >= 0.01) { //relative acceleration is zero, velocity is not
+	else if (abs(A_r) <= 0.01 && abs(V_r) >= 0.01) { //relative acceleration is zero, velocity is not
 		float t1 = (-1*dist + 2) / V_r; //solution 1
 		float t2 = (-1*dist - 2) / V_r; //solution 2
 
