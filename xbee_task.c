@@ -106,23 +106,24 @@ void bsmSend() {
 	xSemaphoreTake(g_xBsmDataSemaphore, portMAX_DELAY);
 
 	if (DTYPE) {
-		sprintf(tmp, "B,%0.6f,%0.6f,%0.2f,%d,%0.1f,%d,%d,%d,%d,%0.5f",
+		sprintf(tmp, "B,%0.6f,%0.6f,%0.2f,%d,%0.1f,%d,%d,%d,%d",
 				g_rBSMData.latitiude, g_rBSMData.longitude, g_rBSMData.speed,
 				g_rBSMData.heading, g_rBSMData.btime, g_rBSMData.date,
-				g_rBSMData.latAccel, g_rBSMData.longAccel, g_rBSMData.vertAccel,
-				g_rBSMData.yawRate);
+				g_rBSMData.latAccel, g_rBSMData.longAccel, g_rBSMData.vertAccel);
 	} else {
 		//todo change time to status
 		sprintf(tmp, "I,%0.6f,%0.6f,%d,%0.1f", g_rBSMData.latitiude,
 				g_rBSMData.longitude, g_rBSMData.heading, g_rBSMData.btime);
 	}
 	xSemaphoreGive(g_xBsmDataSemaphore);
-	if (g_rBSMData.btime == oldTime || g_rBSMData.date == 0)
+	//todo
+	//if (g_rBSMData.btime == oldTime || g_rBSMData.date == 0)
+	if (g_rBSMData.date == 0)
 		return;
 	oldTime = g_rBSMData.btime;
 	nmea_generateChecksum(tmp, bsm);
 	xbeeUARTprintf("%s\n", bsm);
-
+	//bsmParse(bsm);
 }
 
 //*****************************************************************************
@@ -150,15 +151,12 @@ void bsmParse(char *cInput) {
 				tmpBSMData.latAccel = strtol(tokens[7], NULL, 10);
 				tmpBSMData.longAccel = strtol(tokens[8], NULL, 10);
 				tmpBSMData.vertAccel = strtol(tokens[9], NULL, 10);
-				tmpBSMData.yawRate = strtod(tokens[10], NULL);
 
 				sprintf(bsm,
-						"$B,%0.6f,%0.6f,%0.2f,%d,%0.1f,%d,%d,%d,%d,%0.5f,%0.4f,%d",
-						tmpBSMData.latitiude, tmpBSMData.longitude,
+						"%03.2f, %d, %07.1f, %5d, %5d, %5d, %05.1f, %d",
 						tmpBSMData.speed, tmpBSMData.heading, tmpBSMData.btime,
-						tmpBSMData.date, tmpBSMData.latAccel * 29,
-						tmpBSMData.longAccel * 29, tmpBSMData.vertAccel * 29,
-						tmpBSMData.yawRate,
+						tmpBSMData.latAccel * 29, tmpBSMData.longAccel * 29,
+						tmpBSMData.vertAccel * 29,
 						distance(deg2dec(g_rBSMData.latitiude),
 								deg2dec(g_rBSMData.longitude),
 								deg2dec(tmpBSMData.latitiude),
@@ -206,9 +204,9 @@ float tCollide(int dist, int bear, float myVeloc, int myHead, float otherVeloc,
 
 	exp1 = sqrt(exp1); //previous statement avoides taking square root of negative
 
-	float exp2 = d_x * V_rx - d_y * V_ry; //expression 2 of solution
-	float sol1 = (exp1 - exp2) / V_r; //solution 1
-	float sol2 = (-exp1 - exp2) / V_r; //solution 2
+	float exp_2 = d_x * V_rx - d_y * V_ry; //expression 2 of solution
+	float sol1 = (exp1 - exp_2) / V_r; //solution 1
+	float sol2 = (-exp1 - exp_2) / V_r; //solution 2
 
 	if (sol1 < 0 && sol2 < 0)
 		return -1; //vehicles are moving away from eachother
@@ -277,9 +275,7 @@ uint8_t calcColor(rBSMData_t tmpBSMData, int size, int dist) {
 	dir = direction(deg2dec(g_rBSMData.latitiude),
 			deg2dec(g_rBSMData.longitude), deg2dec(tmpBSMData.latitiude),
 			deg2dec(tmpBSMData.longitude), 'K');
-	dir = g_rBSMData.heading - dir;
-	if (dir <= 0)
-		dir += 360;
+
 
 	float coll = tCollide(dist, dir, g_rBSMData.speed, g_rBSMData.heading , tmpBSMData.speed,
 			tmpBSMData.heading);
