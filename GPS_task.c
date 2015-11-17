@@ -140,14 +140,31 @@ void GPSparse(char *gpsString) {
 		//UARTprintf("> %s\n", gpsString);
 	}
 
-	//preserve heading if stopped
-	if(g_rBSMData.speed < .04){
-		g_rBSMData.heading = oldHeading;
-		//initaccel += g_rBSMData.latAccel;
+	//starting
+	if(start){
+		if( (g_rBSMData.speed >= .05) && (g_rBSMData.speed <= .5) && (abs(g_rBSMData.latAccel) >= 500) ){
+			init_accel+= g_rBSMData.latAccel;
+		}
+		else if( (g_rBSMData.speed >= .5) && (g_rBSMData.latAccel < 0) ){
+			start = false;
+			revFlag = true;
+		}
+		else if(g_rBSMData.speed >= .5)
+			start = false;
 	}
 	else
-		oldHeading = g_rBSMData.heading;
-
+	{
+		// stopping
+		//preserve heading if stopped
+		if( g_rBSMData.speed < .05){
+			g_rBSMData.heading = oldHeading;
+		}
+		else{
+			if( abs(g_rBSMData.heading-oldHeading) > 180)
+				revFlag=!revFlag;
+			oldHeading = g_rBSMData.heading;
+		}
+	}
 
 }
 
@@ -259,6 +276,7 @@ uint32_t GPSTaskInit(void) {
 	ConfigureGPSUART(g_ui32SysClock);
 	oldHeading = 0;
 	revFlag = false;
+	start = false;
 	init_accel = 0;
 	//
 	// Make sure the UARTStdioIntHandler priority is low to not interfere

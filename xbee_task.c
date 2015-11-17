@@ -220,16 +220,10 @@ float tCollideAcc(int dist, float myV, int myA_y, int myA_x, int myHead,
 		float t2 = (-1*dist - 2) / V_r; //solution 2
 
 		if((t1<0 && t2<0) || (t1>12 && t2>12) ) return -1; //vehicles will not collide within 12 seconds
-
-		//test the four conditions:
-		if (t1 < 0 && t2 < 0)
-			return -1; //vehicles are moving away from eachother
-		if (t1 >= 0 && t2 < 0)
-			return t1; //t1 is TTC (time to collision)
-		if (t1 < 0 && t2 >= 0)
-			return t2; //t2 is TTC
-		else
-			return min(t1, t2); //the smaller time is the TTC
+		else if(t1>=0 && t1<=12 && t2<0) return t1; //t1 is TTC (time to collision)
+		else if(t1<0 && t2>=0 && t2<=12) return t2; //t2 is TTC
+		else if (min(t1, t2)>=0 && min(t1, t2)<=12) return min(t1,t2); //the smaller time is the TTC
+		else return -1; //vehicles will not collide within 12 seconds
 	}
 
 	//Scenario 3: vehicles are traveling at constant relative acceleration
@@ -360,9 +354,16 @@ float tCollideAcc(int dist, float myV, int myA_y, int myA_x, int myHead,
 				deg2dec(g_rBSMData.longitude), deg2dec(tmpBSMData.latitiude),
 				deg2dec(tmpBSMData.longitude), 'K');
 		dir = g_rBSMData.heading - dir;
+
 		if (dir <= 0)
 			dir += 360;
 		dir = dir * 4 / 45;
+
+		if(revFlag){
+			dir=16-dir;
+			if(dir<0)
+				dir+=32;
+		}
 		return (uint8_t) dir;
 	}
 
