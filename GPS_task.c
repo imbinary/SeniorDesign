@@ -1,24 +1,6 @@
 //*****************************************************************************
 //
-// command_task.c - Virtual COM Port Task manage messages to and from terminal.
-//
-// Copyright (c) 2013-2015 Texas Instruments Incorporated.  All rights reserved.
-// Software License Agreement
-//
-// Texas Instruments (TI) is supplying this software for use solely and
-// exclusively on TI's microcontroller products. The software is owned by
-// TI and/or its suppliers, and is protected under applicable copyright
-// laws. You may not combine this software with "viral" open-source
-// software in order to form a larger program.
-//
-// THIS SOFTWARE IS PROVIDED "AS IS" AND WITH ALL FAULTS.
-// NO WARRANTIES, WHETHER EXPRESS, IMPLIED OR STATUTORY, INCLUDING, BUT
-// NOT LIMITED TO, IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-// A PARTICULAR PURPOSE APPLY TO THIS SOFTWARE. TI SHALL NOT, UNDER ANY
-// CIRCUMSTANCES, BE LIABLE FOR SPECIAL, INCIDENTAL, OR CONSEQUENTIAL
-// DAMAGES, FOR ANY REASON WHATSOEVER.
-//
-// This is part of revision 2.1.1.71 of the EK-TM4C1294XL Firmware Package.
+// gps task based on TI code
 //
 //*****************************************************************************
 
@@ -102,7 +84,6 @@ extern bool g_bOnline;
 //*****************************************************************************
 void GPSparse(char *gpsString) {
 	//"$GPRMC,173843,A,3349.896,N,11808.521,W,000.0,360.0,230108,013.4,E*69\r\n"
-	//todo maybe add a semephore
 	if (gpsString[0] != '$')
 		return;
 	if (nmea_validateChecksum(gpsString, GPS_INPUT_BUF_SIZE )) {
@@ -135,9 +116,6 @@ void GPSparse(char *gpsString) {
 	        vPortFree(tokens);
 	    }
 	    xSemaphoreGive(g_xBsmDataSemaphore);
-	} else
-	{
-		//UARTprintf("> %s\n", gpsString);
 	}
 
 	//starting
@@ -155,7 +133,6 @@ void GPSparse(char *gpsString) {
 	else
 	{
 		// stopping
-		//preserve heading if stopped
 		if( g_rBSMData.speed < .05){
 			g_rBSMData.heading = oldHeading;
 		}
@@ -193,13 +170,6 @@ void ConfigureGPSUART(uint32_t ui32SysClock) {
 	ROM_GPIOPinTypeUART(GPIO_PORTA_BASE, GPIO_PIN_4 | GPIO_PIN_5);
 
 	//
-	// Configure the UART for 115,200, 8-N-1 operation. GPS
-	//
-	//  UARTConfigSetExpClk(UART3_BASE, g_ui32SysClock, 9600,
-	//                         (UART_CONFIG_WLEN_8 | UART_CONFIG_STOP_ONE |
-	//                          UART_CONFIG_PAR_NONE));
-
-	//
 	// Use the system clock for the UART.
 	//
 	UARTClockSourceSet(UART3_BASE, UART_CLOCK_SYSTEM);
@@ -213,13 +183,12 @@ void ConfigureGPSUART(uint32_t ui32SysClock) {
 	gpsUARTprintf("%s\n",
 	nmea_generateChecksum("PMTK314,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0", gpsStr));
 	gpsUARTprintf("%s\n", nmea_generateChecksum("PMTK001,604,3", gpsStr));
-	gpsUARTprintf("%s\n", nmea_generateChecksum("PMTK220,200", gpsStr));
+	gpsUARTprintf("%s\n", nmea_generateChecksum("PMTK220,200", gpsStr)); // 100 for 10 hz
 	gpsUARTprintf("%s\n", nmea_generateChecksum("PMTK001,604,3", gpsStr));
 	//gpsUARTprintf("%s\n", nmea_generateChecksum("PMTK251,38400",gpsStr));
 	//gpsUARTxConfig(3, 38400, ui32SysClock);
-	//gpsUARTprintf("%s\n", nmea_generateChecksum("PMTK001,604,3",gpsStr));
-	//gpsUARTprintf("%s\n", nmea_generateChecksum("PMTK001,604,3",gpsStr));
-	//gpsUARTprintf("%s\n", nmea_generateChecksum("PMTK001,604,3",gpsStr));
+	//gpsUARTprintf("%s\n", nmea_generateChecksum("PMTK001,604,3",gpsStr)); // ack
+
 
 }
 
@@ -246,9 +215,7 @@ static void GPSTask(void *pvParameters) {
 		vTaskDelayUntil(&xLastWakeTime, GPS_TASK_PERIOD_MS /
 		portTICK_RATE_MS);
 
-			// Peek at the buffer to see if a \r is there.  If so we have a
-			// complete command that needs processing. Make sure your terminal
-			// sends a \r when you press 'enter'.
+
 			//
 		i32DollarPosition = gpsUARTPeek('*');
 

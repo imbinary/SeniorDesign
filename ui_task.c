@@ -1,24 +1,6 @@
 //*****************************************************************************
 //
-// command_task.c - Virtual COM Port Task manage messages to and from terminal.
-//
-// Copyright (c) 2013-2015 Texas Instruments Incorporated.  All rights reserved.
-// Software License Agreement
-//
-// Texas Instruments (TI) is supplying this software for use solely and
-// exclusively on TI's microcontroller products. The software is owned by
-// TI and/or its suppliers, and is protected under applicable copyright
-// laws. You may not combine this software with "viral" open-source
-// software in order to form a larger program.
-//
-// THIS SOFTWARE IS PROVIDED "AS IS" AND WITH ALL FAULTS.
-// NO WARRANTIES, WHETHER EXPRESS, IMPLIED OR STATUTORY, INCLUDING, BUT
-// NOT LIMITED TO, IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-// A PARTICULAR PURPOSE APPLY TO THIS SOFTWARE. TI SHALL NOT, UNDER ANY
-// CIRCUMSTANCES, BE LIABLE FOR SPECIAL, INCIDENTAL, OR CONSEQUENTIAL
-// DAMAGES, FOR ANY REASON WHATSOEVER.
-//
-// This is part of revision 2.1.1.71 of the EK-TM4C1294XL Firmware Package.
+// ui task based on TI code
 //
 //*****************************************************************************
 
@@ -138,7 +120,7 @@ static void UITask(void *pvParameters) {
 	int32_t i32DollarPosition;
 	char cInput[UI_INPUT_BUF_SIZE];
 	uint16_t Atest;
-	//int8_t test=0;
+	int8_t stest=0;
 
 	//
 	// Get the current time as a reference to start our delays.
@@ -169,8 +151,7 @@ static void UITask(void *pvParameters) {
 			UARTprintf("%s\n", cInput);
 			xSemaphoreGive(g_uiUARTSemaphore);
 		}
-		//uiUARTprintf("%s","$73");
-		//test = ++test%10;
+
 
 		uint8_t byte1, byte2;
 		int j;
@@ -192,33 +173,16 @@ static void UITask(void *pvParameters) {
 			}
 		}
 
+		// on start blink front led
+		if(stest < 5){
+			byte1 = 1;
+			byte2  = 0x0f;
+			stest++;
+			xSemaphoreTake(g_uiUARTSemaphore, portMAX_DELAY);
+			uiUARTprintf("$%c%c",byte1,byte2);
+			xSemaphoreGive(g_uiUARTSemaphore);
+		}
 
-		/* DEMO STUFF */
-		/*
-		  		uint8_t color=0x01;
-				uint8_t dir=0;
-				uint16_t tim = 0;
-
-				uint8_t siz = 0;
-		  		tim = UIQpointer->time;
-				dir = UIQpointer->dir;
-				color = UIQpointer->color;
-				siz = UIQpointer->size;
-				byte1 = dir * 8 + siz;
-				byte2 = color + night * 128;
-				int i;
-				for(i=0;i<4;i++){
-					uiUARTprintf("$%c%c",byte1,byte2);
-					UARTprintf("$%c%c",byte1,byte2);
-				}
-				dir += 3;
-
-				if(dir >= 32){
-					dir = 0;
-					color += 4;
-					if(color >= 0x7F)
-							color = 0x01;}
-							*/
 	}
 }
 //*****************************************************************************

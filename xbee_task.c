@@ -1,24 +1,6 @@
 //*****************************************************************************
 //
-// command_task.c - Virtual COM Port Task manage messages to and from terminal.
-//
-// Copyright (c) 2013-2015 Texas Instruments Incorporated.  All rights reserved.
-// Software License Agreement
-//
-// Texas Instruments (TI) is supplying this software for use solely and
-// exclusively on TI's microcontroller products. The software is owned by
-// TI and/or its suppliers, and is protected under applicable copyright
-// laws. You may not combine this software with "viral" open-source
-// software in order to form a larger program.
-//
-// THIS SOFTWARE IS PROVIDED "AS IS" AND WITH ALL FAULTS.
-// NO WARRANTIES, WHETHER EXPRESS, IMPLIED OR STATUTORY, INCLUDING, BUT
-// NOT LIMITED TO, IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-// A PARTICULAR PURPOSE APPLY TO THIS SOFTWARE. TI SHALL NOT, UNDER ANY
-// CIRCUMSTANCES, BE LIABLE FOR SPECIAL, INCIDENTAL, OR CONSEQUENTIAL
-// DAMAGES, FOR ANY REASON WHATSOEVER.
-//
-// This is part of revision 2.1.1.71 of the EK-TM4C1294XL Firmware Package.
+// Xbee task
 //
 //*****************************************************************************
 
@@ -115,18 +97,19 @@ void bsmSend() {
 				g_rBSMData.vertAccel);
 	} else {
 		//todo change time to status
-		sprintf(tmp, "I,%0.6f,%0.6f,%d,%0.1f", g_rBSMData.latitiude,
-				g_rBSMData.longitude, g_rBSMData.heading, g_rBSMData.btime);
+		int color=0x0f;
+		sprintf(tmp, "I,%0.6f,%0.6f,%d,%0.1f,%d", g_rBSMData.latitiude,
+				g_rBSMData.longitude, g_rBSMData.heading, g_rBSMData.btime, color );
 	}
 	xSemaphoreGive(g_xBsmDataSemaphore);
-	//todo
-	//if (g_rBSMData.btime == oldTime || g_rBSMData.date == 0)
+
 	if (g_rBSMData.date == 0)
 		return;
 	oldTime = g_rBSMData.btime;
+
 	nmea_generateChecksum(tmp, bsm);
 	xbeeUARTprintf("%s\n", bsm);
-	//bsmParse(bsm);
+
 }
 
 //*****************************************************************************
@@ -175,6 +158,32 @@ void bsmParse(char *cInput) {
 				calcAlert(tmpBSMData);
 
 			}
+			else if (!strcmp(tokens[0], "$I")) {
+					tmpBSMData.latitiude = strtod(tokens[1], NULL);
+					tmpBSMData.longitude = strtod(tokens[2], NULL);
+					tmpBSMData.heading = strtol(tokens[3], NULL, 10);
+					tmpBSMData.btime = strtod(tokens[5], NULL);
+					uint8_t color = strtol(tokens[6], NULL, 10);
+
+
+					sprintf(bsm, "time: %07.1f, color: %5d, dist: %05.1f, dir: %d",
+							tmpBSMData.btime, color,
+							distance(deg2dec(g_rBSMData.latitiude),
+									deg2dec(g_rBSMData.longitude),
+									deg2dec(tmpBSMData.latitiude),
+									deg2dec(tmpBSMData.longitude), 'm'),
+							direction(deg2dec(g_rBSMData.latitiude),
+									deg2dec(g_rBSMData.longitude),
+									deg2dec(tmpBSMData.latitiude),
+									deg2dec(tmpBSMData.longitude), 'K'));
+
+					xSemaphoreTake(g_xUARTSemaphore, portMAX_DELAY);
+					UARTprintf("%s\n", bsm);
+					xSemaphoreGive(g_xUARTSemaphore);
+
+					calcAlert(tmpBSMData);
+
+				}
 
 		}
 		// free memory
@@ -317,22 +326,13 @@ float tCollideAcc(int dist, float myV, int myA_y, int myA_x, int myHead,
 //*****************************************************************************
 	uint8_t calcColor(rBSMData_t tmpBSMData, int size, int dist) {
 		uint8_t color = 0x0f;
-//		int16_t dir;
-
-//		dir = direction(deg2dec(g_rBSMData.latitiude),
-//				deg2dec(g_rBSMData.longitude), deg2dec(tmpBSMData.latitiude),
-//				deg2dec(tmpBSMData.longitude), 'K');
-
-//float tCollideAcc(int dist, float myV,
-//		int myA_y, int myA_x, int myHead,
-//		float oV, int oA_y, int oA_x, int oHead)
 
 		float coll = tCollideAcc(dist,  g_rBSMData.speed,
 				g_rBSMData.latAccel * 29, g_rBSMData.longAccel * 29,
 				g_rBSMData.heading, tmpBSMData.speed, tmpBSMData.latAccel * 29,
 				tmpBSMData.longAccel * 29, tmpBSMData.heading);
 
-		xSemaphoreTake(g_xUARTSemaphore, portMAX_DELAY);
+
 		if (size <= 7) {
 			// far away use intersection with constant speed
 
@@ -340,10 +340,11 @@ float tCollideAcc(int dist, float myV, int myA_y, int myA_x, int myHead,
 				color = 1;
 			else
 				color = ((coll * -10.5) + 127);
-
+			xSemaphoreTake(g_xUARTSemaphore, portMAX_DELAY);
 			UARTprintf("far size: %d color: %d coll %d\n", size, color, coll);
+			xSemaphoreGive(g_xUARTSemaphore);
 		}
-		xSemaphoreGive(g_xUARTSemaphore);
+
 		return color;
 	}
 

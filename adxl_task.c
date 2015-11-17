@@ -1,24 +1,6 @@
 //*****************************************************************************
 //
-// compdcm_task.c - Manage the 9-Axis sensor and Complimentary Filtered DCM.
-//
-// Copyright (c) 2013-2015 Texas Instruments Incorporated.  All rights reserved.
-// Software License Agreement
-// 
-// Texas Instruments (TI) is supplying this software for use solely and
-// exclusively on TI's microcontroller products. The software is owned by
-// TI and/or its suppliers, and is protected under applicable copyright
-// laws. You may not combine this software with "viral" open-source
-// software in order to form a larger program.
-// 
-// THIS SOFTWARE IS PROVIDED "AS IS" AND WITH ALL FAULTS.
-// NO WARRANTIES, WHETHER EXPRESS, IMPLIED OR STATUTORY, INCLUDING, BUT
-// NOT LIMITED TO, IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-// A PARTICULAR PURPOSE APPLY TO THIS SOFTWARE. TI SHALL NOT, UNDER ANY
-// CIRCUMSTANCES, BE LIABLE FOR SPECIAL, INCIDENTAL, OR CONSEQUENTIAL
-// DAMAGES, FOR ANY REASON WHATSOEVER.
-// 
-// This is part of revision 2.1.1.71 of the EK-TM4C1294XL Firmware Package.
+// adxl task based on TI code
 //
 //*****************************************************************************
 
@@ -91,7 +73,7 @@ void updateBSM( int16_t x, int16_t y, int16_t z){
     g_rBSMData.longAccel = x;
     g_rBSMData.latAccel = y;
     g_rBSMData.vertAccel = z;
-    g_rBSMData.yawRate = 5.5; //pfAngularVelocity[1];
+    g_rBSMData.yawRate = 0.0;
 
 
     xSemaphoreGive(g_xBsmDataSemaphore);
@@ -102,7 +84,6 @@ void updateBSM( int16_t x, int16_t y, int16_t z){
 
 
 #define THRESHOLD 15
-int16_t xo,yo,zo;
 
 
 static void
@@ -142,13 +123,6 @@ ADXLTask(void *pvParameters)
 		y = (int16_t)(x2);
 		z = (int16_t)(x3);
 
-		//z=z*2.9/100;
-		//y=y*2.9/100;
-		//x=x*2.9/100;
-
-		xo=x;
-		yo=y;
-		zo=z;
 
         updateBSM(x,y,z);
 

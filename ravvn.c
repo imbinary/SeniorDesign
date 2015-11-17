@@ -53,40 +53,7 @@
 
 //*****************************************************************************
 //
-//! \addtogroup example_list
-//! <h1>SensHub Internet of Things Example (senshub_iot)</h1>
-//!
-//! This application uses FreeRTOS to manage multiple sensor tasks and
-//! aggregate sensor data to be published to a cloud server. The senshub_iot.c
-//! file contains the main function and perform task init before handing
-//! control over to the FreeRTOS scheduler.
-//!
-//! The tasks and their responsibilities are as follows:
-//! - command_task.c is a manager of the UART virtual com port connection to a
-//!   local PC.  This interface allows advanced commands and data.
-//! - compdcm_task.c is a task that manages data from the MPU9150. It performs
-//!   complimentary direct cosine matrix filter on the data to determine roll,
-//!   pitch and yaw as well as quaternions. This data is made available to
-//!   other tasks.
-//!
-//!
-//! In addition to the tasks, this application also uses the following FreeRTOS
-//! resources:
-//!
-//! - Queues enable information transfer between tasks.
-//!
-//! - Mutex Semaphores guard resources such as the UART from access by multiple
-//!   tasks at the same time.
-//!
-//! - Binary Semaphores synchronize events between interrupts and task contexts.
-//!
-//! - A FreeRTOS Delay to put the tasks in blocked state when they have nothing
-//!   to do.
-//!
-//! - A Software timer to regulate the timing of cloud sync events.
-//!
-//! - The FreeRTOS run time stats feature to show CPU usage of each task at run
-//!   time.
+//  RAVVN started with TI senshub base
 //!
 //! For additional details on FreeRTOS, refer to the FreeRTOS web page at:
 //! http://www.freertos.org/
@@ -404,7 +371,7 @@ main(void)
     // config happens in the VCP Task. Once scheduler starts tasks must take
     // the UART semaphore to safely print.
     //
-    UARTprintf("Welcome to the RAVVN!\n");
+    UARTprintf("RAVVN v1.0\n");
 
     //
     // Start the scheduler.  This should not return.
