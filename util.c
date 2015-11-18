@@ -54,13 +54,32 @@ char** str_split(char* a_str, const char a_delim) {
 		char* token = strsep(tmp, delim);
 
 		while (token) {
-			assert(idx < count);
+			//assert(idx < count);
+			if(idx >= count){
+			// free memory
+				int i;
+				for (i = 0; *(result + i); i++) {
+					vPortFree(*(result + i));
+				}
+				vPortFree(result);
+				return 0;
+			}
+
 			result[idx] = pvPortMalloc(strlen(token) + 1);
 			memcpy(result[idx], token, strlen(token) + 1);
 			idx++;
 			token = strsep(0, delim);
 		}
-		assert(idx == count - 1);
+		//assert(idx == count - 1);
+		if(idx != (count - 1)){
+					// free memory
+						int i;
+						for (i = 0; *(result + i); i++) {
+							vPortFree(*(result + i));
+						}
+						vPortFree(result);
+						return 0;
+					}
 		result[idx] = 0;
 	}
 	return result;
