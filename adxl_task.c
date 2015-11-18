@@ -123,7 +123,7 @@ ADXLTask(void *pvParameters)
 		y = (int16_t)(x2);
 		z = (int16_t)(x3);
 		int i=0;
-		if ((first == 1 ) || (abs(x-xb) < 10)){
+		if ((first == 1 ) || (abs(x-xb) < 50)){
 			if(i==15)
 				first = 0;
 			xb=(x+xb)/2;

@@ -111,7 +111,7 @@ void GPSparse(char *gpsString) {
 
 			//starting
 			if (start) {
-				if ((g_rBSMData.speed >= .05) && (g_rBSMData.speed <= .5)
+				if ((g_rBSMData.speed >= .1) && (g_rBSMData.speed <= .5)
 						&& (abs(g_rBSMData.latAccel) >= 500)) {
 					init_accel += g_rBSMData.latAccel;
 				} else if ((g_rBSMData.speed >= .5)
@@ -122,18 +122,18 @@ void GPSparse(char *gpsString) {
 					start = false;
 			} else {
 				// stopping
-				if (g_rBSMData.speed < .05) {
+				if (g_rBSMData.speed < .1) {
 					g_rBSMData.heading = oldHeading;
 				} else {
-					if (abs(g_rBSMData.heading - oldHeading) > 180)
+					if ((abs(g_rBSMData.heading - oldHeading) > 150) && (abs(g_rBSMData.heading - oldHeading ) < 210))
 						revFlag = !revFlag;
 					oldHeading = g_rBSMData.heading;
 				}
 			}
 			char bsm[80];
 
-			sprintf(bsm, "local info time: %07.1f,  head: %05d, rev: %d",
-					g_rBSMData.btime, g_rBSMData.heading, revFlag);
+			sprintf(bsm, "local info time: %07.1f,  head: %05d, rev: %d, speed %3.4f",
+					g_rBSMData.btime, g_rBSMData.heading, revFlag, g_rBSMData.speed);
 
 			xSemaphoreGive(g_xBsmDataSemaphore);
 
@@ -187,6 +187,9 @@ void ConfigureGPSUART(uint32_t ui32SysClock) {
 					"PMTK314,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0", gpsStr));
 	gpsUARTprintf("%s\n", nmea_generateChecksum("PMTK001,604,3", gpsStr));
 	gpsUARTprintf("%s\n", nmea_generateChecksum("PMTK220,100", gpsStr)); // 100 for 10 hz
+	gpsUARTprintf("%s\n", nmea_generateChecksum("PMTK001,604,3", gpsStr));
+	gpsUARTprintf("%s\n", nmea_generateChecksum("PMTK220,100", gpsStr)); // 100 for 10 hz
+	//delay(2);
 	gpsUARTprintf("%s\n", nmea_generateChecksum("PMTK001,604,3", gpsStr));
 	//gpsUARTprintf("%s\n", nmea_generateChecksum("PMTK251,38400",gpsStr));
 	//gpsUARTxConfig(3, 38400, ui32SysClock);

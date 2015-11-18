@@ -120,7 +120,7 @@ void bsmParse(char *cInput) {
 								deg2dec(tmpBSMData.longitude), 'K'));
 
 				xSemaphoreTake(g_xUARTSemaphore, portMAX_DELAY);
-				UARTprintf("\n%s\n\n", bsm);
+				//UARTprintf("\n%s\n\n", bsm);
 				xSemaphoreGive(g_xUARTSemaphore);
 
 				calcAlert(tmpBSMData);
@@ -144,7 +144,7 @@ void bsmParse(char *cInput) {
 								deg2dec(tmpBSMData.longitude), 'K'));
 
 				xSemaphoreTake(g_xUARTSemaphore, portMAX_DELAY);
-				UARTprintf("%s\n", bsm);
+				//UARTprintf("%s\n", bsm);
 				xSemaphoreGive(g_xUARTSemaphore);
 
 				calcAlert(tmpBSMData);
@@ -336,11 +336,13 @@ uint8_t calcColor(rBSMData_t tmpBSMData, int size, int dist) {
 
 		if (coll < 0 || coll > 12)
 			color = 1;
-		else
+		else{
 			color = ((coll * -10.5) + 127);
-		xSemaphoreTake(g_xUARTSemaphore, portMAX_DELAY);
-		UARTprintf("far size: %d color: %d coll %d\n", size, color, coll);
-		xSemaphoreGive(g_xUARTSemaphore);
+			xSemaphoreTake(g_xUARTSemaphore, portMAX_DELAY);
+			UARTprintf("far size: %d color: %d COLLISION!\n", size, color);
+			xSemaphoreGive(g_xUARTSemaphore);
+		}
+
 	}
 
 	return color;

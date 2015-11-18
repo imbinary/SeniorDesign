@@ -6,6 +6,7 @@
  */
 
 #include <stdio.h>
+#include <time.h>
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
@@ -355,4 +356,15 @@ Intersection intersectVectors(Vector line1Start, Vector line1Dir,
 		returnValue.linesAreParallel = true;
 		// when the lines are parallel, there is no intersection point and also no parameter1 and parameter2!
 	return returnValue;
+}
+
+void delay(int milliseconds)
+{
+    long pause;
+    clock_t now,then;
+
+    pause = milliseconds*(CLOCKS_PER_SEC/1000);
+    now = then = clock();
+    while( (now-then) < pause )
+        now = clock();
 }
