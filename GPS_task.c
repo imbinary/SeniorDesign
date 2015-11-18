@@ -183,7 +183,7 @@ void ConfigureGPSUART(uint32_t ui32SysClock) {
 	gpsUARTprintf("%s\n",
 	nmea_generateChecksum("PMTK314,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0", gpsStr));
 	gpsUARTprintf("%s\n", nmea_generateChecksum("PMTK001,604,3", gpsStr));
-	gpsUARTprintf("%s\n", nmea_generateChecksum("PMTK220,200", gpsStr)); // 100 for 10 hz
+	gpsUARTprintf("%s\n", nmea_generateChecksum("PMTK220,100", gpsStr)); // 100 for 10 hz
 	gpsUARTprintf("%s\n", nmea_generateChecksum("PMTK001,604,3", gpsStr));
 	//gpsUARTprintf("%s\n", nmea_generateChecksum("PMTK251,38400",gpsStr));
 	//gpsUARTxConfig(3, 38400, ui32SysClock);
