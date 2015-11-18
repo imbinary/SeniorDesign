@@ -77,7 +77,7 @@ float min(float v1, float v2);
 
 // globals
 extern bool revFlag;
-float oldTime;
+
 
 
 //*****************************************************************************

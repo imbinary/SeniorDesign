@@ -64,7 +64,7 @@ xSemaphoreHandle g_xbeeUARTSemaphore;
 //
 //*****************************************************************************
 extern uint32_t g_ui32SysClock;
-
+float oldTime;
 //extern rBSMData_t g_rBSMData;
 
 
@@ -94,12 +94,15 @@ void bsmSend() {
 	}
 	xSemaphoreGive(g_xBsmDataSemaphore);
 
-	if (g_rBSMData.date == 0)
+	if (g_rBSMData.date == 0 || oldTime == g_rBSMData.btime)
 		return;
-	//oldTime = g_rBSMData.btime;
+	oldTime = g_rBSMData.btime;
 
 	nmea_generateChecksum(tmp, bsm);
+
+	xSemaphoreTake(g_xbeeUARTSemaphore, portMAX_DELAY);
 	xbeeUARTprintf("%s\n", bsm);
+	xSemaphoreGive(g_xbeeUARTSemaphore);
 
 }
 
@@ -176,7 +179,7 @@ uint32_t XBEETaskInit(void) {
 	//
 	ConfigureXBEEUART(g_ui32SysClock);
 
-	//oldTime = -1.0;
+	oldTime = -1.0;
 
 	//
 	// Make sure the UARTStdioIntHandler priority is low to not interfere
