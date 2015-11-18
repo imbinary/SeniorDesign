@@ -321,6 +321,7 @@ main(void)
 
     //
      // Create the CompDCM 9 axis sensor task.
+//todo re enable
 
      if(ADXL && ADXLTaskInit() != 0)
      {
