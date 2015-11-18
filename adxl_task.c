@@ -138,11 +138,11 @@ ADXLTask(void *pvParameters)
 			y=yb;
 		if(abs(z-zb)<=2)
 			z=zb;
-
+/*
 		xSemaphoreTake(g_xUARTSemaphore, portMAX_DELAY);
 		UARTprintf("x: %7d y: %7d z: %7d\n", (x - xb), (y-yb), (z-zb));
 		xSemaphoreGive(g_xUARTSemaphore);
-
+*/
 
         updateBSM((x-xb),(y-yb),(z-zb));
 
