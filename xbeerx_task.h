@@ -21,7 +21,7 @@
 // we need to process a command.
 //
 //*****************************************************************************
-#define XBEE_TASK_PERIOD_MS         100        // periodic rate of the task
+#define XBEERX_TASK_PERIOD_MS         100        // periodic rate of the task
 
 //*****************************************************************************
 //
@@ -43,7 +43,7 @@ extern xSemaphoreHandle g_xbeeUARTSemaphore;
 // Prototypes for the command task.
 //
 //*****************************************************************************
-extern uint32_t XBEERXTaskInit(void);
+extern uint32_t XBEErxTaskInit(void);
 
 //*****************************************************************************
 //
@@ -52,6 +52,6 @@ extern uint32_t XBEERXTaskInit(void);
 //*****************************************************************************
 
 
-//void bsmParse(char *cInput);
+void bsmParse(char *cInput);
 
 #endif // __XBEERX_TASK_H__

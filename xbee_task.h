@@ -52,6 +52,6 @@ extern uint32_t XBEETaskInit(void);
 //*****************************************************************************
 
 void bsmSend();
-void bsmParse(char *cInput);
+//void bsmParse(char *cInput);
 
 #endif // __XBEE_TASK_H__

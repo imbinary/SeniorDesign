@@ -44,6 +44,7 @@
 #include "adxl_task.h"
 #include "mpu_task.h"
 #include "xbee_task.h"
+#include "xbeerx_task.h"
 #include "command_task.h"
 #include "led_task.h"
 #include "ui_task.h"
@@ -255,6 +256,24 @@ main(void)
         // spin forever.  Wait for reset or user to debug.
         //
         UARTprintf("XBEE: Task Init Failed!\n");
+        while(1)
+        {
+            //
+            // Do Nothing.
+            //
+        }
+    }
+
+    //
+    // Create the xbee task.
+    //
+    if(XBEErxTaskInit() != 0)
+    {
+        //
+        // Init returned an error. Print an alert to the user and
+        // spin forever.  Wait for reset or user to debug.
+        //
+        UARTprintf("XBEERX: Task Init Failed!\n");
         while(1)
         {
             //
