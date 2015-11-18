@@ -39,13 +39,11 @@
 
 #define GPS_INPUT_BUF_SIZE  85
 
-
 extern xSemaphoreHandle g_xBsmDataSemaphore;
 uint16_t oldHeading;
 bool revFlag;
 bool start;
 int init_accel;
-
 
 //*****************************************************************************
 //
@@ -76,7 +74,6 @@ extern uint32_t g_ui32SysClock;
 //*****************************************************************************
 extern bool g_bOnline;
 
-
 //*****************************************************************************
 //
 //
@@ -86,61 +83,66 @@ void GPSparse(char *gpsString) {
 	//"$GPRMC,173843,A,3349.896,N,11808.521,W,000.0,360.0,230108,013.4,E*69\r\n"
 	if (gpsString[0] != '$')
 		return;
-	if (nmea_validateChecksum(gpsString, GPS_INPUT_BUF_SIZE )) {
-	    char** tokens;
+	if (nmea_validateChecksum(gpsString, GPS_INPUT_BUF_SIZE)) {
+		char** tokens;
 
-	    xSemaphoreTake(g_xBsmDataSemaphore, portMAX_DELAY);
+		tokens = str_split(gpsString, ',');
 
-	    tokens = str_split(gpsString, ',');
+		if (tokens) {
+			xSemaphoreTake(g_xBsmDataSemaphore, portMAX_DELAY);
+			int i;
+			if ((!strcmp(tokens[2], "A")) && (!strcmp(tokens[0], "$GPRMC"))) {
+				g_rBSMData.btime = strtod(tokens[1], NULL);
+				g_rBSMData.latitiude = strtod(tokens[3], NULL);
+				if (!strcmp(tokens[4], "S"))
+					g_rBSMData.latitiude *= -1;
+				g_rBSMData.longitude = strtod(tokens[5], NULL);
+				if (!strcmp(tokens[6], "W"))
+					g_rBSMData.longitude *= -1;
+				g_rBSMData.speed = strtod(tokens[7], NULL);
+				g_rBSMData.speed *= 0.51444444444;
+				g_rBSMData.heading = strtol(tokens[8], NULL, 10);
+				g_rBSMData.date = strtol(tokens[9], NULL, 10);
+			}
+			for (i = 0; *(tokens + i); i++) {
+				vPortFree(*(tokens + i));
+			}
+			vPortFree(tokens);
 
-	    if (tokens)
-	    {
-	        int i;
-	        if((!strcmp(tokens[2],"A")) && (!strcmp(tokens[0],"$GPRMC"))){
-	        	g_rBSMData.btime = strtod(tokens[1],NULL);
-	        	g_rBSMData.latitiude = strtod(tokens[3],NULL);
-	        	if(!strcmp(tokens[4],"S"))
-	        		g_rBSMData.latitiude *= -1;
-	        	g_rBSMData.longitude = strtod(tokens[5],NULL);
-	        	if(!strcmp(tokens[6],"W"))
-	        		g_rBSMData.longitude *= -1;
-	        	g_rBSMData.speed = strtod(tokens[7],NULL);
-	        	g_rBSMData.speed *=0.51444444444;
-	        	g_rBSMData.heading = strtol(tokens[8],NULL,10);
-	        	g_rBSMData.date = strtol(tokens[9],NULL,10);
-	        }
-	        for (i = 0; *(tokens + i); i++)
-	        {
-	            vPortFree(*(tokens + i));
-	        }
-	        vPortFree(tokens);
-	    }
-	    xSemaphoreGive(g_xBsmDataSemaphore);
-	}
+			//starting
+			if (start) {
+				if ((g_rBSMData.speed >= .05) && (g_rBSMData.speed <= .5)
+						&& (abs(g_rBSMData.latAccel) >= 500)) {
+					init_accel += g_rBSMData.latAccel;
+				} else if ((g_rBSMData.speed >= .5)
+						&& (g_rBSMData.latAccel < 0)) {
+					start = false;
+					revFlag = true;
+				} else if (g_rBSMData.speed >= .5)
+					start = false;
+			} else {
+				// stopping
+				if (g_rBSMData.speed < .05) {
+					g_rBSMData.heading = oldHeading;
+				} else {
+					if (abs(g_rBSMData.heading - oldHeading) > 180)
+						revFlag = !revFlag;
+					oldHeading = g_rBSMData.heading;
+				}
+			}
+			char bsm[80];
 
-	//starting
-	if(start){
-		if( (g_rBSMData.speed >= .05) && (g_rBSMData.speed <= .5) && (abs(g_rBSMData.latAccel) >= 500) ){
-			init_accel+= g_rBSMData.latAccel;
+			sprintf(bsm, "local info time: %07.1f,  head: %05d, rev: %d",
+					g_rBSMData.btime, g_rBSMData.heading, revFlag);
+
+			xSemaphoreGive(g_xBsmDataSemaphore);
+
+			xSemaphoreTake(g_xUARTSemaphore, portMAX_DELAY);
+			UARTprintf("%s\n",bsm);
+			xSemaphoreGive(g_xUARTSemaphore);
+
 		}
-		else if( (g_rBSMData.speed >= .5) && (g_rBSMData.latAccel < 0) ){
-			start = false;
-			revFlag = true;
-		}
-		else if(g_rBSMData.speed >= .5)
-			start = false;
-	}
-	else
-	{
-		// stopping
-		if( g_rBSMData.speed < .05){
-			g_rBSMData.heading = oldHeading;
-		}
-		else{
-			if( abs(g_rBSMData.heading-oldHeading) > 180)
-				revFlag=!revFlag;
-			oldHeading = g_rBSMData.heading;
-		}
+
 	}
 
 }
@@ -181,14 +183,14 @@ void ConfigureGPSUART(uint32_t ui32SysClock) {
 
 	gpsUARTEchoSet(false);
 	gpsUARTprintf("%s\n",
-	nmea_generateChecksum("PMTK314,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0", gpsStr));
+			nmea_generateChecksum(
+					"PMTK314,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0", gpsStr));
 	gpsUARTprintf("%s\n", nmea_generateChecksum("PMTK001,604,3", gpsStr));
 	gpsUARTprintf("%s\n", nmea_generateChecksum("PMTK220,100", gpsStr)); // 100 for 10 hz
 	gpsUARTprintf("%s\n", nmea_generateChecksum("PMTK001,604,3", gpsStr));
 	//gpsUARTprintf("%s\n", nmea_generateChecksum("PMTK251,38400",gpsStr));
 	//gpsUARTxConfig(3, 38400, ui32SysClock);
 	//gpsUARTprintf("%s\n", nmea_generateChecksum("PMTK001,604,3",gpsStr)); // ack
-
 
 }
 
@@ -209,14 +211,13 @@ static void GPSTask(void *pvParameters) {
 
 	while (1) {
 
-		 //
-		 // Wait for the required amount of time to check back.
-		 //
+		//
+		// Wait for the required amount of time to check back.
+		//
 		vTaskDelayUntil(&xLastWakeTime, GPS_TASK_PERIOD_MS /
 		portTICK_RATE_MS);
 
-
-			//
+		//
 		i32DollarPosition = gpsUARTPeek('*');
 
 		if (i32DollarPosition != (-1)) {
@@ -261,11 +262,11 @@ uint32_t GPSTaskInit(void) {
 	// Create the switch task.
 	//
 	if (xTaskCreate(GPSTask, (signed portCHAR *)"GPS",
-		GPS_TASK_STACK_SIZE, NULL, tskIDLE_PRIORITY +
-		PRIORITY_GPS_TASK, g_xGPSHandle) != pdTRUE) {
-			//
-			// Task creation failed.
-			//
+			GPS_TASK_STACK_SIZE, NULL, tskIDLE_PRIORITY +
+			PRIORITY_GPS_TASK, g_xGPSHandle) != pdTRUE) {
+		//
+		// Task creation failed.
+		//
 		return (1);
 	}
 

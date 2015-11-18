@@ -41,6 +41,10 @@ extern xTaskHandle g_xADXLHandle;
 
 #define ADXL_TASK_PERIOD_MS         200        // periodic rate of the task
 
+
+
+
+
 //*****************************************************************************
 //
 // Prototypes for the switch task.

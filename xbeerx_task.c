@@ -120,7 +120,7 @@ void bsmParse(char *cInput) {
 								deg2dec(tmpBSMData.longitude), 'K'));
 
 				xSemaphoreTake(g_xUARTSemaphore, portMAX_DELAY);
-				UARTprintf("%s\n", bsm);
+				UARTprintf("\n%s\n\n", bsm);
 				xSemaphoreGive(g_xUARTSemaphore);
 
 				calcAlert(tmpBSMData);
