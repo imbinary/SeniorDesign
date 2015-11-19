@@ -9,6 +9,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <string.h>
+#include <math.h>
 #include "inc/hw_memmap.h"
 #include "inc/hw_types.h"
 #include "inc/hw_ints.h"
@@ -45,6 +46,8 @@ bool revFlag;
 bool start;
 int init_accel;
 
+void DKFinit( float GPSlat, float GPSlon, float GPShead);
+float * DKF(float * Z);
 //*****************************************************************************
 //
 // A handle by which this task and others can refer to this task.
@@ -74,6 +77,115 @@ extern uint32_t g_ui32SysClock;
 //*****************************************************************************
 extern bool g_bOnline;
 
+//conversion constants
+#define G  		9.88 				//gravitational constant
+#define IMUcon  (G / 10000) 	//convert decimilliGs to m/s^2
+#define m2deg 	(1 / 111111) 		//convert meters to degrees lat/lon
+#define deltaT  (1 / 10) 		//time between messages
+
+//Sensor noise R, will use R/3 for process noise.
+const float R[7] = { 9.213E-7, 3.038E-6, 0.00902, 10846.035, 393.804,
+		378.24, 1005.645 };
+
+
+float Xo[7]= { 0,0,0,0,0,0,0 }; 					//initial predicted actual values
+float Zo[7]= { 0,0,0,0,0,0,0 }; 					//initial predicted sensor readings
+float Po[7]= { 0,0,0,0,0,0,0 }; 					//initial predicted error
+
+float Gk[7]= { 0,0,0,0,0,0,0 };			//Kalman Gain
+float X[7]= { 0,0,0,0,0,0,0 };			//predictions
+
+float F[7]= { 0,0,0,0,0,0,0 };	//matrix for approximation of non-linear f(Xo) functions to scalars a*Xo
+float H[7]= { 0,0,0,0,0,0,0 };	//matrix for approximation of non-linear h(Xo) functions to scalars c*Xo
+float P[7] = { 0,0,0,0,0,0,0 };			//error
+
+//initialize the DKF stuff with initial GPS data
+void DKFinit( float GPSlat, float GPSlon, float GPShead) {
+//initial values for Xo, Zo and Po
+	Xo[0] =  GPSlat + 1 ; //initial predicted actual values
+	Xo[1] = GPSlon + 1 ;
+	Xo[2] = 0.01 ;
+	Xo[3] = GPShead + 5 ;
+	Xo[4] = 100 ;
+	Xo[5] = 100 ;
+	Xo[6] = 10000 ;
+
+	Zo[0] = GPSlat ; //initial predicted sensor readings
+	Zo[1] = GPSlon ;
+	Zo[2] = 0.2 ;
+	Zo[3] = 5 ;
+	Zo[4] = 400 ;
+	Zo[5] = 400 ;
+	Zo[6] = G - 1000 ;
+
+	Po[0] = 1 ; //initial predicted error
+	Po[1] = 1 ;
+	Po[2] = 0.2 ;
+	Po[3] = 5;
+	Po[4] = 200 ;
+	Po[5] = 200;
+	Po[6] = 500 ;
+
+}
+
+//call this function with the parameters stuffed in an array. will return the same array
+float* DKF(float * Z) {	//Z[7] = {GPSlat, GPSlon, GPSvel, GPShead, Yacc, Xacc, Zacc}
+	uint8_t i;
+
+	//modeling/prediction stage:(equations were modeled, just computing functions for prediction)
+//the following is f(Xo), expected actual values. F matrix is a linearization of the results.
+	X[0] = Xo[0] + Xo[2]*cos(deg2rad(Xo[3]))*m2deg*deltaT;//Lat
+	X[1] = Xo[1] + Xo[2]*sin(deg2rad(Xo[3]))*m2deg*deltaT;//Lon
+	X[2] = Xo[2] + Xo[4]*IMUcon*deltaT;//Vel
+	X[3] = Xo[3] + Xo[5]*IMUcon*deltaT/(Xo[2]+R[2]);//heading
+	X[4] = Xo[4] + (X[2]-Xo[2])/IMUcon;//Yacc in decimilliGs
+	X[5] = Xo[5] + (X[3]-Xo[3])*Xo[2]/IMUcon;//Xacc in decimilliGs
+	X[6] = 10000;//ideal Zacc in decimilliGs
+
+	//the following is h(Xo)
+	float XYG = sqrt(10000*10000-Zo[6]*Zo[6]);//Gravity affecting x/y plane, computed by Z, in decimilliGs
+	float YG = Zo[4]-X[4];//gravity affecting Y acc readings in decimilliGs
+	float XG = Zo[5]-X[5];//gravity affecting X acc readings in decimilliGs
+	float XYG2 = sqrt(XG*XG+YG*YG);//Gravity affecting x/y plane, computed by X/Y in decimilliGs
+
+	// expected readings before sensor noise
+	Zo[0]=X[0];//lat
+	Zo[1]=X[1];//lon
+	Zo[2]=X[2];//vel
+	Zo[3]=X[3];//heading
+	if(XYG2!=0) {
+		Zo[4]=X[4]+XYG*YG/XYG2; //Yacc
+		Zo[5]=X[5]+XYG*XG/XYG2;//Xacc
+	}
+	else {
+		Zo[4]=X[4];
+		Zo[5]=X[5];
+	}
+	Zo[6]=sqrt(G*G-XYG2*XYG2); //Zacc
+
+	//the following for-loop completes the predict and update stages
+	for(i=0;i<=7;i++) {
+		if(Xo[i]!=0) {
+			F[i]=X[i]/Xo[i]; //approximates f(Xo) to scalar a*Xo
+			H[i]=Zo[i]/Xo[i];//approximates h(Xo) to scalar c*Xo
+		}
+		else {
+			F[i]=1; //if Xo is zero, just set the scalars to 1
+			H[i]=1;
+		}
+		P[i]=F[i]*Po[i]*F[i]+R[i]/3; //error prediction Pk = a*(Pk-1)*a + Q, where R/3 is used as process noise
+
+		//update stage
+		Gk[i]=P[i]*H[i]/(H[i]*P[i]*H[i]+R[i]);//update kalman gain gk = Pk*c/(c*Pk*c + r)
+		Xo[i]=X[i]+Gk[i]*(*(Z + i)-H[i]*X[i]);//update predicted values for next iteration Xk = Xk + gk(Z - c*Xk)
+		Po[i]=(1-Gk[i]*H[i])*P[i];//update error for next iteration Pk = (1-gk*c)*Pk
+		Zo[i]=*(Z + i);//Z[i];//update Zo for the next iteration
+	}
+	return X; //push out the predicted values
+}
+
+int pdate=0;
+bool fix=false;
 //*****************************************************************************
 //
 //
@@ -125,21 +237,46 @@ void GPSparse(char *gpsString) {
 				if (g_rBSMData.speed < .1) {
 					g_rBSMData.heading = oldHeading;
 				} else {
-					if ((abs(g_rBSMData.heading - oldHeading) > 150) && (abs(g_rBSMData.heading - oldHeading ) < 210))
+					if ((abs(g_rBSMData.heading - oldHeading) > 150)
+							&& (abs(g_rBSMData.heading - oldHeading) < 210))
 						revFlag = !revFlag;
 					oldHeading = g_rBSMData.heading;
 				}
 			}
+
 			char bsm[80];
 
-			sprintf(bsm, "local info time: %07.1f,  head: %05d, rev: %d, speed %3.4f",
-					g_rBSMData.btime, g_rBSMData.heading, revFlag, g_rBSMData.speed);
+
+
+			//todo test bkf
+			if( (pdate == 0) && (g_rBSMData.date != 0) ){
+				fix = true;
+				DKFinit( g_rBSMData.latitiude, g_rBSMData.longitude, g_rBSMData.heading);
+			}
+			else
+				pdate = g_rBSMData.date;
+			float Z[7];
+			float * z;
+			Z[0] = g_rBSMData.latitiude ; //initial predicted sensor readings
+			Z[1] = g_rBSMData.longitude ;
+			Z[2] = g_rBSMData.speed ;
+			Z[3] = g_rBSMData.heading ;
+			Z[4] = g_rBSMData.latAccel *29;
+			Z[5] = g_rBSMData.longAccel *29;
+			Z[6] = g_rBSMData.vertAccel *29;
 
 			xSemaphoreGive(g_xBsmDataSemaphore);
 
-			xSemaphoreTake(g_xUARTSemaphore, portMAX_DELAY);
-			UARTprintf("%s\n",bsm);
-			xSemaphoreGive(g_xUARTSemaphore);
+			if(fix){
+				z = DKF(Z);
+
+				sprintf(bsm,"linfo z1: %4.6f, z2: %4.6f, z3: %7.1f, z4: %7.1f, z5: %7.1f, z6: %7.1f, z7: %7.1f",
+									*(z),*(z+1),*(z+2),*(z+3),*(z+4),*(z+5),*(z+6));
+
+				xSemaphoreTake(g_xUARTSemaphore, portMAX_DELAY);
+				UARTprintf("%s\n", bsm);
+				xSemaphoreGive(g_xUARTSemaphore);
+			}
 
 		}
 

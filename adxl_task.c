@@ -91,9 +91,9 @@ ADXLTask(void *pvParameters)
 {
 	portTickType xLastWakeTime;
 	int xb = 0,yb = 0,zb = 0;
-	uint8_t first = 1;
-	I2CSend(ADXL312_I2CADR_ALT, 2, ADXL_POWER_CTL, 0x08 );
 
+	I2CSend(ADXL312_I2CADR_ALT, 2, ADXL_POWER_CTL, 0x08 );
+	I2CSend(ADXL312_I2CADR_ALT, 2, ADXL_DATA_FORMAT, 0x02 );
 	xLastWakeTime = xTaskGetTickCount();
 
 	while(1)
@@ -122,16 +122,15 @@ ADXLTask(void *pvParameters)
 		x = (int16_t)(x1);
 		y = (int16_t)(x2);
 		z = (int16_t)(x3);
-		int i=0;
-		if ((first == 1 ) || (abs(x-xb) < 50)){
-			if(i==15)
-				first = 0;
-			xb=(x+xb)/2;
-			yb=(y+yb)/2;
-			zb=(z+zb)/2;
-			i++;
 
-		}
+		if ( (abs(x-xb) < 300))
+			xb=(x+xb)/2;
+		if ( (abs(y-yb) < 300))
+			yb=(y+yb)/2;
+		if ( (abs(z-zb) < 1000))
+			zb=(z+zb)/2;
+
+
 		if(abs(x-xb)<=2)
 			x=xb;
 		if(abs(y-yb)<=2)
@@ -140,7 +139,7 @@ ADXLTask(void *pvParameters)
 			z=zb;
 /*
 		xSemaphoreTake(g_xUARTSemaphore, portMAX_DELAY);
-		UARTprintf("x: %7d y: %7d z: %7d\n", (x - xb), (y-yb), (z-zb));
+		UARTprintf("%x\n", I2CReceive(ADXL312_I2CADR_ALT, ADXL_DATA_FORMAT));
 		xSemaphoreGive(g_xUARTSemaphore);
 */
 
