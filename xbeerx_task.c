@@ -96,7 +96,7 @@ void bsmParse(char *cInput) {
 		if (tokens) {
 
 			if (!strcmp(tokens[0], "$B")) {
-				tmpBSMData.latitiude = strtod(tokens[1], NULL);
+				tmpBSMData.latitude = strtod(tokens[1], NULL);
 				tmpBSMData.longitude = strtod(tokens[2], NULL);
 				tmpBSMData.speed = strtod(tokens[3], NULL);
 				tmpBSMData.heading = strtol(tokens[4], NULL, 10);
@@ -106,27 +106,27 @@ void bsmParse(char *cInput) {
 				tmpBSMData.longAccel = strtol(tokens[8], NULL, 10);
 				tmpBSMData.vertAccel = strtol(tokens[9], NULL, 10);
 
-				sprintf(bsm, "%03.2f, %d, %07.1f, %5d, %5d, %5d, %05.1f, %d",
+				sprintf(bsm, "%3.2f, %d, %7.1f, %5d, %5d, %5d, %5.1f, %d, %d",
 						tmpBSMData.speed, tmpBSMData.heading, tmpBSMData.btime,
 						tmpBSMData.latAccel * 29, tmpBSMData.longAccel * 29,
 						tmpBSMData.vertAccel * 29,
-						distance(deg2dec(g_rBSMData.latitiude),
+						distance(deg2dec(g_rBSMData.latitude),
 								deg2dec(g_rBSMData.longitude),
-								deg2dec(tmpBSMData.latitiude),
+								deg2dec(tmpBSMData.latitude),
 								deg2dec(tmpBSMData.longitude), 'm'),
-						direction(deg2dec(g_rBSMData.latitiude),
+						direction(deg2dec(g_rBSMData.latitude),
 								deg2dec(g_rBSMData.longitude),
-								deg2dec(tmpBSMData.latitiude),
-								deg2dec(tmpBSMData.longitude), 'K'));
+								deg2dec(tmpBSMData.latitude),
+								deg2dec(tmpBSMData.longitude), 'K'),calcDir(tmpBSMData));
 
 				xSemaphoreTake(g_xUARTSemaphore, portMAX_DELAY);
-				//UARTprintf("\n%s\n\n", bsm);
+				UARTprintf("\n%s\n\n", bsm);
 				xSemaphoreGive(g_xUARTSemaphore);
 
 				calcAlert(tmpBSMData);
 
 			} else if (!strcmp(tokens[0], "$I")) {
-				tmpBSMData.latitiude = strtod(tokens[1], NULL);
+				tmpBSMData.latitude = strtod(tokens[1], NULL);
 				tmpBSMData.longitude = strtod(tokens[2], NULL);
 				tmpBSMData.heading = strtol(tokens[3], NULL, 10);
 				tmpBSMData.btime = strtod(tokens[5], NULL);
@@ -134,13 +134,13 @@ void bsmParse(char *cInput) {
 
 				sprintf(bsm, "time: %07.1f, color: %5d, dist: %05.1f, dir: %d",
 						tmpBSMData.btime, color,
-						distance(deg2dec(g_rBSMData.latitiude),
+						distance(deg2dec(g_rBSMData.latitude),
 								deg2dec(g_rBSMData.longitude),
-								deg2dec(tmpBSMData.latitiude),
+								deg2dec(tmpBSMData.latitude),
 								deg2dec(tmpBSMData.longitude), 'm'),
-						direction(deg2dec(g_rBSMData.latitiude),
+						direction(deg2dec(g_rBSMData.latitude),
 								deg2dec(g_rBSMData.longitude),
-								deg2dec(tmpBSMData.latitiude),
+								deg2dec(tmpBSMData.latitude),
 								deg2dec(tmpBSMData.longitude), 'K'));
 
 				xSemaphoreTake(g_xUARTSemaphore, portMAX_DELAY);
@@ -280,8 +280,8 @@ void calcAlert(rBSMData_t tmpBSMData) {
 		//construct the bytes
 
 		//calc distance
-		dist = (int) (distance(deg2dec(g_rBSMData.latitiude),
-				deg2dec(g_rBSMData.longitude), deg2dec(tmpBSMData.latitiude),
+		dist = (int) (distance(deg2dec(g_rBSMData.latitude),
+				deg2dec(g_rBSMData.longitude), deg2dec(tmpBSMData.latitude),
 				deg2dec(tmpBSMData.longitude), 'm'));
 		if (dist > 60)
 			return;
@@ -322,8 +322,8 @@ uint8_t calcColor(rBSMData_t tmpBSMData, int size, int dist) {
 	uint8_t color = 0x0f;
 	int16_t dir;
 
-	dir = direction(deg2dec(g_rBSMData.latitiude),
-			deg2dec(g_rBSMData.longitude), deg2dec(tmpBSMData.latitiude),
+	dir = direction(deg2dec(g_rBSMData.latitude),
+			deg2dec(g_rBSMData.longitude), deg2dec(tmpBSMData.latitude),
 			deg2dec(tmpBSMData.longitude), 'K');
 
 	float coll = tCollideAcc(dist, dir, g_rBSMData.speed, g_rBSMData.latAccel * 29,
@@ -351,8 +351,8 @@ uint8_t calcColor(rBSMData_t tmpBSMData, int size, int dist) {
 uint8_t calcDir(rBSMData_t tmpBSMData) {
 	int16_t dir;
 
-	dir = direction(deg2dec(g_rBSMData.latitiude),
-			deg2dec(g_rBSMData.longitude), deg2dec(tmpBSMData.latitiude),
+	dir = direction(deg2dec(g_rBSMData.latitude),
+			deg2dec(g_rBSMData.longitude), deg2dec(tmpBSMData.latitude),
 			deg2dec(tmpBSMData.longitude), 'K');
 	dir = g_rBSMData.heading - dir;
 

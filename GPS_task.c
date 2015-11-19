@@ -102,8 +102,8 @@ float P[7] = { 0,0,0,0,0,0,0 };			//error
 //initialize the DKF stuff with initial GPS data
 void DKFinit( float GPSlat, float GPSlon, float GPShead) {
 //initial values for Xo, Zo and Po
-	Xo[0] =  GPSlat + 1 ; //initial predicted actual values
-	Xo[1] = GPSlon + 1 ;
+	Xo[0] =  GPSlat ; //initial predicted actual values
+	Xo[1] = GPSlon ;
 	Xo[2] = 0.01 ;
 	Xo[3] = GPShead + 5 ;
 	Xo[4] = 100 ;
@@ -116,7 +116,7 @@ void DKFinit( float GPSlat, float GPSlon, float GPShead) {
 	Zo[3] = 5 ;
 	Zo[4] = 400 ;
 	Zo[5] = 400 ;
-	Zo[6] = G - 1000 ;
+	Zo[6] = 10000 - 1000 ;
 
 	Po[0] = 1 ; //initial predicted error
 	Po[1] = 1 ;
@@ -138,8 +138,10 @@ float* DKF(float * Z) {	//Z[7] = {GPSlat, GPSlon, GPSvel, GPShead, Yacc, Xacc, Z
 	X[1] = Xo[1] + Xo[2]*sin(deg2rad(Xo[3]))*m2deg*deltaT;//Lon
 	X[2] = Xo[2] + Xo[4]*IMUcon*deltaT;//Vel
 	X[3] = Xo[3] + Xo[5]*IMUcon*deltaT/(Xo[2]+R[2]);//heading
-	X[4] = Xo[4] + (X[2]-Xo[2])/IMUcon;//Yacc in decimilliGs
-	X[5] = Xo[5] + (X[3]-Xo[3])*Xo[2]/IMUcon;//Xacc in decimilliGs
+//	X[4] = Xo[4] + (X[2]-Xo[2])/IMUcon;//Yacc in decimilliGs
+//	X[5] = Xo[5] + (X[3]-Xo[3])*Xo[2]/IMUcon;//Xacc in decimilliGs
+	X[4] =  (X[2]-Xo[2])/IMUcon;//Yacc in decimilliGs
+	X[5] =  (X[3]-Xo[3])*Xo[2]/IMUcon;//Xacc in decimilliGs
 	X[6] = 10000;//ideal Zacc in decimilliGs
 
 	//the following is h(Xo)
@@ -161,7 +163,7 @@ float* DKF(float * Z) {	//Z[7] = {GPSlat, GPSlon, GPSvel, GPShead, Yacc, Xacc, Z
 		Zo[4]=X[4];
 		Zo[5]=X[5];
 	}
-	Zo[6]=sqrt(G*G-XYG2*XYG2); //Zacc
+	Zo[6]=sqrt(10000*10000 - XYG2*XYG2); //Zacc
 
 	//the following for-loop completes the predict and update stages
 	for(i=0;i<=7;i++) {
@@ -181,7 +183,7 @@ float* DKF(float * Z) {	//Z[7] = {GPSlat, GPSlon, GPSvel, GPShead, Yacc, Xacc, Z
 		Po[i]=(1-Gk[i]*H[i])*P[i];//update error for next iteration Pk = (1-gk*c)*Pk
 		Zo[i]=*(Z + i);//Z[i];//update Zo for the next iteration
 	}
-	return X; //push out the predicted values
+	return Xo; //push out the predicted values
 }
 
 int pdate=0;
@@ -205,9 +207,9 @@ void GPSparse(char *gpsString) {
 			int i;
 			if ((!strcmp(tokens[2], "A")) && (!strcmp(tokens[0], "$GPRMC"))) {
 				g_rBSMData.btime = strtod(tokens[1], NULL);
-				g_rBSMData.latitiude = strtod(tokens[3], NULL);
+				g_rBSMData.latitude = strtod(tokens[3], NULL);
 				if (!strcmp(tokens[4], "S"))
-					g_rBSMData.latitiude *= -1;
+					g_rBSMData.latitude *= -1;
 				g_rBSMData.longitude = strtod(tokens[5], NULL);
 				if (!strcmp(tokens[6], "W"))
 					g_rBSMData.longitude *= -1;
@@ -251,26 +253,26 @@ void GPSparse(char *gpsString) {
 			//todo test bkf
 			if( (pdate == 0) && (g_rBSMData.date != 0) ){
 				fix = true;
-				DKFinit( g_rBSMData.latitiude, g_rBSMData.longitude, g_rBSMData.heading);
+				DKFinit( g_rBSMData.latitude, g_rBSMData.longitude, g_rBSMData.heading);
 			}
 			else
 				pdate = g_rBSMData.date;
 			float Z[7];
 			float * z;
-			Z[0] = g_rBSMData.latitiude ; //initial predicted sensor readings
+			Z[0] = g_rBSMData.latitude ; //initial predicted sensor readings
 			Z[1] = g_rBSMData.longitude ;
 			Z[2] = g_rBSMData.speed ;
 			Z[3] = g_rBSMData.heading ;
-			Z[4] = g_rBSMData.latAccel *29;
-			Z[5] = g_rBSMData.longAccel *29;
-			Z[6] = g_rBSMData.vertAccel *29;
+			Z[4] = (float)g_rBSMData.latAccel * 116;
+			Z[5] = (float)g_rBSMData.longAccel * 116;
+			Z[6] = (float)g_rBSMData.vertAccel * 116;
 
 			xSemaphoreGive(g_xBsmDataSemaphore);
 
 			if(fix){
 				z = DKF(Z);
 
-				sprintf(bsm,"linfo z1: %4.6f, z2: %4.6f, z3: %7.1f, z4: %7.1f, z5: %7.1f, z6: %7.1f, z7: %7.1f",
+				sprintf(bsm,"linfo z1: %4.6f, z2: %4.6f, z3: %7.1f, z4: %7.1f, z5: %7.6f, z6: %7.6f, z7: %7.6f",
 									*(z),*(z+1),*(z+2),*(z+3),*(z+4),*(z+5),*(z+6));
 
 				xSemaphoreTake(g_xUARTSemaphore, portMAX_DELAY);

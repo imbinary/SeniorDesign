@@ -15,7 +15,7 @@
 //*****************************************************************************
 typedef struct rBSMDataStruct
 {
-	float latitiude;
+	float latitude;
 	float longitude;
 	int16_t elevation;
 	float pAccuracy;

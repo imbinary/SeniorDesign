@@ -81,14 +81,14 @@ void bsmSend() {
 
 	if (DTYPE) {
 		sprintf(tmp, "B,%0.6f,%0.6f,%0.2f,%d,%0.1f,%d,%d,%d,%d",
-				g_rBSMData.latitiude, g_rBSMData.longitude, g_rBSMData.speed,
+				g_rBSMData.latitude, g_rBSMData.longitude, g_rBSMData.speed,
 				g_rBSMData.heading, g_rBSMData.btime, g_rBSMData.date,
 				g_rBSMData.latAccel, g_rBSMData.longAccel,
 				g_rBSMData.vertAccel);
 	} else {
 		//todo change time to status
 		int color = 0x0f;
-		sprintf(tmp, "I,%0.6f,%0.6f,%d,%0.1f,%d", g_rBSMData.latitiude,
+		sprintf(tmp, "I,%0.6f,%0.6f,%d,%0.1f,%d", g_rBSMData.latitude,
 				g_rBSMData.longitude, g_rBSMData.heading, g_rBSMData.btime,
 				color);
 	}
@@ -103,6 +103,10 @@ void bsmSend() {
 	xSemaphoreTake(g_xbeeUARTSemaphore, portMAX_DELAY);
 	xbeeUARTprintf("%s\n", bsm);
 	xSemaphoreGive(g_xbeeUARTSemaphore);
+
+	xSemaphoreTake(g_xUARTSemaphore, portMAX_DELAY);
+	UARTprintf("%s\n", bsm);
+	xSemaphoreGive(g_xUARTSemaphore);
 
 }
 
