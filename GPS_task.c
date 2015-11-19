@@ -143,8 +143,8 @@ float* DKF(float * Z) {	//Z[7] = {GPSlat, GPSlon, GPSvel, GPShead, Yacc, Xacc, Z
 //	X[4] = Xo[4] + (X[2]-Xo[2])/IMUcon;//Yacc in decimilliGs
 //	X[5] = Xo[5] + (X[3]-Xo[3])*Xo[2]/IMUcon;//Xacc in decimilliGs
 	//0.5*Xo[4/5]+0.5
-	X[4] =  (X[2]-Xo[2])/(IMUcon*deltaT);//Yacc in decimilliGs
-	X[5] =  (deg2rad(X[3]-Xo[3])/deltaT)*Xo[2]/IMUcon;//Xacc in decimilliGs
+	X[4] =  0.5*Xo[4]+0.5*(X[2]-Xo[2])/(IMUcon*deltaT);
+	X[5] = 0.5*Xo[5] + (deg2rad(X[3]-Xo[3])/deltaT)*Xo[2]/IMUcon;
 	X[6] = 10000;//ideal Zacc in decimilliGs
 
 	//the following is h(Xo)
