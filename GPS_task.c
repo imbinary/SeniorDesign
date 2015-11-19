@@ -79,9 +79,8 @@ extern bool g_bOnline;
 
 //conversion constants
 #define G  		9.88 				//gravitational constant
-#define IMUcon  (G / 10000) 	//convert decimilliGs to m/s^2
-#define m2deg 	(1 / 111111) 		//convert meters to degrees lat/lon
-#define deltaT  (1 / 10) 		//time between messages
+		//convert meters to degrees lat/lon
+//#define deltaT  (1 / 10) 		//time between messages
 
 //Sensor noise R, will use R/3 for process noise.
 const float R[7] = { 9.213E-7, 3.038E-6, 0.00902, 10846.035, 393.804,
@@ -131,7 +130,9 @@ void DKFinit( float GPSlat, float GPSlon, float GPShead) {
 //call this function with the parameters stuffed in an array. will return the same array
 float* DKF(float * Z) {	//Z[7] = {GPSlat, GPSlon, GPSvel, GPShead, Yacc, Xacc, Zacc}
 	uint8_t i;
-
+	float deltaT = (1 / 10);
+	float IMUcon = (G / 10000); 	//convert decimilliGs to m/s^2
+	float m2deg =	(1 / 111111);
 	//modeling/prediction stage:(equations were modeled, just computing functions for prediction)
 //the following is f(Xo), expected actual values. F matrix is a linearization of the results.
 	X[0] = Xo[0] + Xo[2]*cos(deg2rad(Xo[3]))*m2deg*deltaT;//Lat
@@ -140,8 +141,8 @@ float* DKF(float * Z) {	//Z[7] = {GPSlat, GPSlon, GPSvel, GPShead, Yacc, Xacc, Z
 	X[3] = Xo[3] + Xo[5]*IMUcon*deltaT/(Xo[2]+R[2]);//heading
 //	X[4] = Xo[4] + (X[2]-Xo[2])/IMUcon;//Yacc in decimilliGs
 //	X[5] = Xo[5] + (X[3]-Xo[3])*Xo[2]/IMUcon;//Xacc in decimilliGs
-	X[4] =  (X[2]-Xo[2])/IMUcon;//Yacc in decimilliGs
-	X[5] =  (X[3]-Xo[3])*Xo[2]/IMUcon;//Xacc in decimilliGs
+	X[4] =  (X[2]-Xo[2])/(IMUcon*deltaT);//Yacc in decimilliGs
+	X[5] =  (deg2rad(X[3]-Xo[3])/deltaT)*Xo[2]/IMUcon;//Xacc in decimilliGs
 	X[6] = 10000;//ideal Zacc in decimilliGs
 
 	//the following is h(Xo)

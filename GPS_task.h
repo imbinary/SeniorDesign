@@ -30,7 +30,7 @@
 // The stack size for the COMMAND task.
 //
 //*****************************************************************************
-#define GPS_TASK_STACK_SIZE        1024         // Stack size in words
+#define GPS_TASK_STACK_SIZE        2048         // Stack size in words
 
 //*****************************************************************************
 //
