@@ -106,10 +106,9 @@ void bsmParse(char *cInput) {
 				tmpBSMData.longAccel = strtol(tokens[8], NULL, 10);
 				tmpBSMData.vertAccel = strtol(tokens[9], NULL, 10);
 
-				sprintf(bsm, "%3.2f, %d, %7.1f, %5d, %5d, %5d, %5.1f, %d, %d",
+				sprintf(bsm, "mS %3.2f, mH %d, mT %7.1f, oS %3.2f, oH %d, oT %7.1f, dist  %5.1f, d2o %d, pix %d",
+						g_rBSMData.speed, g_rBSMData.heading, g_rBSMData.btime,
 						tmpBSMData.speed, tmpBSMData.heading, tmpBSMData.btime,
-						tmpBSMData.latAccel * 29, tmpBSMData.longAccel * 29,
-						tmpBSMData.vertAccel * 29,
 						distance(deg2dec(g_rBSMData.latitude),
 								deg2dec(g_rBSMData.longitude),
 								deg2dec(tmpBSMData.latitude),
@@ -117,7 +116,8 @@ void bsmParse(char *cInput) {
 						direction(deg2dec(g_rBSMData.latitude),
 								deg2dec(g_rBSMData.longitude),
 								deg2dec(tmpBSMData.latitude),
-								deg2dec(tmpBSMData.longitude), 'K'),calcDir(tmpBSMData));
+								deg2dec(tmpBSMData.longitude), 'K'),
+								calcDir(tmpBSMData));
 
 				xSemaphoreTake(g_xUARTSemaphore, portMAX_DELAY);
 				UARTprintf("\n%s\n\n", bsm);
@@ -200,6 +200,8 @@ float tCollideAcc(int dist, int bear, float myV, int myA_y, int myA_x,
 	float t1 = (ex1 - ex2) / A_r2; //solution 1
 	float t2 = (0 - ex1 - ex2) / A_r2; //solution 2
 	float D_t1, D_t2;
+	t1 *= -1;
+	t2 *= -1;
 
 	if (t1 >= 0 && t1 <= 12) { //assumes we don't care to predict collisions more than 12 seconds out
 		D_t1 = pow(D_x + V_rx * t1 + A_rx * t1 * t1 / 2, 2)
@@ -326,9 +328,9 @@ uint8_t calcColor(rBSMData_t tmpBSMData, int size, int dist) {
 			deg2dec(g_rBSMData.longitude), deg2dec(tmpBSMData.latitude),
 			deg2dec(tmpBSMData.longitude), 'K');
 
-	float coll = tCollideAcc(dist, dir, g_rBSMData.speed, g_rBSMData.latAccel * 29,
-			g_rBSMData.longAccel * 29, g_rBSMData.heading, tmpBSMData.speed,
-			tmpBSMData.latAccel * 29, tmpBSMData.longAccel * 29,
+	float coll = tCollideAcc(dist, dir, g_rBSMData.speed, g_rBSMData.latAccel * 116,
+			g_rBSMData.longAccel * 116, g_rBSMData.heading, tmpBSMData.speed,
+			tmpBSMData.latAccel * 116, tmpBSMData.longAccel * 116,
 			tmpBSMData.heading);
 
 	if (size <= 7) {
