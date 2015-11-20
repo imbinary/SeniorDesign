@@ -15,7 +15,7 @@
 //*****************************************************************************
 typedef struct rBSMDataStruct
 {
-	float latitiude;
+	float latitude;
 	float longitude;
 	int16_t elevation;
 	float pAccuracy;
@@ -36,9 +36,9 @@ typedef struct rBSMDataStruct
 
 
 
-
+//todo toggle for device type
 #define  DTYPE  1    // 1 for vehicle, 0 for infrastructure
-
+#define ADXL 1
 #endif /* RAVVN_H_ */
 
 extern rBSMData_t g_rBSMData;

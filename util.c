@@ -6,6 +6,7 @@
  */
 
 #include <stdio.h>
+#include <time.h>
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
@@ -38,8 +39,7 @@ char** str_split(char* a_str, const char a_delim) {
 		}
 		tmp++;
 	}
-	//if(count==0)
-	//	return NULL;
+
 	/* Add space for trailing token. */
 	count += last_comma < (a_str + strlen(a_str) - 1);
 
@@ -55,13 +55,32 @@ char** str_split(char* a_str, const char a_delim) {
 		char* token = strsep(tmp, delim);
 
 		while (token) {
-			assert(idx < count);
+			//assert(idx < count);
+			if(idx >= count){
+			// free memory
+				int i;
+				for (i = 0; *(result + i); i++) {
+					vPortFree(*(result + i));
+				}
+				vPortFree(result);
+				return 0;
+			}
+
 			result[idx] = pvPortMalloc(strlen(token) + 1);
 			memcpy(result[idx], token, strlen(token) + 1);
 			idx++;
 			token = strsep(0, delim);
 		}
-		assert(idx == count - 1);
+		//assert(idx == count - 1);
+		if(idx != (count - 1)){
+					// free memory
+						int i;
+						for (i = 0; *(result + i); i++) {
+							vPortFree(*(result + i));
+						}
+						vPortFree(result);
+						return 0;
+					}
 		result[idx] = 0;
 	}
 	return result;
@@ -164,6 +183,8 @@ double rad2deg(double rad) {
 	return (rad * 180 / pi);
 }
 
+
+
 int16_t direction(double lat1, double lon1, double lat2, double lon2, char unit) {
 	double y, x;
 	double theta = lon2 - lon1;
@@ -177,6 +198,8 @@ int16_t direction(double lat1, double lon1, double lat2, double lon2, char unit)
 	return direction;
 }
 
+
+
 double deg2dec(double deg) {
 	if (deg == 0)
 		return 0;
@@ -187,6 +210,7 @@ double deg2dec(double deg) {
 	return ((double) (intp / 100)) + (decp);
 	//return deg;
 }
+
 
 // this takes a nmea gps string, and validates it againts the checksum
 // at the end if the string. (requires first byte to be $)
@@ -229,6 +253,7 @@ int8_t nmea_validateChecksum(char *strPtr, uint16_t bufSize) {
 	return flagValid;
 }
 
+
 // this returns a single binary byte that is the checksum
 // you must convert it to hex if you are going to print it or send it
 const char * nmea_generateChecksum(char *strPtr, char *dstStr) {
@@ -249,6 +274,7 @@ const char * nmea_generateChecksum(char *strPtr, char *dstStr) {
 	sprintf(&dstStr[0], "$%s*%02x", strPtr, chksum);
 	return dstStr;
 }
+
 
 float dotproduct(Vector vec1, Vector vec2){
 	return (vec1.x * vec2.x) + (vec1.y * vec2.y);
@@ -290,6 +316,10 @@ Vector vectormult (Vector vec1, float scalar){
 	return tmp;
 }
 
+
+// http://cosmonautica.com/blog/2014/06/06/vectorguide/
+// not used but its pretty cool so leaving it here
+
 Intersection intersectVectors(Vector line1Start, Vector line1Dir,
 		Vector line2Start, Vector line2Dir) {
 
@@ -324,6 +354,17 @@ Intersection intersectVectors(Vector line1Start, Vector line1Dir,
 	}
 	else
 		returnValue.linesAreParallel = true;
-// when the lines are parallel, there is no intersection point and also no parameter1 and parameter2!
+		// when the lines are parallel, there is no intersection point and also no parameter1 and parameter2!
 	return returnValue;
+}
+
+void delay(int milliseconds)
+{
+    long pause;
+    clock_t now,then;
+
+    pause = milliseconds*(CLOCKS_PER_SEC/1000);
+    now = then = clock();
+    while( (now-then) < pause )
+        now = clock();
 }
