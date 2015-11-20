@@ -359,12 +359,13 @@ uint8_t calcDir(rBSMData_t tmpBSMData) {
 	if (dir <= 0)
 		dir += 360;
 	dir = dir * 4 / 45;
-
+/*
 	if (revFlag) {
 		dir = 16 - dir;
 		if (dir < 0)
 			dir += 32;
 	}
+	*/
 	return (uint8_t) dir;
 }
 
