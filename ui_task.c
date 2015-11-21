@@ -174,8 +174,8 @@ static void UITask(void *pvParameters) {
 		}
 
 		// on start blink front led
-		if(stest < 5){
-			byte1 = 1;
+		if(stest < 32){
+			byte1 = stest*8;
 			byte2  = 0x0f;
 			stest++;
 			xSemaphoreTake(g_uiUARTSemaphore, portMAX_DELAY);

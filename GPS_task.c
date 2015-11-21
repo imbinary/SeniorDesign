@@ -85,7 +85,7 @@ extern bool g_bOnline;
 //#define deltaT  (1 / 10) 		//time between messages
 
 //Sensor noise R, will use R/3 for process noise.
-const float R[7] = { 9.213E-7, 3.038E-6, 0.00902, 10846.035, 393.804, 378.24,
+const float R[7] = { 9.213E-7, 3.038E-6, 0.00902, 8.073482933, 393.804, 378.24,
 		1005.645 };
 
 float Xo[7] = { 0, 0, 0, 0, 0, 0, 0 }; 		//initial predicted actual values
@@ -291,10 +291,10 @@ void GPSparse(char *gpsString) {
 
 				z = DKFlin(Z);
 
-				g_rBSMData.latitude = *(z); //initial predicted sensor readings
-				g_rBSMData.longitude = *(z+1);
+//				g_rBSMData.latitude = *(z); //initial predicted sensor readings
+//				g_rBSMData.longitude = *(z+1);
 				g_rBSMData.speed = *(z+2);
-				g_rBSMData.heading = *(z+3);
+//				g_rBSMData.heading = *(z+3);
 				g_rBSMData.latAccel = *(z+4)/116;
 				g_rBSMData.longAccel = *(z+5)/116;
 				g_rBSMData.vertAccel = *(z+6)/116;
@@ -315,7 +315,7 @@ void GPSparse(char *gpsString) {
 					start = false;
 			} else {
 				// stopping
-				if (g_rBSMData.speed < .05) {
+				if (g_rBSMData.speed < .2) {
 					g_rBSMData.heading = oldHeading;
 				} else {
 					if ((abs(g_rBSMData.heading - oldHeading) > 150)

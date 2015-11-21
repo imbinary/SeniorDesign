@@ -23,6 +23,8 @@
 //*****************************************************************************
 
 #include <stdbool.h>
+#include <math.h>
+#include <stdio.h>
 #include <stdint.h>
 #include "inc/hw_memmap.h"
 #include "inc/hw_types.h"
@@ -209,6 +211,8 @@ main(void)
                                              SYSCTL_USE_PLL |
                                              SYSCTL_CFG_VCO_480), 120000000);
 
+
+
     //
     // Configure the device pins for this board.
     // This application uses Ethernet but not USB.
@@ -245,6 +249,12 @@ main(void)
             //
         }
     }
+
+	char bsm[45];
+	float coll = tCollideAcc(13.9, 13, 0.04, 0, 0, 0, 9.05, 0, 0, 188);
+	float c = tCollideAcc(18.3, 124, 0.04, 0, 0, 0, 4.93, 0, 0, 251);
+	sprintf(bsm, "%f %f", coll, c);
+	UARTprintf("%s\n", bsm);
 
     //
     // Create the xbee task.
