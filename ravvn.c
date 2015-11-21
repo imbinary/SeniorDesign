@@ -23,6 +23,8 @@
 //*****************************************************************************
 
 #include <stdbool.h>
+#include <math.h>
+#include <stdio.h>
 #include <stdint.h>
 #include "inc/hw_memmap.h"
 #include "inc/hw_types.h"
@@ -209,6 +211,8 @@ main(void)
                                              SYSCTL_USE_PLL |
                                              SYSCTL_CFG_VCO_480), 120000000);
 
+
+
     //
     // Configure the device pins for this board.
     // This application uses Ethernet but not USB.
@@ -245,6 +249,7 @@ main(void)
             //
         }
     }
+
 
     //
     // Create the xbee task.

@@ -54,4 +54,10 @@ extern uint32_t XBEErxTaskInit(void);
 
 void bsmParse(char *cInput);
 
+float tCollide(int dist, int bear, float myVeloc, int myHead, float oVeloc,
+		int oHead);
+float tCollideAcc(int dist, int bear, float myV, int myA_y, int myA_x,
+		int myHead, float oV, int oA_y, int oA_x, int oHead);
+float min(float v1, float v2);
+
 #endif // __XBEERX_TASK_H__
