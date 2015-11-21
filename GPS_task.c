@@ -250,7 +250,6 @@ void GPSparse(char *gpsString) {
 
 		if (tokens) {
 			xSemaphoreTake(g_xBsmDataSemaphore, portMAX_DELAY);
-			int i;
 			if ((!strcmp(tokens[2], "A")) && (!strcmp(tokens[0], "$GPRMC"))) {
 				g_rBSMData.btime = strtod(tokens[1], NULL);
 				g_rBSMData.latitude = strtod(tokens[3], NULL);
