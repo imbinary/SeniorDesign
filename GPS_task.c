@@ -241,9 +241,12 @@ void GPSparse(char *gpsString) {
 	if (gpsString[0] != '$')
 		return;
 	if (nmea_validateChecksum(gpsString, GPS_INPUT_BUF_SIZE)) {
-		char** tokens;
+		//char** tokens;
+		char tokens[10][25];
+		//tokens = str_split(cInput, ',');
+		int cnt = sstr_split(tokens, gpsString, ',');
 
-		tokens = str_split(gpsString, ',');
+		//tokens = str_split(gpsString, ',');
 
 		if (tokens) {
 			xSemaphoreTake(g_xBsmDataSemaphore, portMAX_DELAY);
@@ -261,11 +264,12 @@ void GPSparse(char *gpsString) {
 				g_rBSMData.heading = strtol(tokens[8], NULL, 10);
 				g_rBSMData.date = strtol(tokens[9], NULL, 10);
 			}
+			/*
 			for (i = 0; *(tokens + i); i++) {
 				vPortFree(*(tokens + i));
 			}
 			vPortFree(tokens);
-
+*/
 
 
 			//todo test bkf

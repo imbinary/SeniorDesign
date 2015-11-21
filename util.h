@@ -21,11 +21,13 @@ typedef struct Intersection {
 
 
 
-char** str_split(char* a_str, const char a_delim);
-char *strsep(char* line, const char* delims);
 /*:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
 /*::  Function prototypes                                           :*/
 /*:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
+
+char** str_split(char* a_str, const char a_delim);
+char *strsep(char* line, const char* delims);
+int sstr_split(char result[][25],char* a_str, const char a_delim);
 double deg2rad(double);
 double rad2deg(double);
 double distance(double lat1, double lon1, double lat2, double lon2, char unit);

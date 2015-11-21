@@ -21,6 +21,48 @@
 #include "util.h"
 #include <math.h>
 
+int sstr_split(char result[][25],char* a_str, const char a_delim) {
+	uint8_t M=10,N=25;
+	//char result[M][N];
+	int8_t count = 0;
+	char* tmp = a_str;
+	char delim[2];
+	delim[0] = a_delim;
+	delim[1] = 0;
+	//char *mystring;
+
+	//init result
+
+	for(count=0; count<M; count++)
+		result[M][0]=0;
+
+	count=0;
+	/* Count how many elements will be extracted. */
+	while (*tmp) {
+		if (a_delim == *tmp) {
+			count++;
+		}
+		tmp++;
+	}
+
+	/* Add space for trailing token. */
+	count++;
+
+
+	size_t idx = 0;
+	tmp = a_str;
+	char* token = strsep(tmp, delim);
+
+	while (token && (idx < M)) {
+		strncpy(&result[idx][0],token,N-1);
+		idx++;
+		token = strsep(0, delim);
+	}
+
+
+	return idx;
+}
+
 char** str_split(char* a_str, const char a_delim) {
 	char** result = 0;
 	int8_t count = 0;
