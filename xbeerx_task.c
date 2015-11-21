@@ -69,11 +69,6 @@ extern uint32_t g_ui32SysClock;
 void calcAlert(rBSMData_t tmpBSMData);
 uint8_t calcDir(rBSMData_t tmpBSMData);
 uint8_t calcColor(rBSMData_t tmpBSMData, int size, int dist);
-float tCollide(int dist, int bear, float myVeloc, int myHead, float oVeloc,
-		int oHead);
-float tCollideAcc(int dist, int bear, float myV, int myA_y, int myA_x,
-		int myHead, float oV, int oA_y, int oA_x, int oHead);
-float min(float v1, float v2);
 
 // globals
 extern bool revFlag;
@@ -91,8 +86,12 @@ void bsmParse(char *cInput) {
 	int i;
 
 	if (nmea_validateChecksum(cInput, XBEE_INPUT_BUF_SIZE)) {
-		char** tokens;
-		tokens = str_split(cInput, ',');
+		//char** tokens;
+		char tokens[10][25];
+		//tokens = str_split(cInput, ',');
+		int cnt = sstr_split(tokens, cInput, ',');
+		//char** tokens;
+		//tokens = str_split(cInput, ',');
 		if (tokens) {
 
 			if (!strcmp(tokens[0], "$B")) {
@@ -106,7 +105,7 @@ void bsmParse(char *cInput) {
 				tmpBSMData.longAccel = strtol(tokens[8], NULL, 10);
 				tmpBSMData.vertAccel = strtol(tokens[9], NULL, 10);
 
-				sprintf(bsm, "mS %3.2f, mH %d, mT %7.1f, oS %3.2f, oH %d, oT %7.1f, dist  %5.1f, d2o %d, pix %d",
+				sprintf(bsm, "mS %3.2f, mH %d, mT %7.1f, oS %3.2f, oH %d, oT %7.1f, dist  %5.1f, d2o %d, pix %d, cnt %d",
 						g_rBSMData.speed, g_rBSMData.heading, g_rBSMData.btime,
 						tmpBSMData.speed, tmpBSMData.heading, tmpBSMData.btime,
 						distance(deg2dec(g_rBSMData.latitude),
@@ -117,7 +116,7 @@ void bsmParse(char *cInput) {
 								deg2dec(g_rBSMData.longitude),
 								deg2dec(tmpBSMData.latitude),
 								deg2dec(tmpBSMData.longitude), 'K'),
-								calcDir(tmpBSMData));
+								calcDir(tmpBSMData), cnt);
 
 				xSemaphoreTake(g_xUARTSemaphore, portMAX_DELAY);
 				UARTprintf("\n%s\n\n", bsm);
@@ -184,9 +183,16 @@ float tCollideAcc(int dist, int bear, float myV, int myA_y, int myA_x,
 	float A_r2 = A_rx * A_rx + A_ry * A_ry;
 
 	//if there is no relative acceleration, check for collision by velocity
-	if (A_r2 < 0.001)
+	if (A_r2 < 25){
+		xSemaphoreTake(g_xUARTSemaphore, portMAX_DELAY);
+		UARTprintf("VELOCITY\n");
+		xSemaphoreGive(g_xUARTSemaphore);
 		return tCollide(dist, bear, myV, myHead, oV, oHead);
-
+	}else{
+		xSemaphoreTake(g_xUARTSemaphore, portMAX_DELAY);
+		UARTprintf("ACCELERATION\n");
+		xSemaphoreGive(g_xUARTSemaphore);
+	}
 	//expression 1 of solution
 	float ex1 = dist * dist * A_r2 - 4 * dist * A_r2
 			- A_rx * A_rx * (V_ry * V_ry - 4) + 2 * A_rx * A_ry * V_rx * V_ry
@@ -200,8 +206,8 @@ float tCollideAcc(int dist, int bear, float myV, int myA_y, int myA_x,
 	float t1 = (ex1 - ex2) / A_r2; //solution 1
 	float t2 = (0 - ex1 - ex2) / A_r2; //solution 2
 	float D_t1, D_t2;
-	t1 *= -1;
-	t2 *= -1;
+	//t1 *= -1;
+	//t2 *= -1;
 
 	if (t1 >= 0 && t1 <= 12) { //assumes we don't care to predict collisions more than 12 seconds out
 		D_t1 = pow(D_x + V_rx * t1 + A_rx * t1 * t1 / 2, 2)
@@ -233,8 +239,8 @@ float tCollide(int dist, int bear, float myVeloc, int myHead, float oVeloc,
 
 	float d_y = dist * cos(bear); //y component of distance in meters
 	float d_x = dist * sin(bear); //x component of distance in meters
-	float V_ry = oVeloc * cos(oHead) - myVeloc * cos(myHead); //y component of relative velocity
-	float V_rx = oVeloc * sin(oHead) - myVeloc * sin(myHead); //x component of relative velocity
+	float V_ry = 0-oVeloc * cos(oHead) + myVeloc * cos(myHead); //y component of relative velocity
+	float V_rx = 0-oVeloc * sin(oHead) + myVeloc * sin(myHead); //x component of relative velocity
 	float V_r2 = V_ry * V_ry + V_rx * V_rx; //relative velocity
 
 	if (V_r2 < 0.001)
@@ -248,6 +254,7 @@ float tCollide(int dist, int bear, float myVeloc, int myHead, float oVeloc,
 
 	ex1 = sqrt(ex1); //previous statement avoides taking square root of negative
 	float ex2 = d_x * V_rx - d_y * V_ry; //expression 2 of solution
+	//todo we changed this
 	float t1 = (ex1 - ex2) / V_r2; //solution 1
 	float t2 = (0 - ex1 - ex2) / V_r2; //solution 2
 
@@ -328,7 +335,7 @@ uint8_t calcColor(rBSMData_t tmpBSMData, int size, int dist) {
 			deg2dec(g_rBSMData.longitude), deg2dec(tmpBSMData.latitude),
 			deg2dec(tmpBSMData.longitude), 'K');
 
-	float coll = tCollideAcc(dist, dir, g_rBSMData.speed, g_rBSMData.latAccel * 116,
+	float coll = tCollideAcc(dist, 360- dir, g_rBSMData.speed, g_rBSMData.latAccel * 116,
 			g_rBSMData.longAccel * 116, g_rBSMData.heading, tmpBSMData.speed,
 			tmpBSMData.latAccel * 116, tmpBSMData.longAccel * 116,
 			tmpBSMData.heading);
@@ -346,6 +353,7 @@ uint8_t calcColor(rBSMData_t tmpBSMData, int size, int dist) {
 		}
 
 	}
+
 
 	return color;
 }
@@ -407,7 +415,9 @@ uint8_t calcDir(rBSMData_t tmpBSMData) {
 					bsmParse(cInput);
 				}
 			}
+
 		}
+
 	}
 
 //*****************************************************************************
@@ -416,7 +426,6 @@ uint8_t calcDir(rBSMData_t tmpBSMData) {
 //
 //*****************************************************************************
 	uint32_t XBEErxTaskInit(void) {
-
 
 
 
