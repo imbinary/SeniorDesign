@@ -325,7 +325,6 @@ void GPSparse(char *gpsString) {
 				}
 			}
 
-
 		}
 
 	}

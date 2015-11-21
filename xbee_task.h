@@ -12,7 +12,7 @@
 // The stack size for the COMMAND task.
 //
 //*****************************************************************************
-#define XBEE_TASK_STACK_SIZE        2048         // Stack size in words
+#define XBEE_TASK_STACK_SIZE        1024         // Stack size in words
 
 //*****************************************************************************
 //

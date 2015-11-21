@@ -64,8 +64,8 @@ extern uint32_t g_ui32SysClock;
 // Global flag indicates if we are online currently.
 //
 //*****************************************************************************
-extern bool g_bOnline;
 
+extern bool fix;
 
 
 //*****************************************************************************
@@ -173,11 +173,13 @@ static void UITask(void *pvParameters) {
 			}
 		}
 
-		// on start blink front led
-		if(stest < 32){
+		// spin led's while no fix
+		if(! fix){
 			byte1 = stest*8;
 			byte2  = 0x0f;
 			stest++;
+			if(stest == 32)
+				stest=0;
 			xSemaphoreTake(g_uiUARTSemaphore, portMAX_DELAY);
 			uiUARTprintf("$%c%c",byte1,byte2);
 			xSemaphoreGive(g_uiUARTSemaphore);
