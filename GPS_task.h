@@ -63,7 +63,7 @@ extern xSemaphoreHandle g_gpsUARTSemaphore;
 //*****************************************************************************
 extern uint32_t GPSTaskInit(void);
 void GPSparse(char *gpsString);
-
+void GPSconfig(uint32_t ui32SysClock);
 //*****************************************************************************
 //
 // Forward declarations for command-line operations.

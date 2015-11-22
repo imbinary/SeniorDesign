@@ -13,6 +13,7 @@
 #include "inc/hw_memmap.h"
 #include "inc/hw_types.h"
 #include "inc/hw_ints.h"
+#include "inc/hw_nvic.h"
 #include "driverlib/gpio.h"
 #include "driverlib/pin_map.h"
 #include "driverlib/rom.h"
@@ -238,15 +239,13 @@ bool fix = false;
 //*****************************************************************************
 void GPSparse(char *gpsString) {
 	//"$GPRMC,173843,A,3349.896,N,11808.521,W,000.0,360.0,230108,013.4,E*69\r\n"
+
 	if (gpsString[0] != '$')
 		return;
 	if (nmea_validateChecksum(gpsString, GPS_INPUT_BUF_SIZE)) {
-		//char** tokens;
-		char tokens[10][25];
-		//tokens = str_split(cInput, ',');
-		int cnt = sstr_split(tokens, gpsString, ',');
 
-		//tokens = str_split(gpsString, ',');
+		char tokens[10][25];
+		int cnt = sstr_split(tokens, gpsString, ',');
 
 		if (tokens) {
 			xSemaphoreTake(g_xBsmDataSemaphore, portMAX_DELAY);
@@ -263,12 +262,7 @@ void GPSparse(char *gpsString) {
 				g_rBSMData.heading = strtol(tokens[8], NULL, 10);
 				g_rBSMData.date = strtol(tokens[9], NULL, 10);
 			}
-			/*
-			for (i = 0; *(tokens + i); i++) {
-				vPortFree(*(tokens + i));
-			}
-			vPortFree(tokens);
-*/
+
 
 
 			//todo test bkf
@@ -276,6 +270,7 @@ void GPSparse(char *gpsString) {
 				fix = true;
 				DKFlininit(g_rBSMData.latitude, g_rBSMData.longitude,
 						g_rBSMData.heading);
+
 			} else
 				pdate = g_rBSMData.date;
 
@@ -340,7 +335,7 @@ void GPSparse(char *gpsString) {
 //
 //*****************************************************************************
 void ConfigureGPSUART(uint32_t ui32SysClock) {
-	char gpsStr[GPS_INPUT_BUF_SIZE];
+
 	//
 	// Enable the GPIO Peripheral used by the UART.
 	//
@@ -368,22 +363,35 @@ void ConfigureGPSUART(uint32_t ui32SysClock) {
 	//
 	gpsUARTxConfig(3, 9600, ui32SysClock);
 
+
+
 	gpsUARTEchoSet(false);
-	gpsUARTprintf("%s\n",
-			nmea_generateChecksum(
-					"PMTK314,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0", gpsStr));
-	gpsUARTprintf("%s\n", nmea_generateChecksum("PMTK001,604,3", gpsStr));
-	gpsUARTprintf("%s\n", nmea_generateChecksum("PMTK220,100", gpsStr));// 100 for 10 hz
-	gpsUARTprintf("%s\n", nmea_generateChecksum("PMTK001,604,3", gpsStr));
-	gpsUARTprintf("%s\n", nmea_generateChecksum("PMTK220,100", gpsStr));// 100 for 10 hz
-	//delay(2);
-	gpsUARTprintf("%s\n", nmea_generateChecksum("PMTK001,604,3", gpsStr));
-	//gpsUARTprintf("%s\n", nmea_generateChecksum("PMTK251,38400",gpsStr));
-	//gpsUARTxConfig(3, 38400, ui32SysClock);
-	//gpsUARTprintf("%s\n", nmea_generateChecksum("PMTK001,604,3",gpsStr)); // ack
+
+
 
 }
 
+void GPSconfig(uint32_t job){
+	char gpsStr[GPS_INPUT_BUF_SIZE];
+	// set gps messages
+
+	if(job == 0)
+	{
+		gpsUARTFlushTx(false);
+		gpsUARTprintf("%s\n",
+				nmea_generateChecksum(
+						"PMTK314,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0", gpsStr));
+		//gpsUARTFlushTx(true);
+		// set update rate
+		gpsUARTprintf("%s\n", nmea_generateChecksum("PMTK220,100", gpsStr));// 100 for 10 hz
+	}else{
+		gpsUARTxConfig(3, 9600, g_ui32SysClock);
+		gpsUARTprintf("%s\n", nmea_generateChecksum("PMTK251,38400",gpsStr));
+		gpsUARTxConfig(3, 38400, g_ui32SysClock);
+		gpsUARTprintf("%s\n", nmea_generateChecksum("PMTK001,251,3", gpsStr));
+
+	}
+}
 //*****************************************************************************
 //
 // The main function of the Command Task.
@@ -393,6 +401,7 @@ static void GPSTask(void *pvParameters) {
 	portTickType xLastWakeTime;
 	int32_t i32DollarPosition;
 	char cInput[GPS_INPUT_BUF_SIZE];
+	int8_t i=0;
 
 	//
 	// Get the current time as a reference to start our delays.
@@ -400,6 +409,20 @@ static void GPSTask(void *pvParameters) {
 	xLastWakeTime = xTaskGetTickCount();
 
 	while (1) {
+		if(i<50){
+			GPSconfig(0);
+			i++;
+		}
+		else if(i<75){
+			GPSconfig(1);
+			i++;
+				}
+		else if(i==75){
+			gpsUARTxConfig(3, 38400, g_ui32SysClock);
+			//gpsUARTprintf("%s\n", nmea_generateChecksum("PMTK001,251,3", gpsStr));
+
+			i++;
+				}
 
 		//
 		// Wait for the required amount of time to check back.
@@ -442,7 +465,7 @@ uint32_t GPSTaskInit(void) {
 	// call FreeRTOS functions ("fromISR" or otherwise).
 	//
 	IntPrioritySet(INT_UART3, 0xE0);
-
+	GPSconfig(0);
 	//
 	// Create a mutex to guard the UART.
 	//

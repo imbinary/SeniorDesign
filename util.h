@@ -38,4 +38,5 @@ const char * nmea_generateChecksum(char *strPtr, char *dstStr);
 Intersection intersectVectors(Vector line1Start, Vector line1Dir,
 		Vector line2Start, Vector line2Dir);
 void delay(int milliseconds);
+int reset();
 #endif /* UTIL_H_ */

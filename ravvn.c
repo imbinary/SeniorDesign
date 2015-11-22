@@ -324,23 +324,7 @@ main(void)
     }
 
 
-    //
-    // Create the GPS  task.
-    //
-    if(GPSTaskInit() != 0)
-    {
-        //
-        // Init returned an error. Print an alert to the user and
-        // spin forever.  Wait for reset or user to debug.
-        //
-        UARTprintf("GPS: Task Init Failed!\n");
-        while(1)
-        {
-            //
-            // Do Nothing.
-            //
-        }
-    }
+
 
 
     //
@@ -385,6 +369,23 @@ main(void)
     }
 
     //
+    // Create the GPS  task.
+    //
+    if(GPSTaskInit() != 0)
+    {
+        //
+        // Init returned an error. Print an alert to the user and
+        // spin forever.  Wait for reset or user to debug.
+        //
+        UARTprintf("GPS: Task Init Failed!\n");
+        while(1)
+        {
+            //
+            // Do Nothing.
+            //
+        }
+    }
+    //
     // Config and start the timer that is used by FreeRTOS to determine
     // run time stats.
     //
@@ -396,7 +397,7 @@ main(void)
     // config happens in the VCP Task. Once scheduler starts tasks must take
     // the UART semaphore to safely print.
     //
-    UARTprintf("RAVVN v1.0\n");
+    UARTprintf("RAVVN v1.2\n");
 
     //
     // Start the scheduler.  This should not return.

@@ -28,6 +28,7 @@
 #include "inc/hw_memmap.h"
 #include "inc/hw_types.h"
 #include "inc/hw_ints.h"
+#include "inc/hw_nvic.h"
 #include "driverlib/gpio.h"
 #include "driverlib/pin_map.h"
 #include "driverlib/rom.h"
@@ -99,6 +100,7 @@ tCmdLineEntry g_psCmdTable[] =
     { "connect",  Cmd_connect,  ": Tries to establish a connection with"
                                 " exosite."},
     { "s",    Cmd_sync,      ": Syncronize data with exosite now." },
+    { "reset",    Cmd_reset,      ": Reset MCU." },
     { 0, 0, 0 }
 };
 
@@ -216,6 +218,21 @@ Cmd_stats(int argc, char *argv[])
     return 0;
 }
 
+
+//*****************************************************************************
+//
+// This function prints a list of local statistics for this board.
+//
+//*****************************************************************************
+int
+Cmd_reset(int argc, char *argv[])
+{
+
+
+	HWREG(NVIC_APINT) = NVIC_APINT_VECTKEY | NVIC_APINT_SYSRESETREQ;
+
+    return 0;
+}
 //*****************************************************************************
 //
 // Connects to Exosite and attempts to obtain a CIK. If no connection is made

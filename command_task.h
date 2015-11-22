@@ -75,5 +75,6 @@ extern int Cmd_clear(int argc, char *argv[]);
 extern int Cmd_sync(int argc, char *argv[]);
 extern int Cmd_connect(int argc, char *argv[]);
 extern int Cmd_proxy(int argc, char *argv[]);
+extern int Cmd_reset(int argc, char *argv[]);
 
 #endif // __COMMAND_TASK_H__
