@@ -213,6 +213,8 @@ main(void)
 
 
 
+
+
     //
     // Configure the device pins for this board.
     // This application uses Ethernet but not USB.
@@ -367,6 +369,15 @@ main(void)
             //
         }
     }
+//    char bsm[60];
+//    float coll = tCollideAcc(18.5,360- 6 , 0.00, 0,
+//			0,0,9.89,
+//			0, 0,
+//			180);
+
+//	sprintf(bsm, "%f",coll);
+//	UARTprintf("tcoll: %s\n",bsm);
+
 
     //
     // Create the GPS  task.

@@ -289,9 +289,10 @@ void GPSparse(char *gpsString) {
 
 				z = DKFlin(Z);
 
-//				g_rBSMData.latitude = *(z); //initial predicted sensor readings
-//				g_rBSMData.longitude = *(z+1);
+//				g_rBSMData.latitude = 2836.114000; //initial predicted sensor readings
+//				g_rBSMData.longitude = -8111.737000;
 				g_rBSMData.speed = *(z+2);
+//				g_rBSMData.speed = 0.0;
 //				g_rBSMData.heading = *(z+3);
 				g_rBSMData.latAccel = *(z+4)/116;
 				g_rBSMData.longAccel = *(z+5)/116;
