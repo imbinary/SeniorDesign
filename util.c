@@ -20,6 +20,19 @@
 #include "utils/uartstdio.h"
 #include "util.h"
 #include <math.h>
+#include "inc/hw_types.h"
+#include "inc/hw_ints.h"
+#include "inc/hw_nvic.h"
+
+int
+reset()
+{
+
+
+	HWREG(NVIC_APINT) = NVIC_APINT_VECTKEY | NVIC_APINT_SYSRESETREQ;
+
+    return 0;
+}
 
 int sstr_split(char result[][25],char* a_str, const char a_delim) {
 	uint8_t M=10,N=25;

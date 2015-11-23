@@ -122,7 +122,7 @@ ADXLTask(void *pvParameters)
 		x = (int16_t)(x1);
 		y = (int16_t)(x2);
 		z = (int16_t)(x3);
-
+/*
 		if ( (abs(x-xb) < 9))
 			xb=(x+xb)/2;
 		if ( (abs(y-yb) < 9))
@@ -137,7 +137,7 @@ ADXLTask(void *pvParameters)
 			y=yb;
 		if(abs(z-zb)<=2)
 			z=zb;
-
+*/
 /*
 		xSemaphoreTake(g_xUARTSemaphore, portMAX_DELAY);
 		UARTprintf("%x\n", I2CReceive(ADXL312_I2CADR_ALT, ADXL_DATA_FORMAT));

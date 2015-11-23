@@ -83,15 +83,13 @@ extern bool revFlag;
 void bsmParse(char *cInput) {
 	rBSMData_t tmpBSMData;
 	char bsm[BSM_SIZE];
-	int i;
 
 	if (nmea_validateChecksum(cInput, XBEE_INPUT_BUF_SIZE)) {
-		//char** tokens;
+
 		char tokens[10][25];
-		//tokens = str_split(cInput, ',');
+
 		int cnt = sstr_split(tokens, cInput, ',');
-		//char** tokens;
-		//tokens = str_split(cInput, ',');
+
 		if (tokens) {
 
 			if (!strcmp(tokens[0], "$B")) {
@@ -143,7 +141,7 @@ void bsmParse(char *cInput) {
 								deg2dec(tmpBSMData.longitude), 'K'));
 
 				xSemaphoreTake(g_xUARTSemaphore, portMAX_DELAY);
-				//UARTprintf("%s\n", bsm);
+				UARTprintf("%s\n", bsm);
 				xSemaphoreGive(g_xUARTSemaphore);
 
 				calcAlert(tmpBSMData);
@@ -151,11 +149,7 @@ void bsmParse(char *cInput) {
 			}
 
 		}
-		// free memory
-		for (i = 0; *(tokens + i); i++) {
-			vPortFree(*(tokens + i));
-		}
-		vPortFree(tokens);
+
 	}
 
 }
@@ -198,10 +192,10 @@ float tCollideAcc(int dist, int bear, float myV, int myA_y, int myA_x,
 			- A_rx * A_rx * (V_ry * V_ry - 4) + 2 * A_rx * A_ry * V_rx * V_ry
 			- A_ry * A_ry * (V_rx * V_rx - 4);
 
-	if (ex1 < 0)
-		return -1; //solution is not real-paths are parallel
+//	if (ex1 < 0)
+//		return -1; //solution is not real-paths are parallel
 
-	ex1 = sqrt(ex1); //previous statement avoids taking square root of negative
+	ex1 = sqrt(abs(ex1)); //previous statement avoids taking square root of negative
 	float ex2 = A_rx * V_rx + A_ry * V_ry; //expression 2 of solution
 	float t1 = (ex1 - ex2) / A_r2; //solution 1
 	float t2 = (0 - ex1 - ex2) / A_r2; //solution 2
@@ -209,14 +203,15 @@ float tCollideAcc(int dist, int bear, float myV, int myA_y, int myA_x,
 	//t1 *= -1;
 	//t2 *= -1;
 
-	if (t1 >= 0 && t1 <= 12) { //assumes we don't care to predict collisions more than 12 seconds out
+	if (t1 >= 0 && t1 <= 14) { //assumes we don't care to predict collisions more than 12 seconds out
 		D_t1 = pow(D_x + V_rx * t1 + A_rx * t1 * t1 / 2, 2)
 				+ pow(D_y + V_ry * t1 + A_ry * t1 * t1 / 2, 2);
 		D_t1 = sqrt(D_t1); //distance at time 1
 	} else
 		D_t1 = -1; //not valid solution
 
-	if (t2 >= 0 && t2 <= 12) { //assumes we don't care to predict collisions more than 12 seconds out
+
+	if (t2 >= 0 && t2 <= 14) { //assumes we don't care to predict collisions more than 12 seconds out
 		D_t2 = pow(D_x + V_rx * t2 + A_rx * t2 * t2 / 2, 2)
 				+ pow(D_y + V_ry * t2 + A_ry * t2 * t2 / 2, 2);
 		D_t2 = sqrt(D_t2); //distance at time 2
@@ -239,29 +234,48 @@ float tCollide(int dist, int bear, float myVeloc, int myHead, float oVeloc,
 
 	float d_y = dist * cos(bear); //y component of distance in meters
 	float d_x = dist * sin(bear); //x component of distance in meters
-	float V_ry = 0-oVeloc * cos(oHead) + myVeloc * cos(myHead); //y component of relative velocity
-	float V_rx = 0-oVeloc * sin(oHead) + myVeloc * sin(myHead); //x component of relative velocity
+	float V_ry = 0 -oVeloc * cos(oHead) + myVeloc * cos(myHead); //y component of relative velocity
+	float V_rx = 0 -oVeloc * sin(oHead) + myVeloc * sin(myHead); //x component of relative velocity
 	float V_r2 = V_ry * V_ry + V_rx * V_rx; //relative velocity
 
 	if (V_r2 < 0.001)
 		return -1; //travelling parallel at same velocity, same direction. No collision
-
-	float ex1 = 0 - (d_x + d_x) * (V_ry * V_ry) + 2 * d_x * d_y * V_rx * V_ry
+//	xSemaphoreTake(g_xUARTSemaphore, portMAX_DELAY);
+//	UARTprintf("test1 pass\n");
+//	xSemaphoreGive(g_xUARTSemaphore);
+	float ex1 = 0 - (d_x * d_x) * (V_ry * V_ry) + 2 * d_x * d_y * V_rx * V_ry
 			- (d_y * d_y) * (V_rx * V_rx) + 4 * (V_r2); //expression 1 of solution
-
-	if (ex1 < 0)
-		return -1; //solution is not real-paths are parallel
-
+	ex1=abs(ex1);
+//	if (ex1 < 0)
+//		return -1; //solution is not real-paths are parallel
+//	xSemaphoreTake(g_xUARTSemaphore, portMAX_DELAY);
+//	UARTprintf("test2 pass\n");
+//	xSemaphoreGive(g_xUARTSemaphore);
 	ex1 = sqrt(ex1); //previous statement avoides taking square root of negative
 	float ex2 = d_x * V_rx - d_y * V_ry; //expression 2 of solution
 	//todo we changed this
 	float t1 = (ex1 - ex2) / V_r2; //solution 1
 	float t2 = (0 - ex1 - ex2) / V_r2; //solution 2
+	float D_t1, D_t2;
+	if (t1 >= 0 && t1 <= 14) { //assumes we don't care to predict collisions more than 12 seconds out
+			D_t1 = pow(d_x - V_rx * t1 , 2)
+					+ pow(d_y - V_ry * t1 , 2);
+			D_t1 = sqrt(D_t1); //distance at time 1
+		} else
+			D_t1 = -1; //not valid solution
 
-	if((t1<0 || t1>12) && (t2 < 0 || t2 > 12) ) return -1; //vehicles will not collide within 12 seconds
-	else if(t2<0 || t2 >12) return t1; //t1 is TTC (time to collision)
-	else if(t1<0 || t1 >12) return t2; //t2 is TTC
-	else return min(t1,t2); //the smaller time is the TTC
+
+		if (t2 >= 0 && t2 <= 14) { //assumes we don't care to predict collisions more than 12 seconds out
+			D_t2 = pow(d_x - V_rx * t2 , 2)
+					+ pow(d_y - V_ry * t2 , 2);
+			D_t2 = sqrt(D_t2); //distance at time 2
+		} else
+			D_t2 = -1; //not valid solution
+
+		if( (D_t1 >= dist && D_t2 >= dist) || (D_t1 < 0 && D_t2 < 0) ) return -1; //vehicles are moving away from eachother
+		else if( D_t1 >= 0 && D_t1 < dist && (D_t2 >=dist || D_t2 < 0) ) return t1; //t1 is time to collision
+		else if( (D_t1 >= dist || D_t1 < 0 ) && D_t2 >= 0 && D_t2 < dist) return t2; //t2 is time to collision
+		else return min(t1, t2); //the minimum of t1 and t2 is time to collision
 }
 
 //*****************************************************************************
@@ -335,7 +349,7 @@ uint8_t calcColor(rBSMData_t tmpBSMData, int size, int dist) {
 			deg2dec(g_rBSMData.longitude), deg2dec(tmpBSMData.latitude),
 			deg2dec(tmpBSMData.longitude), 'K');
 
-	float coll = tCollideAcc(dist, 360- dir, g_rBSMData.speed, g_rBSMData.latAccel * 116,
+	float coll = tCollideAcc(dist, 360 - dir, g_rBSMData.speed, g_rBSMData.latAccel * 116,
 			g_rBSMData.longAccel * 116, g_rBSMData.heading, tmpBSMData.speed,
 			tmpBSMData.latAccel * 116, tmpBSMData.longAccel * 116,
 			tmpBSMData.heading);
@@ -343,10 +357,12 @@ uint8_t calcColor(rBSMData_t tmpBSMData, int size, int dist) {
 	if (size <= 7) {
 		// far away use intersection with constant speed
 
-		if (coll < 0 || coll > 12)
+		if (coll < 0 || coll > 14)
 			color = 1;
 		else{
-			color = ((coll * -10.5) + 127);
+			color = ((coll * -10.6) + 149.4);
+			if( color > 127)
+				color = 127;
 			xSemaphoreTake(g_xUARTSemaphore, portMAX_DELAY);
 			UARTprintf("far size: %d color: %d COLLISION!\n", size, color);
 			xSemaphoreGive(g_xUARTSemaphore);

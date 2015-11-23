@@ -213,6 +213,8 @@ main(void)
 
 
 
+
+
     //
     // Configure the device pins for this board.
     // This application uses Ethernet but not USB.
@@ -324,23 +326,7 @@ main(void)
     }
 
 
-    //
-    // Create the GPS  task.
-    //
-    if(GPSTaskInit() != 0)
-    {
-        //
-        // Init returned an error. Print an alert to the user and
-        // spin forever.  Wait for reset or user to debug.
-        //
-        UARTprintf("GPS: Task Init Failed!\n");
-        while(1)
-        {
-            //
-            // Do Nothing.
-            //
-        }
-    }
+
 
 
     //
@@ -383,7 +369,33 @@ main(void)
             //
         }
     }
+//    char bsm[60];
+//    float coll = tCollideAcc(18.5,360- 6 , 0.00, 0,
+//			0,0,9.89,
+//			0, 0,
+//			180);
 
+//	sprintf(bsm, "%f",coll);
+//	UARTprintf("tcoll: %s\n",bsm);
+
+
+    //
+    // Create the GPS  task.
+    //
+    if(GPSTaskInit() != 0)
+    {
+        //
+        // Init returned an error. Print an alert to the user and
+        // spin forever.  Wait for reset or user to debug.
+        //
+        UARTprintf("GPS: Task Init Failed!\n");
+        while(1)
+        {
+            //
+            // Do Nothing.
+            //
+        }
+    }
     //
     // Config and start the timer that is used by FreeRTOS to determine
     // run time stats.
@@ -396,7 +408,7 @@ main(void)
     // config happens in the VCP Task. Once scheduler starts tasks must take
     // the UART semaphore to safely print.
     //
-    UARTprintf("RAVVN v1.0\n");
+    UARTprintf("RAVVN v1.2\n");
 
     //
     // Start the scheduler.  This should not return.
