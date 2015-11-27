@@ -39,4 +39,5 @@ Intersection intersectVectors(Vector line1Start, Vector line1Dir,
 		Vector line2Start, Vector line2Dir);
 void delay(int milliseconds);
 int reset();
+float gpstime(float btime);
 #endif /* UTIL_H_ */

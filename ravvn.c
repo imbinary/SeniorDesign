@@ -274,7 +274,7 @@ main(void)
     //
     // Create the xbee task.
     //
-    if(XBEErxTaskInit() != 0)
+    if( XBEErxTaskInit() != 0)
     {
         //
         // Init returned an error. Print an alert to the user and
@@ -400,7 +400,8 @@ main(void)
     // config happens in the VCP Task. Once scheduler starts tasks must take
     // the UART semaphore to safely print.
     //
-    UARTprintf("RAVVN v1.2\n");
+    g_rBSMData.ID = DEVID;
+    UARTprintf("RAVVN v1.5 (%d)\n",g_rBSMData.ID);
 
     //
     // Start the scheduler.  This should not return.

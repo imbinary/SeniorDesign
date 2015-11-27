@@ -24,6 +24,54 @@
 #include "inc/hw_ints.h"
 #include "inc/hw_nvic.h"
 
+float gpstime(float btime){
+    char tmp[8];
+    char t[3];
+    int16_t h=-1,m=-1,s=-1;
+
+    sprintf(tmp,"%.0f",btime);
+
+    if(strlen(tmp) >5 ){
+        sprintf(t,"%c%c",tmp[strlen(tmp)-6],tmp[strlen(tmp)-5]);
+        h = atoi(t);
+    }
+    if(strlen(tmp) >3 ){
+        sprintf(t,"%c%c",tmp[strlen(tmp)-4],tmp[strlen(tmp)-3]);
+        m = atoi(t);
+    }
+    if(strlen(tmp) >1 ){
+        sprintf(t,"%c%c",tmp[strlen(tmp)-2],tmp[strlen(tmp)-1]);
+        s = atoi(t);
+    }
+
+    if(s>=60){
+        s = s % 60;
+        if(m<0)
+            m=1;
+        else
+            m++;
+    }
+    if(m>=60){
+        m = m % 60;
+        if(h<0)
+            h=1;
+        else
+            h++;
+    }
+    if(h>=24){
+        h = h % 24;
+    }
+    if(h>=0)
+        sprintf(tmp,"%d%02d%02d.0",h,m,s);
+    else if(m>=0)
+        sprintf(tmp,"%d%02d.0",m,s);
+    else if(s>=0)
+        sprintf(tmp,"%d.0",s);
+
+        return atof(tmp);
+
+}
+
 int
 reset()
 {
@@ -35,7 +83,7 @@ reset()
 }
 
 int sstr_split(char result[][25],char* a_str, const char a_delim) {
-	uint8_t M=10,N=25;
+	uint8_t M=12,N=25;
 	//char result[M][N];
 	int8_t count = 0;
 	char* tmp = a_str;

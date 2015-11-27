@@ -244,7 +244,7 @@ void GPSparse(char *gpsString) {
 		return;
 	if (nmea_validateChecksum(gpsString, GPS_INPUT_BUF_SIZE)) {
 
-		char tokens[10][25];
+		char tokens[12][25];
 		int cnt = sstr_split(tokens, gpsString, ',');
 
 		if (tokens) {

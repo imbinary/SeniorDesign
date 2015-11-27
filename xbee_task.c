@@ -64,7 +64,9 @@ xSemaphoreHandle g_xbeeUARTSemaphore;
 //
 //*****************************************************************************
 extern uint32_t g_ui32SysClock;
-float oldTime;
+float oldTime,stime=-1;
+uint8_t color=0x6a;
+uint16_t heading = 0;
 //extern rBSMData_t g_rBSMData;
 
 
@@ -77,25 +79,43 @@ float oldTime;
 void bsmSend() {
 	char tmp[BSM_SIZE];
 	char bsm[BSM_SIZE];
-	xSemaphoreTake(g_xBsmDataSemaphore, portMAX_DELAY);
 
+	xSemaphoreTake(g_xBsmDataSemaphore, portMAX_DELAY);
 	if (DTYPE) {
-		sprintf(tmp, "B,%0.6f,%0.6f,%0.2f,%d,%0.1f,%d,%d,%d,%d",
+		sprintf(tmp, "B,%0.6f,%0.6f,%0.2f,%d,%0.1f,%d,%d,%d,%d,%d",
 				g_rBSMData.latitude, g_rBSMData.longitude, g_rBSMData.speed,
 				g_rBSMData.heading, g_rBSMData.btime, g_rBSMData.date,
 				g_rBSMData.latAccel, g_rBSMData.longAccel,
-				g_rBSMData.vertAccel);
+				g_rBSMData.vertAccel,g_rBSMData.ID);
+		if ( (g_rBSMData.date == 0) || (oldTime == g_rBSMData.btime) ){
+			xSemaphoreGive(g_xBsmDataSemaphore);
+			return;
+		}
 	} else {
 		//todo change time to status
-		int color = 0x0f;
-		sprintf(tmp, "I,%0.6f,%0.6f,%d,%0.1f,%d", g_rBSMData.latitude,
-				g_rBSMData.longitude, g_rBSMData.heading, g_rBSMData.btime,
-				color);
+		if (stime<0)
+			stime = g_rBSMData.btime+30;
+		if(stime <= g_rBSMData.btime){
+			if( color == 106 ){
+				color = 53;
+				stime = gpstime(g_rBSMData.btime+15);
+			}
+			else if (color == 53){
+				color = 1;
+				stime = gpstime(g_rBSMData.btime+30);
+			}
+			else {
+				color = 106;
+				stime = gpstime(g_rBSMData.btime+30);
+			}
+		}
+
+		sprintf(tmp, "I,%0.6f,%0.6f,%d,%0.1f,%d,%d", g_rBSMData.latitude,
+				g_rBSMData.longitude, heading, stime,
+				color,g_rBSMData.ID);
 	}
 	xSemaphoreGive(g_xBsmDataSemaphore);
 
-	if (g_rBSMData.date == 0 || oldTime == g_rBSMData.btime)
-		return;
 	oldTime = g_rBSMData.btime;
 
 	nmea_generateChecksum(tmp, bsm);
@@ -105,7 +125,7 @@ void bsmSend() {
 	xSemaphoreGive(g_xbeeUARTSemaphore);
 //todo remove
 	xSemaphoreTake(g_xUARTSemaphore, portMAX_DELAY);
-//	UARTprintf("%s\n", bsm);
+	UARTprintf("->%s\n", bsm);
 	xSemaphoreGive(g_xUARTSemaphore);
 
 

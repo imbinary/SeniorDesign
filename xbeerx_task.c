@@ -67,8 +67,10 @@ extern uint32_t g_ui32SysClock;
 
 
 void calcAlert(rBSMData_t tmpBSMData);
+void calcAlertI(rBSMData_t tmpBSMData, uint8_t color);
 uint8_t calcDir(rBSMData_t tmpBSMData);
 uint8_t calcColor(rBSMData_t tmpBSMData, int size, int dist);
+uint8_t calcColorI(rBSMData_t tmpBSMData, int size, int dist, uint8_t color);
 
 // globals
 extern bool revFlag;
@@ -86,7 +88,7 @@ void bsmParse(char *cInput) {
 
 	if (nmea_validateChecksum(cInput, XBEE_INPUT_BUF_SIZE)) {
 
-		char tokens[10][25];
+		char tokens[12][25];
 
 		int cnt = sstr_split(tokens, cInput, ',');
 
@@ -102,10 +104,11 @@ void bsmParse(char *cInput) {
 				tmpBSMData.latAccel = strtol(tokens[7], NULL, 10);
 				tmpBSMData.longAccel = strtol(tokens[8], NULL, 10);
 				tmpBSMData.vertAccel = strtol(tokens[9], NULL, 10);
+				tmpBSMData.ID = strtol(tokens[10], NULL, 10);
 
-				sprintf(bsm, "mS %3.2f, mH %d, mT %7.1f, oS %3.2f, oH %d, oT %7.1f, dist  %5.1f, d2o %d, pix %d, cnt %d",
+				sprintf(bsm, "mS %3.2f, mH %d, mT %7.1f, oID %d, oS %3.2f, oH %d, oT %7.1f, dist  %5.1f, d2o %d, pix %d, cnt %d",
 						g_rBSMData.speed, g_rBSMData.heading, g_rBSMData.btime,
-						tmpBSMData.speed, tmpBSMData.heading, tmpBSMData.btime,
+						tmpBSMData.ID, tmpBSMData.speed, tmpBSMData.heading, tmpBSMData.btime,
 						distance(deg2dec(g_rBSMData.latitude),
 								deg2dec(g_rBSMData.longitude),
 								deg2dec(tmpBSMData.latitude),
@@ -126,9 +129,20 @@ void bsmParse(char *cInput) {
 				tmpBSMData.latitude = strtod(tokens[1], NULL);
 				tmpBSMData.longitude = strtod(tokens[2], NULL);
 				tmpBSMData.heading = strtol(tokens[3], NULL, 10);
-				tmpBSMData.btime = strtod(tokens[5], NULL);
-				uint8_t color = strtol(tokens[6], NULL, 10);
+				tmpBSMData.btime = strtod(tokens[4], NULL);
+				uint8_t color = strtol(tokens[5], NULL, 10);
+				tmpBSMData.ID = strtol(tokens[6], NULL, 10);
+				tmpBSMData.speed = 0;
+				tmpBSMData.date = g_rBSMData.date;
+				tmpBSMData.latAccel = 0;
+				tmpBSMData.longAccel = 0;
+				tmpBSMData.vertAccel = 0;
 
+				/*
+				sprintf(tmp, "I,%0.6f,%0.6f,%d,%0.1f,%d,%d", g_rBSMData.latitude,
+								g_rBSMData.longitude, heading, stime,
+								color,DEVID);
+				*/
 				sprintf(bsm, "time: %07.1f, color: %5d, dist: %05.1f, dir: %d",
 						tmpBSMData.btime, color,
 						distance(deg2dec(g_rBSMData.latitude),
@@ -144,7 +158,7 @@ void bsmParse(char *cInput) {
 				UARTprintf("%s\n", bsm);
 				xSemaphoreGive(g_xUARTSemaphore);
 
-				calcAlert(tmpBSMData);
+				calcAlertI(tmpBSMData, color);
 
 			}
 
@@ -283,6 +297,53 @@ float min(float v1, float v2) {
 //
 //
 //*****************************************************************************
+void calcAlertI(rBSMData_t tmpBSMData, uint8_t color) {
+
+	// send alert to queue
+	if (xQueue1 != 0) {
+		uint8_t byte1, byte2;
+		int size, dist;
+		//construct the bytes
+
+		//calc distance
+		dist = (int) (distance(deg2dec(g_rBSMData.latitude),
+				deg2dec(g_rBSMData.longitude), deg2dec(tmpBSMData.latitude),
+				deg2dec(tmpBSMData.longitude), 'm'));
+		if (dist > 60)
+			return;
+
+		byte1 = calcDir(tmpBSMData);
+
+		//size relative to distance
+		if (dist > 20)
+			size = 0;
+		else if (dist < 3)
+			size = 7;
+		else {
+			float tmp3 = ((dist * -7) + 140) / 17;
+			size = tmp3;
+		}
+
+		// set dir and size
+		byte1 = (byte1 * 8) + size;
+		// set color
+		byte2 = calcColorI(tmpBSMData, size, dist, color);
+		//set night bit
+		if (tmpBSMData.btime > 20000 && tmpBSMData.btime < 140000)
+			byte2 |= 0x80;
+
+		uint16_t tmp = (byte1 << 8) | byte2;
+		xQueueSendToBackFromISR(xQueue1, &tmp, 0);
+
+	}
+
+}
+
+//*****************************************************************************
+//
+//
+//
+//*****************************************************************************
 void calcAlert(rBSMData_t tmpBSMData) {
 
 	// send alert to queue
@@ -330,6 +391,36 @@ void calcAlert(rBSMData_t tmpBSMData) {
 //
 //
 //*****************************************************************************
+uint8_t calcColorI(rBSMData_t tmpBSMData, int size, int dist, uint8_t color) {
+
+	int16_t dir;
+
+	dir = direction(deg2dec(g_rBSMData.latitude),
+			deg2dec(g_rBSMData.longitude), deg2dec(tmpBSMData.latitude),
+			deg2dec(tmpBSMData.longitude), 'K');
+
+	float coll = tCollideAcc(dist, 360 - dir,
+			g_rBSMData.speed, g_rBSMData.latAccel * 116, g_rBSMData.longAccel * 116,
+			g_rBSMData.heading, 0, 0, 0,tmpBSMData.heading);
+
+
+	if ( (coll < 0) || (coll > 14) || (color == 1) ) // green light
+		return color;
+	else if ( (color == 53) && ((tmpBSMData.btime - g_rBSMData.btime) <= coll-2 ) ) //yellow light
+		return color;
+	else{ // red light or almost red
+		if (color == 53)
+			return 106;
+		return 127;
+	}
+
+}
+
+//*****************************************************************************
+//
+//
+//
+//*****************************************************************************
 uint8_t calcColor(rBSMData_t tmpBSMData, int size, int dist) {
 	uint8_t color = 0x0f;
 	int16_t dir;
@@ -343,26 +434,26 @@ uint8_t calcColor(rBSMData_t tmpBSMData, int size, int dist) {
 			tmpBSMData.latAccel * 116, tmpBSMData.longAccel * 116,
 			tmpBSMData.heading);
 
-	if (size <= 7) {
-		// far away use intersection with constant speed
 
-		if (coll < 0 || coll > 14)
-			color = 1;
-		else{
-			color = ((coll * -10.6) + 149.4);
-			if( color > 127)
-				color = 127;
-			xSemaphoreTake(g_xUARTSemaphore, portMAX_DELAY);
-			UARTprintf("far size: %d color: %d COLLISION!\n", size, color);
-			xSemaphoreGive(g_xUARTSemaphore);
-		}
-
+	if (coll < 0 || coll > 14)
+		color = 1;
+	else{
+		color = ((coll * -10.6) + 149.4);
+		if( color > 127)
+			color = 127;
+		xSemaphoreTake(g_xUARTSemaphore, portMAX_DELAY);
+		UARTprintf("far size: %d color: %d COLLISION!\n", size, color);
+		xSemaphoreGive(g_xUARTSemaphore);
 	}
-
 
 	return color;
 }
 
+//*****************************************************************************
+//
+//
+//
+//*****************************************************************************
 uint8_t calcDir(rBSMData_t tmpBSMData) {
 	int16_t dir;
 
