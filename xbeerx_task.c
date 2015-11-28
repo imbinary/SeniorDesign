@@ -179,14 +179,14 @@ float tCollideAcc(float dist, int bearing, float myV, int myA_y, int myA_x,
 	float oHead = deg2rad(oH);
 	float myHead = deg2rad(myH);
 	float bear = deg2rad(bearing);
-
+    float s_phi = sin(bear);
+	float c_phi = cos(bear);
 	float D_y = dist * cos(bear); //y component of distance in meters
 	float D_x = dist * sin(bear); //x component of distance in meters
 
-	float V_ry = 0 - oV * cos(oHead) + myV * cos(myHead); //y component of relative velocity
-	float V_rx = 0 - oV * sin(oHead) + myV * sin(myHead); //x component of relative velocity
-	float V_r2 = V_ry*V_ry+V_rx*V_rx;
-	float V_r = sqrt(V_r2);
+	float V_ry = oV * cos(oHead) - myV * cos(myHead); //y component of relative velocity
+	float V_rx = oV * sin(oHead) - myV * sin(myHead); //x component of relative velocity
+
 
 	float A_ry = (oA_y * cos(oHead) - oA_x * sin(oHead) - myA_y * cos(myHead)
 			+ myA_x * sin(myHead)) * 9.88 / 10000; //convert to m/s^2 from g*10^-4
@@ -195,43 +195,65 @@ float tCollideAcc(float dist, int bearing, float myV, int myA_y, int myA_x,
 	float A_r2 = A_rx * A_rx + A_ry * A_ry;
 	float A_r = sqrt(A_r2);
 
-	// todo chris adjustment
 	//if there is no relative acceleration, check for collision by velocity
 	if (A_r2 < 16){
-
 		return tCollide(dist, bear, myV, myHead, oV, oHead);
 	}
 
 	//expression 1 of solution
-	float ex1 = 2 * dist * A_r - 4*A_r + V_r2;
+	float ex1_x = V_rx*V_rx-2*A_rx*(D_x-2*s_phi);// x
+	float ex1_y = V_ry*V_ry-2*A_ry*(D_y-2*c_phi);// y
+	//negative expression 1 means non-intersecting paths
+	if(ex1_x<0 || ex1_y<0) return -1;
+	//total of 4 solutions, 2 each for x and y
+	float t1_x = -1, t2_x=-1, t1_y=-1, t2_y=-1;
 
-	ex1 = sqrt(abs(ex1)); //avoids taking square root of negative
-	float t1 = (ex1 - V_r) / A_r; //solution 1
-	float t2 = (0 - ex1 - V_r) / A_r; //solution 2
-	float D_t1, D_t2;
+	ex1_x = sqrt(ex1_x); //avoids taking square root of negative
+	ex1_y = sqrt(ex1_y);
+	if(A_rx !=0){
+		t1_x = (ex1_x - V_rx) / A_rx; //solution 1 x
+		t2_x = (0 - ex1_x - V_rx) / A_rx;} //solution 2 x
+	if(A_ry !=0){
+		t1_y = (ex1_y - V_ry) / A_ry; //solution 1 y
+		t2_y = (0 - ex1_y - V_ry) / A_ry;} //solution 2 y
+		else{
+			if(abs(D_y)<=2){
+			t1_y = t1_x;
+			t2_y = t2_x;}
+			else return -1;
+		}
+		if(A_rx == 0 ){
+			if(abs(D_x)<=2){
+			t1_x = t1_y;
+			t2_x = t2_y;}
+			else return -1;
+	}
 
+	//scenario 1: x or y component does not collide in positive time
+	if((t1_x<0&&t2_x<0)||(t1_y<0&&t2_y<0)) return -1;
+	//scenario 2: at least one component collides in positive time (0.1 accounts for cos/sin inaccuracy)
+    if( abs(t1_x-t1_y)<=0.1 || abs(t1_x-t2_y)<=0.1 || abs(t2_x-t1_y)<=0.1 || abs(t2_x-t2_y)<=0.1){
+	    //2.1.1: only one intersection of components: t1_x
+		if((abs(t1_x-t1_y)<=0.1 || abs(t1_x-t2_y)<=0.1) && abs(t2_x-t1_y)>0.1 && abs(t2_x-t2_y)>0.1 ){
 
-	if (t1 >= 0 && t1 <= 14) { //assumes we don't care to predict collisions more than 14 seconds out
-		D_t1 = pow(D_x - V_rx * t1 + A_rx * t1 * t1 / 2, 2)
-				+ pow(D_y - V_ry * t1 + A_ry * t1 * t1 / 2, 2);
-		D_t1 = sqrt(D_t1); //distance at time 1
-	} else
-		D_t1 = -1; //not valid solution
+		  return t1_x;}
+		//2.1.2: only one intersection of components: t2_x
+		else if( (abs(t2_x-t1_y)<=0.1 || abs(t2_x-t2_y)<=0.1) && abs(t1_x-t1_y)>0.1 && abs(t1_x-t1_y)>0.1){
 
-	if (t2 >= 0 && t2 <= 14) { //assumes we don't care to predict collisions more than 14 seconds out
-		D_t2 = pow(D_x - V_rx * t2 + A_rx * t2 * t2 / 2, 2)
-				+ pow(D_y - V_ry * t2 + A_ry * t2 * t2 / 2, 2);
-		D_t2 = sqrt(D_t2); //distance at time 2
-	} else
-		D_t2 = -1; //not valid solution
-
-
-
-	if( (D_t1 >= 3 || D_t1 < 0) && (D_t2 < 0 || D_t2 >= 3) ) return -1; //vehicles are moving away from eachother
-	else if( D_t2 >= 3 || D_t2 < 0 ) return t1; //t1 is time to collision
-	else if( D_t1 >= 3 || D_t1 < 0 ) return t2; //t2 is time to collision
-	else return min(t1, t2); //the minimum of t1 and t2 is time to collision
+		  return t2_x;}
+		//2.2: both times intersect
+		else if( (abs(t1_x-t1_y)<=0.1 && abs(t2_x-t2_y)<=0.1) || (abs(t1_x-t2_y)<=0.1 && abs(t2_x-t1_y)<=0.1)){
+		    //2.2.1 t1 is negative
+			if(t1_x<0){ return t2_x;}
+			//2.2.2 t2 is negative
+			else if(t2_x<0){ return t1_x;}
+			//2.2.3 both are positive
+			else{ return min(t1_x, t2_x);}
+		}
+	}
+	return -1;
 }
+
 //*****************************************************************************
 //
 //
