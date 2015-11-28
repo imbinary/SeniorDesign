@@ -195,8 +195,9 @@ float tCollideAcc(float dist, int bearing, float myV, int myA_y, int myA_x,
 	float A_r2 = A_rx * A_rx + A_ry * A_ry;
 	float A_r = sqrt(A_r2);
 
+	// todo chris adjustment
 	//if there is no relative acceleration, check for collision by velocity
-	if (A_r2 < 4){
+	if (A_r2 < 16){
 
 		return tCollide(dist, bear, myV, myHead, oV, oHead);
 	}
@@ -362,12 +363,12 @@ void calcAlert(rBSMData_t tmpBSMData) {
 		byte1 = calcDir(tmpBSMData);
 
 		//size relative to distance
-		if (dist > 20)
-			size = 0;
-		else if (dist < 3)
+
+		size = 0;
+		if (dist < 3)
 			size = 7;
 		else {
-			float tmp3 = ((dist * -7) + 140) / 17;
+			float tmp3 = (dist * -7/57) + 140 / 19;
 			size = tmp3;
 		}
 
@@ -406,12 +407,12 @@ uint8_t calcColorI(rBSMData_t tmpBSMData, int size, int dist, uint8_t color) {
 
 	if ( (coll < 0) || (coll > 14) || (color == 1) ) // green light
 		return color;
-	else if ( (color == 53) && ((tmpBSMData.btime - g_rBSMData.btime) <= coll-2 ) ) //yellow light
+	else if ( (color == 60) && ((tmpBSMData.btime - g_rBSMData.btime) <= coll-2 ) ) //yellow light
 		return color;
 	else{ // red light or almost red
-		if (color == 53)
-			return 106;
-		return 127;
+		if(coll<3)
+			return 127;
+		return 106;
 	}
 
 }

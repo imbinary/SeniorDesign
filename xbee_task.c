@@ -50,6 +50,7 @@
 xTaskHandle g_xXBEEHandle;
 extern xQueueHandle xQueue1;
 extern xSemaphoreHandle g_xBsmDataSemaphore;
+extern xQueueHandle xQueue1;
 //*****************************************************************************
 //
 // A mutex semaphore to manage the UART buffer in utils
@@ -66,10 +67,39 @@ xSemaphoreHandle g_xbeeUARTSemaphore;
 extern uint32_t g_ui32SysClock;
 float oldTime,stime=-1;
 uint8_t color=0x6a;
-uint16_t heading = 0;
+uint16_t heading = 15;
 //extern rBSMData_t g_rBSMData;
 
+//*****************************************************************************
+//
+//
+//
+//*****************************************************************************
 
+void tcd(color){
+	// send alert to queue
+	if (xQueue1 != 0) {
+		uint8_t byte1, byte2;
+
+		// set dir and size
+		byte1 = (0 * 8) + 7;
+		// set color
+		byte2 = color;
+
+		byte2 |= 0x80;
+		uint16_t tmp = (byte1 << 8) | byte2;
+		xQueueSendToBackFromISR(xQueue1, &tmp, 0);
+		// set dir and size
+		byte1 = (10 * 8) + 7;
+
+		tmp = (byte1 << 8) | byte2;
+		xQueueSendToBackFromISR(xQueue1, &tmp, 0);
+		byte1 = (20 * 8) + 7;
+
+		tmp = (byte1 << 8) | byte2;
+		xQueueSendToBackFromISR(xQueue1, &tmp, 0);
+	}
+}
 
 //*****************************************************************************
 //
@@ -97,22 +127,26 @@ void bsmSend() {
 			stime = g_rBSMData.btime+30;
 		if(stime <= g_rBSMData.btime){
 			if( color == 106 ){
-				color = 53;
-				stime = gpstime(g_rBSMData.btime+15);
-			}
-			else if (color == 53){
 				color = 1;
-				stime = gpstime(g_rBSMData.btime+30);
+				stime = gpstime(g_rBSMData.btime+20);
+			}
+			else if (color == 60){
+				color = 106;
+				stime = gpstime(g_rBSMData.btime+20);
 			}
 			else {
-				color = 106;
-				stime = gpstime(g_rBSMData.btime+30);
+				color = 60;
+				stime = gpstime(g_rBSMData.btime+5);
 			}
 		}
 
 		sprintf(tmp, "I,%0.6f,%0.6f,%d,%0.1f,%d,%d", g_rBSMData.latitude,
 				g_rBSMData.longitude, heading, stime,
 				color,g_rBSMData.ID);
+	}
+	if(DTYPE == 0)
+	{
+		tcd(color);
 	}
 	xSemaphoreGive(g_xBsmDataSemaphore);
 

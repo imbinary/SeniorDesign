@@ -274,7 +274,7 @@ main(void)
     //
     // Create the xbee task.
     //
-    if( XBEErxTaskInit() != 0)
+    if(DTYPE && (XBEErxTaskInit() != 0))
     {
         //
         // Init returned an error. Print an alert to the user and
