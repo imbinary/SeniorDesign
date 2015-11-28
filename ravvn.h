@@ -37,10 +37,10 @@ typedef struct rBSMDataStruct
 
 
 //todo toggle for device type
-#define  DTYPE  0    // 1 for vehicle, 0 for infrastructure
+#define  DTYPE  1    // 1 for vehicle, 0 for infrastructure
 #define ADXL 0
 #define DEMO 1
-#define DEVID 1
+#define DEVID 3
 #endif /* RAVVN_H_ */
 
 extern rBSMData_t g_rBSMData;

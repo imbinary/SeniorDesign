@@ -422,8 +422,8 @@ uint8_t calcColorI(rBSMData_t tmpBSMData, int size, int dist, uint8_t color) {
 			deg2dec(g_rBSMData.longitude), deg2dec(tmpBSMData.latitude),
 			deg2dec(tmpBSMData.longitude), 'K');
 
-	float coll = tCollideAcc(dist, 360 - dir,
-			g_rBSMData.speed, g_rBSMData.latAccel * 116, g_rBSMData.longAccel * 116,
+	float coll = tCollideAcc(dist,360 - dir,
+			g_rBSMData.speed, g_rBSMData.latAccel * 116, 0,
 			g_rBSMData.heading, 0, 0, 0,tmpBSMData.heading);
 
 
@@ -454,7 +454,7 @@ uint8_t calcColor(rBSMData_t tmpBSMData, int size, int dist) {
 
 	float coll = tCollideAcc(dist, 360 - dir, g_rBSMData.speed, g_rBSMData.latAccel * 116,
 			g_rBSMData.longAccel * 116, g_rBSMData.heading, tmpBSMData.speed,
-			tmpBSMData.latAccel * 116, tmpBSMData.longAccel * 116,
+			tmpBSMData.latAccel * 116, 0, //tmpBSMData.longAccel * 116,
 			tmpBSMData.heading);
 
 

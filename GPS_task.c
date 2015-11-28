@@ -323,7 +323,9 @@ void GPSparse(char *gpsString) {
 					oldHeading = g_rBSMData.heading;
 				}
 			}
-
+			//todo remove
+			g_rBSMData.heading = 270;
+			g_rBSMData.speed = 0;
 		}
 
 	}

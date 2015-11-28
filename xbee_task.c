@@ -67,7 +67,7 @@ xSemaphoreHandle g_xbeeUARTSemaphore;
 extern uint32_t g_ui32SysClock;
 float oldTime,stime=-1;
 uint8_t color=0x6a;
-uint16_t heading = 15;
+uint16_t heading = 270;
 //extern rBSMData_t g_rBSMData;
 
 //*****************************************************************************
@@ -159,7 +159,7 @@ void bsmSend() {
 	xSemaphoreGive(g_xbeeUARTSemaphore);
 //todo remove
 	xSemaphoreTake(g_xUARTSemaphore, portMAX_DELAY);
-	UARTprintf("->%s\n", bsm);
+//	UARTprintf("->%s\n", bsm);
 	xSemaphoreGive(g_xUARTSemaphore);
 
 

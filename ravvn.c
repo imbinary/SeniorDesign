@@ -401,7 +401,7 @@ main(void)
     // the UART semaphore to safely print.
     //
     g_rBSMData.ID = DEVID;
-    UARTprintf("RAVVN v1.5 (%d)\n",g_rBSMData.ID);
+    UARTprintf("RAVVN v1.9 (%d)\n",g_rBSMData.ID);
 
     //
     // Start the scheduler.  This should not return.
