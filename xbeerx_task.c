@@ -176,6 +176,9 @@ void bsmParse(char *cInput) {
 float tCollideAcc(float dist, int bearing, float myV, int myA_y, int myA_x,
 		int myH, float oV, int oA_y, int oA_x, int oH) {
 
+	if(dist <2)
+		return 0.05;
+
 	float oHead = deg2rad(oH);
 	float myHead = deg2rad(myH);
 	float bear = deg2rad(bearing);
@@ -204,7 +207,9 @@ float tCollideAcc(float dist, int bearing, float myV, int myA_y, int myA_x,
 	float ex1_x = V_rx*V_rx-2*A_rx*(D_x-2*s_phi);// x
 	float ex1_y = V_ry*V_ry-2*A_ry*(D_y-2*c_phi);// y
 	//negative expression 1 means non-intersecting paths
-	if(ex1_x<0 || ex1_y<0) return -1;
+	if((ex1_x<0 && D_x >2)||( ex1_y<0 && D_y>2)) return -1;
+	else if (ex1_x<0 && D_x<=2) A_rx = 0;
+	else if (ex1_y<0 && D_y<=2) A_ry = 0;
 	//total of 4 solutions, 2 each for x and y
 	float t1_x = -1, t2_x=-1, t1_y=-1, t2_y=-1;
 
