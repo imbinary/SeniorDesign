@@ -159,7 +159,7 @@ void bsmSend() {
 	xSemaphoreGive(g_xbeeUARTSemaphore);
 //todo remove
 	xSemaphoreTake(g_xUARTSemaphore, portMAX_DELAY);
-//	UARTprintf("->%s\n", bsm);
+	UARTprintf("->%s\n", bsm);
 	xSemaphoreGive(g_xUARTSemaphore);
 
 

@@ -38,7 +38,7 @@ typedef struct rBSMDataStruct
 
 //todo toggle for device type
 #define  DTYPE  1    // 1 for vehicle, 0 for infrastructure
-#define ADXL 0
+#define ADXL 1
 #define DEMO 1
 #define DEVID 3
 #endif /* RAVVN_H_ */

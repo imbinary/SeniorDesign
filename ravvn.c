@@ -206,12 +206,16 @@ main(void)
     //
     // Configure the system frequency.
     //
+	/*
     g_ui32SysClock = MAP_SysCtlClockFreqSet((SYSCTL_XTAL_25MHZ |
                                              SYSCTL_OSC_MAIN |
                                              SYSCTL_USE_PLL |
                                              SYSCTL_CFG_VCO_480), 120000000);
-
-
+*/
+    g_ui32SysClock = MAP_SysCtlClockFreqSet((
+                                             SYSCTL_OSC_INT |
+                                             SYSCTL_USE_PLL |
+                                             SYSCTL_CFG_VCO_480), 120000000);
 
 
 
@@ -401,7 +405,7 @@ main(void)
     // the UART semaphore to safely print.
     //
     g_rBSMData.ID = DEVID;
-    UARTprintf("RAVVN v1.9 (%d)\n",g_rBSMData.ID);
+    UARTprintf("RAVVN v2.0 (%d)\n",g_rBSMData.ID);
 
     //
     // Start the scheduler.  This should not return.

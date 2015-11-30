@@ -261,52 +261,36 @@ float tCollideAcc(float dist, int bearing, float myV, int myA_y, int myA_x,
 
 //*****************************************************************************
 //
-//
+//							VELOCITY
 //
 //*****************************************************************************
 float tCollide(float dist, float bear, float myVeloc, float myHead, float oVeloc,
 		float oHead) {
-
-	float d_y = dist * cos(bear); //y component of distance in meters
-	float d_x = dist * sin(bear); //x component of distance in meters
-	float V_ry = 0 -oVeloc * cos(oHead) + myVeloc * cos(myHead); //y component of relative velocity
-	float V_rx = 0 -oVeloc * sin(oHead) + myVeloc * sin(myHead); //x component of relative velocity
+    float s_phi = sin(bear);
+	float c_phi = cos(bear);
+	float d_y = dist * c_phi; //y component of distance in meters
+	float d_x = dist * s_phi; //x component of distance in meters
+	float V_ry = oVeloc * cos(oHead) - myVeloc * cos(myHead); //y component of relative velocity
+	float V_rx = oVeloc * sin(oHead) - myVeloc * sin(myHead); //x component of relative velocity
 	float V_r2 = V_ry * V_ry + V_rx * V_rx; //relative velocity
 
 	if (V_r2 < 0.001)
 		return -1; //travelling parallel at same velocity, same direction. No collision
+//	xSemaphoreTake(g_xUARTSemaphore, portMAX_DELAY);
+//	UARTprintf("test1 pass\n");
+//	xSemaphoreGive(g_xUARTSemaphore);
+    if( (abs(d_y)>2 && abs(V_ry)<0.01) || (abs(d_x)>2 && abs(V_rx)<0.01)) return -1;
+    else if( abs(d_y)<=2 && abs(V_ry)<0.01 ) return (2*s_phi-d_x)/V_rx;
+	else if( abs(d_x)<=2 && abs(V_rx)<0.01 ) return (2*c_phi-d_y)/V_ry;
+//	xSemaphoreTake(g_xUARTSemaphore, portMAX_DELAY);
+//	UARTprintf("test2 pass\n");
+//	xSemaphoreGive(g_xUARTSemaphore);
+	float t_y = (2*c_phi-d_y)/V_ry;
+	float t_x = (2*s_phi-d_x)/V_rx;
+	//printf("t_x: %f\nt_y: %f\n",t_x,t_y);
+    if(abs(t_y - t_x) < 0.1) return t_x;
+	else return -1;
 
-	float ex1 = 0 - (d_x * d_x) * (V_ry * V_ry) + 2 * d_x * d_y * V_rx * V_ry
-			- (d_y * d_y) * (V_rx * V_rx) + 4 * (V_r2); //expression 1 of solution
-	ex1=abs(ex1);
-//	if (ex1 < 0)
-//		return -1; //solution is not real-paths are parallel
-
-	ex1 = sqrt(ex1); //previous statement avoides taking square root of negative
-	float ex2 = d_x * V_rx - d_y * V_ry; //expression 2 of solution
-	//todo we changed this
-	float t1 = (ex1 - ex2) / V_r2; //solution 1
-	float t2 = (0 - ex1 - ex2) / V_r2; //solution 2
-	float D_t1, D_t2;
-	if (t1 >= 0 && t1 <= 14) { //assumes we don't care to predict collisions more than 12 seconds out
-			D_t1 = pow(d_x - V_rx * t1 , 2)
-					+ pow(d_y - V_ry * t1 , 2);
-			D_t1 = sqrt(D_t1); //distance at time 1
-		} else
-			D_t1 = -1; //not valid solution
-
-
-		if (t2 >= 0 && t2 <= 14) { //assumes we don't care to predict collisions more than 12 seconds out
-			D_t2 = pow(d_x - V_rx * t2 , 2)
-					+ pow(d_y - V_ry * t2 , 2);
-			D_t2 = sqrt(D_t2); //distance at time 2
-		} else
-			D_t2 = -1; //not valid solution
-
-		if( (D_t1 >= dist && D_t2 >= dist) || (D_t1 < 0 && D_t2 < 0) ) return -1; //vehicles are moving away from eachother
-		else if( D_t1 >= 0 && D_t1 < dist && (D_t2 >=dist || D_t2 < 0) ) return t1; //t1 is time to collision
-		else if( (D_t1 >= dist || D_t1 < 0 ) && D_t2 >= 0 && D_t2 < dist) return t2; //t2 is time to collision
-		else return min(t1, t2); //the minimum of t1 and t2 is time to collision
 }
 
 //*****************************************************************************
